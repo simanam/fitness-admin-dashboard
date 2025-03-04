@@ -2,12 +2,14 @@ node_modules/
 dist/
 dist-ssr/
 
-# Environment variables
+# Ignore environment variable files
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+
 
 # Editor directories and files
 .vscode/*
@@ -28,8 +30,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# System Files
-.DS_Store
+
 
 # Editor directories and files
 .vscode/*
@@ -41,3 +42,7 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+
+# System Files
+.DS_Store
