@@ -5,13 +5,12 @@ import { cn } from '../../lib/utils';
 export interface SelectProps
   extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
-  options: { value: string; label: string }[];
   helperText?: string;
   error?: string;
 }
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, options, helperText, error, ...props }, ref) => {
+  ({ className, label, helperText, error, ...props }, ref) => {
     return (
       <div className="w-full">
         {label && (
@@ -31,11 +30,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           {...props}
         >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
+          {props.children}
         </select>
         {helperText && !error && (
           <p className="mt-1 text-sm text-gray-500">{helperText}</p>

@@ -10,6 +10,15 @@ import NotFoundPage from './pages/NotFound';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import UnauthorizedPage from './pages/Unauthorized';
 import ProfilePage from './pages/Profile';
+import ExerciseList from './pages/exercises/ExerciseList';
+import ExerciseDetail from './pages/exercises/ExerciseDetail';
+import CreateExercisePage from './pages/exercises/CreateExercisePage';
+import EditExercisePage from './pages/exercises/EditExercisePage';
+import MuscleList from './pages/muscles/MuscleList';
+import MuscleDetail from './pages/muscles/MuscleDetail';
+import CreateMusclePage from './pages/muscles/CreateMusclePage';
+import EditMusclePage from './pages/muscles/EditMusclePage';
+import MuscleGroupsManagementPage from './pages/muscles/MuscleGroupsManagementPage';
 
 function App() {
   return (
@@ -27,37 +36,23 @@ function App() {
                   <Route index element={<HomePage />} />
                   <Route path="profile" element={<ProfilePage />} />
 
-                  {/* Placeholder routes for main sections */}
-                  {/* Exercises */}
                   <Route path="exercises">
-                    <Route
-                      index
-                      element={<div className="p-4">Exercises List Page</div>}
-                    />
-                    <Route
-                      path="new"
-                      element={<div className="p-4">New Exercise Page</div>}
-                    />
-                    <Route
-                      path=":id"
-                      element={<div className="p-4">Exercise Detail Page</div>}
-                    />
+                    <Route index element={<ExerciseList />} />
+                    <Route path="new" element={<CreateExercisePage />} />
+                    <Route path=":id" element={<ExerciseDetail />} />
+                    <Route path=":id/edit" element={<EditExercisePage />} />
                   </Route>
 
                   {/* Muscles */}
                   <Route path="muscles">
-                    <Route
-                      index
-                      element={<div className="p-4">Muscles List Page</div>}
-                    />
+                    <Route index element={<MuscleList />} />
+                    <Route path="new" element={<CreateMusclePage />} />
+                    <Route path=":id/edit" element={<EditMusclePage />} />
                     <Route
                       path="groups"
-                      element={<div className="p-4">Muscle Groups Page</div>}
+                      element={<MuscleGroupsManagementPage />}
                     />
-                    <Route
-                      path=":id"
-                      element={<div className="p-4">Muscle Detail Page</div>}
-                    />
+                    <Route path=":id" element={<MuscleDetail />} />
                   </Route>
 
                   {/* Equipment */}

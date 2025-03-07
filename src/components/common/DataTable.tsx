@@ -155,16 +155,16 @@ export function DataTable<T>({
   };
 
   // Create skeleton loading state
-  const renderSkeletonRow = () => (
-    <tr>
+  const renderSkeletonRow = (index) => (
+    <tr key={`skeleton-row-${index}`}>
       {isSelectable && (
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
           <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
         </td>
       )}
-      {columns.map((column) => (
+      {columns.map((column, colIndex) => (
         <td
-          key={column.key}
+          key={`skeleton-col-${colIndex}`}
           className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
         >
           <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -310,7 +310,9 @@ export function DataTable<T>({
           <tbody className="bg-white divide-y divide-gray-200">
             {isLoading ? (
               // Render skeleton loading rows
-              Array.from({ length: 5 }).map((_, index) => renderSkeletonRow())
+              Array.from({ length: 5 }).map((_, index) =>
+                renderSkeletonRow(index)
+              )
             ) : filteredData.length > 0 ? (
               filteredData.map((item) => {
                 const id = String(keyExtractor(item));
