@@ -27,6 +27,9 @@ import AdminUserList from './pages/users/AdminUserList';
 import AdminUserDetail from './pages/users/AdminUserDetail';
 import AdminUserCreate from './pages/users/AdminUserCreate';
 import AdminUserEdit from './pages/users/AdminUserEdit';
+import ClientList from './pages/clients/ClientList';
+import ClientDetail from './pages/clients/ClientDetail';
+import ClientForm from './pages/clients/ClientForm';
 
 function App() {
   return (
@@ -81,20 +84,10 @@ function App() {
 
                   {/* API Clients */}
                   <Route path="clients">
-                    <Route
-                      index
-                      element={<div className="p-4">API Clients List Page</div>}
-                    />
-                    <Route
-                      path="new"
-                      element={<div className="p-4">New API Client Page</div>}
-                    />
-                    <Route
-                      path=":id"
-                      element={
-                        <div className="p-4">API Client Detail Page</div>
-                      }
-                    />
+                    <Route index element={<ClientList />} />
+                    <Route path="new" element={<ClientForm />} />
+                    <Route path=":id" element={<ClientDetail />} />
+                    <Route path=":id/edit" element={<ClientForm />} />
                   </Route>
                 </Route>
               </Route>

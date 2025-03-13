@@ -80,7 +80,15 @@ export const NavigationProvider = ({ children }: NavigationProviderProps) => {
         { name: 'Add New', path: '/users/new' },
       ],
     },
-    { name: 'API Clients', path: '/clients', icon: <Database size={20} /> },
+    {
+      name: 'API Clients',
+      path: '/clients',
+      icon: <Database size={20} />,
+      children: [
+        { name: 'All Clients', path: '/clients' },
+        { name: 'Add New', path: '/clients/new' },
+      ],
+    },
   ];
 
   // Update current path when location changes
