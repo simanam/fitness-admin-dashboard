@@ -71,7 +71,15 @@ export const NavigationProvider = ({ children }: NavigationProviderProps) => {
         { name: 'Add New', path: '/equipment/new' },
       ],
     },
-    { name: 'Admin Users', path: '/users', icon: <Users size={20} /> },
+    {
+      name: 'Admin Users',
+      path: '/users',
+      icon: <Users size={20} />,
+      children: [
+        { name: 'All Users', path: '/users' },
+        { name: 'Add New', path: '/users/new' },
+      ],
+    },
     { name: 'API Clients', path: '/clients', icon: <Database size={20} /> },
   ];
 

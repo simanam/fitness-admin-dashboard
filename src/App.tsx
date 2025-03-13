@@ -23,6 +23,10 @@ import EquipmentList from './pages/equipment/EquipmentList';
 import EquipmentDetail from './pages/equipment/EquipmentDetail';
 import CreateEquipmentPage from './pages/equipment/CreateEquipmentPage';
 import EditEquipmentPage from './pages/equipment/EditEquipmentPage';
+import AdminUserList from './pages/users/AdminUserList';
+import AdminUserDetail from './pages/users/AdminUserDetail';
+import AdminUserCreate from './pages/users/AdminUserCreate';
+import AdminUserEdit from './pages/users/AdminUserEdit';
 
 function App() {
   return (
@@ -69,20 +73,10 @@ function App() {
 
                   {/* Admin Users */}
                   <Route path="users">
-                    <Route
-                      index
-                      element={<div className="p-4">Admin Users List Page</div>}
-                    />
-                    <Route
-                      path="new"
-                      element={<div className="p-4">New Admin User Page</div>}
-                    />
-                    <Route
-                      path=":id"
-                      element={
-                        <div className="p-4">Admin User Detail Page</div>
-                      }
-                    />
+                    <Route index element={<AdminUserList />} />
+                    <Route path="new" element={<AdminUserCreate />} />
+                    <Route path=":id" element={<AdminUserDetail />} />
+                    <Route path=":id/edit" element={<AdminUserEdit />} />
                   </Route>
 
                   {/* API Clients */}
