@@ -19,6 +19,10 @@ import MuscleDetail from './pages/muscles/MuscleDetail';
 import CreateMusclePage from './pages/muscles/CreateMusclePage';
 import EditMusclePage from './pages/muscles/EditMusclePage';
 import MuscleGroupsManagementPage from './pages/muscles/MuscleGroupsManagementPage';
+import EquipmentList from './pages/equipment/EquipmentList';
+import EquipmentDetail from './pages/equipment/EquipmentDetail';
+import CreateEquipmentPage from './pages/equipment/CreateEquipmentPage';
+import EditEquipmentPage from './pages/equipment/EditEquipmentPage';
 
 function App() {
   return (
@@ -57,18 +61,10 @@ function App() {
 
                   {/* Equipment */}
                   <Route path="equipment">
-                    <Route
-                      index
-                      element={<div className="p-4">Equipment List Page</div>}
-                    />
-                    <Route
-                      path="new"
-                      element={<div className="p-4">New Equipment Page</div>}
-                    />
-                    <Route
-                      path=":id"
-                      element={<div className="p-4">Equipment Detail Page</div>}
-                    />
+                    <Route index element={<EquipmentList />} />
+                    <Route path="new" element={<CreateEquipmentPage />} />
+                    <Route path=":id" element={<EquipmentDetail />} />
+                    <Route path=":id/edit" element={<EditEquipmentPage />} />
                   </Route>
 
                   {/* Admin Users */}

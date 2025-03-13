@@ -7,6 +7,7 @@ import {
   ChevronDown,
   ArrowRight,
   Link as LinkIcon,
+  Edit,
 } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import ConfirmationDialog from '../../../components/ui/confirmation-dialog';
@@ -19,7 +20,11 @@ import exerciseService, { Exercise } from '../../../api/exerciseService';
 import relationshipService, {
   ExerciseRelationship,
   ProgressionPath,
+  ProgressionRelationship,
 } from '../../../api/relationshipService';
+import DifficultyIndicator from '../../../components/exercises/DifficultyIndicator';
+import RelationshipEditModal from '../../../components/exercises/RelationshipEditModal';
+import ProgressionPathVisualization from '../../../components/exercises/ProgressionPathVisualization';
 
 interface ExerciseRelationshipsProps {
   exerciseId: string;
@@ -39,9 +44,12 @@ const ExerciseRelationships = ({
     useState<ProgressionPath | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedRelationship, setSelectedRelationship] =
     useState<ExerciseRelationship | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showVisualization, setShowVisualization] = useState(true);
 
   // Form state
   const [relatedExerciseId, setRelatedExerciseId] = useState<string>('');
@@ -62,50 +70,50 @@ const ExerciseRelationships = ({
 
   // Fetch data
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch relationships, progression path, and exercises for selection
-        const [relationshipsData, progressionData, exercisesData] =
-          await Promise.all([
-            relationshipService.getExerciseRelationships(exerciseId),
-            relationshipService.getProgressionPath(exerciseId),
-            exerciseService.getExercises({
-              status: 'PUBLISHED',
-              per_page: 100,
-            }),
-          ]);
-
-        setRelationships(relationshipsData);
-        setProgressionPath(progressionData);
-
-        // Filter out the current exercise and already related exercises
-        const relatedIds = [
-          ...relationshipsData.map((r) =>
-            r.baseExerciseId === exerciseId
-              ? r.relatedExerciseId
-              : r.baseExerciseId
-          ),
-          exerciseId,
-        ];
-
-        setExercises(
-          exercisesData.data.filter((e) => !relatedIds.includes(e.id))
-        );
-      } catch (error) {
-        console.error('Error fetching relationships data:', error);
-        showToast({
-          type: 'error',
-          title: 'Error',
-          message: 'Failed to load relationships data',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
   }, [exerciseId]);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch relationships, progression path, and exercises for selection
+      const [relationshipsData, progressionData, exercisesData] =
+        await Promise.all([
+          relationshipService.getExerciseRelationships(exerciseId),
+          relationshipService.getProgressionPath(exerciseId),
+          exerciseService.getExercises({
+            status: 'PUBLISHED',
+            per_page: 100,
+          }),
+        ]);
+
+      setRelationships(relationshipsData);
+      setProgressionPath(progressionData);
+
+      // Filter out the current exercise and already related exercises
+      const relatedIds = [
+        ...relationshipsData.map((r) =>
+          r.baseExerciseId === exerciseId
+            ? r.relatedExerciseId
+            : r.baseExerciseId
+        ),
+        exerciseId,
+      ];
+
+      setExercises(
+        exercisesData.data.filter((e) => !relatedIds.includes(e.id))
+      );
+    } catch (error) {
+      console.error('Error fetching relationships data:', error);
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to load relationships data',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Reset form state
   const resetForm = () => {
@@ -131,6 +139,7 @@ const ExerciseRelationships = ({
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const newRelationship = await relationshipService.createRelationship({
         baseExerciseId: exerciseId,
@@ -143,36 +152,14 @@ const ExerciseRelationships = ({
           relationshipType !== 'PROGRESSION' ? modificationDetails : undefined,
       });
 
-      // Find the related exercise for display
-      const relatedExercise = exercises.find((e) => e.id === relatedExerciseId);
-
-      if (relatedExercise && newRelationship) {
-        // Add related exercise info to the relationship
-        const completeRelationship = {
-          ...newRelationship,
-          baseExercise: exercise,
-          relatedExercise: relatedExercise,
-        };
-
-        setRelationships([...relationships, completeRelationship]);
-
-        // If it's a progression relationship, refresh the progression path
-        if (relationshipType === 'PROGRESSION') {
-          const newProgressionPath =
-            await relationshipService.getProgressionPath(exerciseId);
-          setProgressionPath(newProgressionPath);
-        }
-
-        // Remove the related exercise from the available options
-        setExercises(exercises.filter((e) => e.id !== relatedExerciseId));
-      }
-
       showToast({
         type: 'success',
         title: 'Success',
         message: 'Relationship added successfully',
       });
 
+      // Refresh data
+      fetchData();
       resetForm();
       setShowAddModal(false);
     } catch (error) {
@@ -182,6 +169,50 @@ const ExerciseRelationships = ({
         title: 'Error',
         message: 'Failed to add relationship',
       });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle relationship update
+  const handleUpdateRelationship = async (data: {
+    relationshipType: 'PROGRESSION' | 'VARIATION' | 'ALTERNATIVE';
+    difficultyChange: number;
+    bidirectional: boolean;
+    modificationDetails?: {
+      setupChanges: string;
+      techniqueChanges: string;
+      targetMuscleImpact: string;
+    };
+  }) => {
+    if (!selectedRelationship) return;
+
+    setIsSubmitting(true);
+    try {
+      await relationshipService.updateRelationship(
+        selectedRelationship.id,
+        data
+      );
+
+      showToast({
+        type: 'success',
+        title: 'Success',
+        message: 'Relationship updated successfully',
+      });
+
+      // Refresh data
+      fetchData();
+      setShowEditModal(false);
+      setSelectedRelationship(null);
+    } catch (error) {
+      console.error('Error updating relationship:', error);
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update relationship',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -189,35 +220,9 @@ const ExerciseRelationships = ({
   const handleDeleteRelationship = async () => {
     if (!selectedRelationship) return;
 
+    setIsSubmitting(true);
     try {
       await relationshipService.deleteRelationship(selectedRelationship.id);
-
-      // Add the related exercise back to the available options
-      const relatedId =
-        selectedRelationship.baseExerciseId === exerciseId
-          ? selectedRelationship.relatedExerciseId
-          : selectedRelationship.baseExerciseId;
-
-      const relatedExercise =
-        selectedRelationship.baseExerciseId === exerciseId
-          ? selectedRelationship.relatedExercise
-          : selectedRelationship.baseExercise;
-
-      if (relatedExercise) {
-        setExercises([...exercises, relatedExercise]);
-      }
-
-      // Remove from relationships
-      setRelationships(
-        relationships.filter((r) => r.id !== selectedRelationship.id)
-      );
-
-      // If it's a progression relationship, refresh the progression path
-      if (selectedRelationship.relationshipType === 'PROGRESSION') {
-        const newProgressionPath =
-          await relationshipService.getProgressionPath(exerciseId);
-        setProgressionPath(newProgressionPath);
-      }
 
       showToast({
         type: 'success',
@@ -225,8 +230,10 @@ const ExerciseRelationships = ({
         message: 'Relationship removed successfully',
       });
 
-      setSelectedRelationship(null);
+      // Refresh data
+      fetchData();
       setShowDeleteDialog(false);
+      setSelectedRelationship(null);
     } catch (error) {
       console.error('Error deleting relationship:', error);
       showToast({
@@ -234,6 +241,8 @@ const ExerciseRelationships = ({
         title: 'Error',
         message: 'Failed to remove relationship',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -241,6 +250,12 @@ const ExerciseRelationships = ({
   const confirmDelete = (relationship: ExerciseRelationship) => {
     setSelectedRelationship(relationship);
     setShowDeleteDialog(true);
+  };
+
+  // Open edit modal
+  const openEditModal = (relationship: ExerciseRelationship) => {
+    setSelectedRelationship(relationship);
+    setShowEditModal(true);
   };
 
   // Group relationships by type for display
@@ -282,6 +297,25 @@ const ExerciseRelationships = ({
     }
   };
 
+  // Handler for deleting a progression relationship from the visualization
+  const handleDeleteFromVisualization = (
+    relationship: ProgressionRelationship
+  ) => {
+    confirmDelete(relationship);
+  };
+
+  // Handler for editing a progression relationship from the visualization
+  const handleEditFromVisualization = (
+    relationship: ProgressionRelationship
+  ) => {
+    openEditModal(relationship);
+  };
+
+  // Toggle between visualization and list view
+  const toggleView = () => {
+    setShowVisualization(!showVisualization);
+  };
+
   // Show loading state
   if (isLoading) {
     return (
@@ -296,134 +330,123 @@ const ExerciseRelationships = ({
       {/* Header with title and add button */}
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium text-gray-900">Relationships</h3>
-        <button
-          onClick={() => setShowAddModal(true)}
-          disabled={exercises.length === 0}
-          className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md ${
-            exercises.length === 0
-              ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-500'
-              : 'text-gray-700 bg-white hover:bg-gray-50'
-          } focus:outline-none`}
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Add Relationship
-        </button>
+        <div className="flex space-x-2">
+          {/* Toggle visualization/list view button - only show if there's progression data */}
+          {progressionPath &&
+            (progressionPath.easier.length > 0 ||
+              progressionPath.harder.length > 0) && (
+              <button
+                onClick={toggleView}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+              >
+                {showVisualization ? 'Show List View' : 'Show Visual View'}
+              </button>
+            )}
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            disabled={exercises.length === 0}
+            className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md ${
+              exercises.length === 0
+                ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-500'
+                : 'text-gray-700 bg-white hover:bg-gray-50'
+            } focus:outline-none`}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Relationship
+          </button>
+        </div>
       </div>
 
       {/* Display progression path if available */}
       {progressionPath &&
         (progressionPath.easier.length > 0 ||
-          progressionPath.harder.length > 0) && (
-          <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-6">
-            <h4 className="font-medium text-gray-900 mb-4">Progression Path</h4>
-
-            <div className="flex flex-col-reverse md:flex-row gap-4">
-              {/* Easier exercises */}
-              <div className="flex-1">
-                <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <ChevronDown className="h-4 w-4 text-blue-500 mr-1" />
-                  Easier Variations
-                </h5>
-
-                {progressionPath.easier.length > 0 ? (
-                  <ul className="space-y-2">
-                    {progressionPath.easier.map((item) => (
-                      <li
-                        key={item.id}
-                        className="flex items-center justify-between border border-gray-200 rounded-lg p-3 bg-white"
-                      >
-                        <div>
-                          <div className="font-medium">
-                            {item.baseExercise?.name}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {/* Show difficulty change from current exercise */}
-                            {item.difficultyChange !== 0 && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                {item.difficultyChange > 0 ? '+' : ''}
-                                {item.difficultyChange} difficulty
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => confirmDelete(item)}
-                          className="text-gray-400 hover:text-red-500"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg p-3 bg-white text-center">
-                    No easier exercises defined
-                  </div>
-                )}
-              </div>
-
-              {/* Current exercise */}
-              <div className="flex items-center justify-center">
-                <div className="border-2 border-black rounded-lg p-3 px-4 bg-white">
-                  <div className="font-medium">{exercise.name}</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Current exercise
-                  </div>
-                </div>
-              </div>
-
-              {/* Harder exercises */}
-              <div className="flex-1">
-                <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <ChevronUp className="h-4 w-4 text-red-500 mr-1" />
-                  Harder Variations
-                </h5>
-
-                {progressionPath.harder.length > 0 ? (
-                  <ul className="space-y-2">
-                    {progressionPath.harder.map((item) => (
-                      <li
-                        key={item.id}
-                        className="flex items-center justify-between border border-gray-200 rounded-lg p-3 bg-white"
-                      >
-                        <div>
-                          <div className="font-medium">
-                            {item.relatedExercise?.name}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {item.difficultyChange !== 0 && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                {item.difficultyChange > 0 ? '+' : ''}
-                                {item.difficultyChange} difficulty
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => confirmDelete(item)}
-                          className="text-gray-400 hover:text-red-500"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg p-3 bg-white text-center">
-                    No harder exercises defined
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          progressionPath.harder.length > 0) &&
+        showVisualization && (
+          <ProgressionPathVisualization
+            progressionPath={progressionPath}
+            currentExercise={exercise}
+            onDeleteRelationship={handleDeleteFromVisualization}
+            onEditRelationship={handleEditFromVisualization}
+          />
         )}
 
-      {/* Relationships list by type */}
-      {relationships.length > 0 ? (
-        <div className="space-y-6">
-          {/* Variations */}
+      {/* Display list view when visualization is off or there's no progression data */}
+      {(!showVisualization ||
+        !(
+          progressionPath &&
+          (progressionPath.easier.length > 0 ||
+            progressionPath.harder.length > 0)
+        )) && (
+        <>
+          {/* Progression Section in List View */}
+          {progressionRelationships.length > 0 && (
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-6">
+              <h4 className="font-medium text-gray-900 mb-4">
+                Progression Path
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {progressionRelationships.map((relationship) => {
+                  const relatedExercise = getRelatedExercise(relationship);
+                  const isHarder =
+                    (relationship.baseExerciseId === exerciseId &&
+                      relationship.difficultyChange > 0) ||
+                    (relationship.relatedExerciseId === exerciseId &&
+                      relationship.difficultyChange < 0);
+
+                  return (
+                    <div
+                      key={relationship.id}
+                      className="flex items-center justify-between border border-gray-200 rounded-lg p-3 bg-white"
+                    >
+                      <div>
+                        <div className="font-medium flex items-center">
+                          {isHarder ? (
+                            <ChevronUp
+                              size={16}
+                              className="mr-1 text-red-500"
+                            />
+                          ) : (
+                            <ChevronDown
+                              size={16}
+                              className="mr-1 text-blue-500"
+                            />
+                          )}
+                          {relatedExercise?.name}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {relationship.difficultyChange !== 0 && (
+                            <DifficultyIndicator
+                              value={relationship.difficultyChange}
+                              size="sm"
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => openEditModal(relationship)}
+                          className="text-gray-400 hover:text-blue-500"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => confirmDelete(relationship)}
+                          className="text-gray-400 hover:text-red-500"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Relationships list by type - Variations */}
           {variationRelationships.length > 0 && (
-            <div>
+            <div className="mb-6">
               <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center">
                 <span className="w-3 h-3 rounded-full bg-purple-500 mr-2"></span>
                 Variations
@@ -485,12 +508,20 @@ const ExerciseRelationships = ({
                           )}
                         </div>
 
-                        <button
-                          onClick={() => confirmDelete(relationship)}
-                          className="text-gray-400 hover:text-red-500"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => openEditModal(relationship)}
+                            className="text-gray-400 hover:text-blue-500"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(relationship)}
+                            className="text-gray-400 hover:text-red-500"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -563,12 +594,20 @@ const ExerciseRelationships = ({
                           )}
                         </div>
 
-                        <button
-                          onClick={() => confirmDelete(relationship)}
-                          className="text-gray-400 hover:text-red-500"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => openEditModal(relationship)}
+                            className="text-gray-400 hover:text-blue-500"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(relationship)}
+                            className="text-gray-400 hover:text-red-500"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -576,8 +615,11 @@ const ExerciseRelationships = ({
               </div>
             </div>
           )}
-        </div>
-      ) : (
+        </>
+      )}
+
+      {/* Empty state */}
+      {relationships.length === 0 && (
         <EmptyState
           icon={<LinkIcon className="h-12 w-12 text-gray-400" />}
           title="No relationships defined"
@@ -616,14 +658,16 @@ const ExerciseRelationships = ({
                 setShowAddModal(false);
               }}
               className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               onClick={handleAddRelationship}
               className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+              disabled={isSubmitting || !relatedExerciseId}
             >
-              Add Relationship
+              {isSubmitting ? 'Adding...' : 'Add Relationship'}
             </button>
           </div>
         }
@@ -644,6 +688,7 @@ const ExerciseRelationships = ({
               ]}
               value={relatedExerciseId}
               onChange={(e) => setRelatedExerciseId(e.target.value)}
+              disabled={isSubmitting}
             />
             {exercises.length === 0 && (
               <p className="mt-1 text-sm text-yellow-600">
@@ -678,6 +723,7 @@ const ExerciseRelationships = ({
                   e.target.value as 'PROGRESSION' | 'VARIATION' | 'ALTERNATIVE'
                 )
               }
+              disabled={isSubmitting}
             />
           </div>
 
@@ -694,6 +740,7 @@ const ExerciseRelationships = ({
                     setDifficultyChange(Math.max(-3, difficultyChange - 1))
                   }
                   className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                  disabled={isSubmitting}
                 >
                   -
                 </button>
@@ -708,6 +755,7 @@ const ExerciseRelationships = ({
                     setDifficultyChange(Math.min(3, difficultyChange + 1))
                   }
                   className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                  disabled={isSubmitting}
                 >
                   +
                 </button>
@@ -731,6 +779,7 @@ const ExerciseRelationships = ({
                 onChange={(e) => setBidirectional(e.target.checked)}
                 label="Bidirectional relationship"
                 helperText="If checked, the relationship works both ways"
+                disabled={isSubmitting}
               />
             </div>
           )}
@@ -756,6 +805,7 @@ const ExerciseRelationships = ({
                   }
                   placeholder="How does the setup differ between these exercises?"
                   rows={2}
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -773,6 +823,7 @@ const ExerciseRelationships = ({
                   }
                   placeholder="How does the execution technique differ?"
                   rows={2}
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -790,12 +841,25 @@ const ExerciseRelationships = ({
                   }
                   placeholder="How does this change affect the muscles targeted?"
                   rows={2}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
           )}
         </div>
       </Modal>
+
+      {/* Edit modal using the RelationshipEditModal component */}
+      <RelationshipEditModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedRelationship(null);
+        }}
+        relationship={selectedRelationship}
+        onUpdate={handleUpdateRelationship}
+        isSubmitting={isSubmitting}
+      />
 
       {/* Delete confirmation dialog */}
       <ConfirmationDialog
@@ -818,6 +882,7 @@ const ExerciseRelationships = ({
         }
         confirmText="Remove"
         type="danger"
+        isLoading={isSubmitting}
       />
     </div>
   );
