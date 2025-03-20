@@ -1,15 +1,20 @@
 // src/types/adminUserFormTypes.ts
 
+export enum AdminRole {
+  EDITOR = 'editor',
+  READONLY = 'readonly',
+}
+
 export interface AdminUserFormData {
   email: string;
   password?: string;
-  role: 'EDITOR' | 'READONLY';
+  role: AdminRole;
 }
 
 export const defaultAdminUserFormData: AdminUserFormData = {
   email: '',
   password: '',
-  role: 'READONLY',
+  role: AdminRole.READONLY,
 };
 
 export const FORM_VALIDATION_RULES = {

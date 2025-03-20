@@ -1,3 +1,4 @@
+// src/components/muscles/form/BasicInfoSection.tsx
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useMuscleGroups } from '../../../hooks/useMuscleGroups';
@@ -7,9 +8,13 @@ import { Select } from '../../../components/ui/select';
 import FormField from '../../exercises/form/FormField';
 import { FORM_SECTIONS } from '../../../types/muscleFormTypes';
 import { AlertCircle } from 'lucide-react';
-import FileUpload from '../../ui/file-upload';
+import SvgUploadField from './SvgUploadField';
 
-const BasicInfoSection: React.FC = () => {
+interface BasicInfoSectionProps {
+  muscleId?: string;
+}
+
+const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ muscleId }) => {
   const { register } = useFormContext();
   const { muscleGroups, isLoading } = useMuscleGroups();
 
@@ -98,27 +103,12 @@ const BasicInfoSection: React.FC = () => {
           </Select>
         </FormField>
 
-        <FormField
-          name="svgFile"
-          label="SVG Illustration"
-          helperText="Upload an SVG illustration of the muscle"
-        >
-          <FileUpload
-            accept="image/svg+xml"
-            maxSize={2} // 2MB max
-            onFileSelect={(file) => {
-              if (file) {
-                setValue('svgFile', file);
-                trigger('svgFile');
-              }
-            }}
-            showPreview={true}
-          />
-        </FormField>
+        {/* New SVG Upload Field */}
+        <SvgUploadField muscleId={muscleId} />
 
         <div className="bg-yellow-50 border border-yellow-100 rounded-md p-4">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-yellow-400" />
+            <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0" />
             <div className="ml-3">
               <h3 className="text-sm font-medium text-yellow-800">
                 Important Note

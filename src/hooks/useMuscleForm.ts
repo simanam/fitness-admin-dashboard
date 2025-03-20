@@ -1,3 +1,4 @@
+// src/hooks/useMuscleForm.ts
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from './useToast';
@@ -26,13 +27,22 @@ export const useMuscleForm = ({
   const handleSubmit = async (data: MuscleFormData) => {
     setIsSubmitting(true);
     try {
-      // Create FormData for multipart submission
+      // Create FormData for multipart submission if there's an SVG file
       const formData = new FormData();
+
+      // Add basic fields
       formData.append('name', data.name);
       if (data.commonName) formData.append('commonName', data.commonName);
       if (data.description) formData.append('description', data.description);
       formData.append('muscleGroupId', data.muscleGroupId);
-      if (data.svgFile) formData.append('svgFile', data.svgFile);
+
+      // Handle SVG file
+      if (data.svgFile) {
+        formData.append('svgFile', data.svgFile);
+      } else if (muscleId && data.keepExistingSvg) {
+        // If editing and keeping existing SVG, tell the server not to change it
+        formData.append('keepExistingSvg', 'true');
+      }
 
       if (muscleId) {
         // Update existing muscle
@@ -42,6 +52,7 @@ export const useMuscleForm = ({
           title: 'Success',
           message: 'Muscle updated successfully',
         });
+        navigate(`/muscles/${muscleId}`);
       } else {
         // Create new muscle
         const newMuscle = await muscleService.createMuscleWithSvg(formData);
@@ -82,3 +93,5 @@ export const useMuscleForm = ({
     handleCancel,
   };
 };
+
+export default useMuscleForm;

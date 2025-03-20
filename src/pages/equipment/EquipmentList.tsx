@@ -1,6 +1,6 @@
 // src/pages/equipment/EquipmentList.tsx
 import { useNavigate } from 'react-router-dom';
-import { Eye, Edit, Plus, Box, Search, X, Filter } from 'lucide-react';
+import { Eye, Edit, Plus, Box, Search, X, Filter, Trash2 } from 'lucide-react';
 import DataTable, { Column } from '../../components/common/DataTable';
 import Pagination from '../../components/ui/pagination';
 import ConfirmationDialog from '../../components/ui/confirmation-dialog';
@@ -180,9 +180,7 @@ const EquipmentList = () => {
             <Checkbox
               id="isCommon"
               checked={isCommonFilter === true}
-              onChange={(e) =>
-                handleIsCommonFilterChange(e.target.checked ? true : undefined)
-              }
+              onChange={(e) => handleIsCommonFilterChange(e.target.checked)}
               label="Common Equipment Only"
             />
           </div>

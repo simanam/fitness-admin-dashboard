@@ -1,3 +1,4 @@
+// src/pages/muscles/EditMusclePage.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -32,8 +33,7 @@ const EditMusclePage: React.FC = () => {
           commonName: muscle.commonName || '',
           description: muscle.description || '',
           muscleGroupId: muscle.muscleGroupId,
-          // We don't set svgFile initially as we can't recreate a File object from a URL
-          // The SVG file will only be included in the update if a new one is uploaded
+          keepExistingSvg: true, // Default to keeping existing SVG
         };
 
         setInitialData(formData);
@@ -88,6 +88,7 @@ const EditMusclePage: React.FC = () => {
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}
+          muscleId={id}
         />
       </div>
     </div>

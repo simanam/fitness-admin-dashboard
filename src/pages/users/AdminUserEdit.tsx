@@ -6,6 +6,7 @@ import { useToast } from '../../hooks/useToast';
 import AdminUserForm from '../../components/users/AdminUserForm';
 import useAdminUserForm from '../../hooks/useAdminUserForm';
 import adminUserService from '../../api/adminUserService';
+import { AdminRole, AdminUserFormData } from '../../types/adminUserFormTypes';
 
 const AdminUserEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +16,7 @@ const AdminUserEdit = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [initialUserData, setInitialUserData] = useState({
     email: '',
-    role: 'READONLY' as 'EDITOR' | 'READONLY',
+    role: AdminRole.READONLY,
   });
 
   // Fetch user data for editing
@@ -26,9 +27,10 @@ const AdminUserEdit = () => {
       setIsLoading(true);
       try {
         const user = await adminUserService.getAdminUser(id);
+
         setInitialUserData({
           email: user.email,
-          role: user.role as 'EDITOR' | 'READONLY',
+          role: user.role as AdminRole,
         });
       } catch (error) {
         console.error('Error fetching admin user:', error);

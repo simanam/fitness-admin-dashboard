@@ -17,9 +17,9 @@ const MuscleGroupDetail: React.FC<MuscleGroupDetailProps> = ({
   children = [],
 }) => {
   const categoryColors = {
-    UPPER_BODY: 'bg-blue-50 border-blue-200',
-    LOWER_BODY: 'bg-green-50 border-green-200',
-    CORE: 'bg-purple-50 border-purple-200',
+    upper_body: 'bg-blue-50 border-blue-200',
+    lower_body: 'bg-green-50 border-green-200',
+    core: 'bg-purple-50 border-purple-200',
   };
 
   const categoryClass =

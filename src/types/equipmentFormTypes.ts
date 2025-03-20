@@ -1,13 +1,13 @@
 // src/types/equipmentFormTypes.ts
 
 export type EquipmentCategory =
-  | 'FREE_WEIGHTS'
-  | 'MACHINES'
-  | 'CABLES'
-  | 'BODYWEIGHT'
-  | 'CARDIO'
-  | 'ACCESSORIES'
-  | 'OTHER';
+  | 'free_weights'
+  | 'machines'
+  | 'cables'
+  | 'bodyweight'
+  | 'cardio'
+  | 'accessories'
+  | 'other';
 
 export interface EquipmentAlternativeFormData {
   name: string;
@@ -29,7 +29,7 @@ export interface EquipmentFormData {
 export const defaultEquipmentFormData: EquipmentFormData = {
   name: '',
   description: '',
-  category: 'FREE_WEIGHTS',
+  category: 'free_weights',
   isCommon: true,
   alternatives: {
     equipment_options: [],
@@ -65,11 +65,11 @@ export const FORM_SECTIONS = {
 };
 
 export const CATEGORY_OPTIONS = [
-  { value: 'FREE_WEIGHTS', label: 'Free Weights' },
-  { value: 'MACHINES', label: 'Machines' },
-  { value: 'CABLES', label: 'Cables' },
-  { value: 'BODYWEIGHT', label: 'Bodyweight' },
-  { value: 'CARDIO', label: 'Cardio Equipment' },
-  { value: 'ACCESSORIES', label: 'Accessories' },
-  { value: 'OTHER', label: 'Other' },
+  { value: 'free_weights', label: 'Free Weights' },
+  { value: 'machines', label: 'Machines' },
+  { value: 'cables', label: 'Cables' },
+  { value: 'bodyweight', label: 'Bodyweight' },
+  { value: 'cardio', label: 'Cardio Equipment' },
+  { value: 'accessories', label: 'Accessories' },
+  { value: 'other', label: 'Other' },
 ];

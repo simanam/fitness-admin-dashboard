@@ -4,19 +4,20 @@ import { ArrowLeft } from 'lucide-react';
 import AdminUserForm from '../../components/users/AdminUserForm';
 import useAdminUserForm from '../../hooks/useAdminUserForm';
 import { defaultAdminUserFormData } from '../../types/adminUserFormTypes';
+import { AdminRole } from '../../types/adminUserFormTypes';
 
 const AdminUserCreate = () => {
   const navigate = useNavigate();
-  const { isSubmitting, handleSubmit, handleCancel, initialData } =
-    useAdminUserForm({
-      initialData: defaultAdminUserFormData,
-    });
+  const { isSubmitting, handleSubmit, handleCancel } = useAdminUserForm({
+    initialData: defaultAdminUserFormData,
+  });
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center">
         <button
+          type="button"
           onClick={() => navigate('/users')}
           className="mr-4 p-1 rounded-full text-gray-500 hover:bg-gray-100"
         >
@@ -37,7 +38,7 @@ const AdminUserCreate = () => {
         </div>
         <div className="px-4 py-5 sm:p-6">
           <AdminUserForm
-            initialData={initialData}
+            initialData={{ email: '', password: '', role: AdminRole.READONLY }}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             isSubmitting={isSubmitting}

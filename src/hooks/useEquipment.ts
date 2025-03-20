@@ -49,6 +49,7 @@ export const useEquipment = () => {
       };
 
       const response = await equipmentService.getEquipment(params);
+
       setEquipment(response.data);
       setTotalPages(response.meta.totalPages);
       setTotalItems(response.meta.total);
@@ -87,7 +88,7 @@ export const useEquipment = () => {
     setCurrentPage(1); // Reset to first page on new filter
   };
 
-  const handleIsCommonFilterChange = (isCommon: boolean | undefined) => {
+  const handleIsCommonFilterChange = (isCommon: boolean) => {
     setIsCommonFilter(isCommon);
     setCurrentPage(1); // Reset to first page on new filter
   };
@@ -129,13 +130,13 @@ export const useEquipment = () => {
   // Get all available categories for filtering
   const getAvailableCategories = (): { value: string; label: string }[] => {
     const categories = [
-      { value: 'FREE_WEIGHTS', label: 'Free Weights' },
-      { value: 'MACHINES', label: 'Machines' },
-      { value: 'CABLES', label: 'Cables' },
-      { value: 'BODYWEIGHT', label: 'Bodyweight' },
-      { value: 'CARDIO', label: 'Cardio' },
-      { value: 'ACCESSORIES', label: 'Accessories' },
-      { value: 'OTHER', label: 'Other' },
+      { value: 'free_weights', label: 'Free Weights' },
+      { value: 'machines', label: 'Machines' },
+      { value: 'cables', label: 'Cables' },
+      { value: 'bodyweight', label: 'Bodyweight' },
+      { value: 'cardio', label: 'Cardio' },
+      { value: 'accessories', label: 'Accessories' },
+      // { value: 'other', label: 'Other' },
     ];
 
     return categories;

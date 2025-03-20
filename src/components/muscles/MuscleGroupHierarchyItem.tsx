@@ -74,9 +74,9 @@ const MuscleGroupHierarchyItem: React.FC<MuscleGroupHierarchyItemProps> = ({
   };
 
   const categoryColors = {
-    UPPER_BODY: 'bg-blue-100 text-blue-800',
-    LOWER_BODY: 'bg-green-100 text-green-800',
-    CORE: 'bg-purple-100 text-purple-800',
+    upper_body: 'bg-blue-100 text-blue-800',
+    lower_body: 'bg-green-100 text-green-800',
+    core: 'bg-purple-100 text-purple-800',
   };
 
   const paddingLeft = `${level * 24}px`;
@@ -102,9 +102,9 @@ const MuscleGroupHierarchyItem: React.FC<MuscleGroupHierarchyItemProps> = ({
         <button
           onClick={() => setExpanded(!expanded)}
           className="p-2 text-gray-500 hover:text-gray-700"
-          disabled={item.children.length === 0}
+          disabled={item?.children?.length === 0}
         >
-          {item.children.length > 0 ? (
+          {item?.children?.length > 0 ? (
             expanded ? (
               <ChevronDown size={16} />
             ) : (
@@ -156,7 +156,7 @@ const MuscleGroupHierarchyItem: React.FC<MuscleGroupHierarchyItemProps> = ({
         </div>
       </div>
 
-      {expanded && item.children.length > 0 && (
+      {expanded && item?.children?.length > 0 && (
         <div className="border-l border-gray-200 ml-10">
           {item.children.map((child) => (
             <MuscleGroupHierarchyItem

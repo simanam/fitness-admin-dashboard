@@ -1,3 +1,4 @@
+// src/components/muscles/form/MuscleForm.tsx
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Save, X } from 'lucide-react';
@@ -12,6 +13,7 @@ interface MuscleFormProps {
   onSubmit: (data: MuscleFormData) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
+  muscleId?: string;
 }
 
 const MuscleForm: React.FC<MuscleFormProps> = ({
@@ -19,9 +21,13 @@ const MuscleForm: React.FC<MuscleFormProps> = ({
   onSubmit,
   onCancel,
   isSubmitting = false,
+  muscleId,
 }) => {
   const methods = useForm<MuscleFormData>({
-    defaultValues: initialData,
+    defaultValues: {
+      ...initialData,
+      keepExistingSvg: muscleId ? true : false,
+    },
     mode: 'onChange',
     rules: FORM_VALIDATION_RULES,
   });
@@ -35,7 +41,7 @@ const MuscleForm: React.FC<MuscleFormProps> = ({
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {/* Form content */}
-        <BasicInfoSection />
+        <BasicInfoSection muscleId={muscleId} />
 
         {/* Action buttons */}
         <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">

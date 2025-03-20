@@ -136,9 +136,9 @@ const MuscleGroupReorder: React.FC<MuscleGroupReorderProps> = ({
                   <div className="font-medium text-gray-900">{item.name}</div>
                   <div
                     className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
-                      item.category === 'UPPER_BODY'
+                      item.category === 'upper_body'
                         ? 'bg-blue-100 text-blue-800'
-                        : item.category === 'LOWER_BODY'
+                        : item.category === 'lower_body'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-purple-100 text-purple-800'
                     }`}

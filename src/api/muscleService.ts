@@ -14,7 +14,7 @@ export interface Muscle {
 export interface MuscleGroup {
   id: string;
   name: string;
-  category: 'UPPER_BODY' | 'LOWER_BODY' | 'CORE';
+  category: 'upper_body' | 'lower_body' | 'core';
   description: string | null;
   parentGroupId: string | null;
   muscles?: Muscle[];
@@ -133,7 +133,11 @@ export const muscleService = {
 
   // Create a muscle with SVG
   createMuscleWithSvg: async (formData: FormData): Promise<Muscle> => {
-    const response = await apiClient.post('/muscles', formData, {
+    console.log('FormData contents:');
+    for (const pair of formData.entries()) {
+      console.log(pair[0], ':', pair[1]);
+    }
+    const response = await apiClient.post('/muscles/with-svg', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

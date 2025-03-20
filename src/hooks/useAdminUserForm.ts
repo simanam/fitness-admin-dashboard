@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from './useToast';
 import adminUserService from '../api/adminUserService';
+import { AdminRole } from '../types/adminUserFormTypes';
 
 export interface AdminUserFormData {
   email: string;
   password?: string;
-  role: 'EDITOR' | 'READONLY';
+  role: AdminRole;
 }
 
 interface UseAdminUserFormProps {
@@ -20,7 +21,7 @@ export const useAdminUserForm = ({
   initialData = {
     email: '',
     password: '',
-    role: 'READONLY',
+    role: AdminRole.READONLY,
   },
 }: UseAdminUserFormProps = {}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -17,9 +17,9 @@ const MuscleGroupFilter: React.FC<MuscleGroupFilterProps> = ({
   const [showInfo, setShowInfo] = useState(false);
 
   const categoryColors = {
-    UPPER_BODY: 'bg-blue-100 text-blue-800',
-    LOWER_BODY: 'bg-green-100 text-green-800',
-    CORE: 'bg-purple-100 text-purple-800',
+    upper_body: 'bg-blue-100 text-blue-800',
+    lower_body: 'bg-green-100 text-green-800',
+    core: 'bg-purple-100 text-purple-800',
   };
 
   if (isLoading) {

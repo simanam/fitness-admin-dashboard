@@ -56,14 +56,16 @@ function App() {
 
                   {/* Muscles */}
                   <Route path="muscles">
-                    <Route index element={<MuscleList />} />
-                    <Route path="new" element={<CreateMusclePage />} />
-                    <Route path=":id/edit" element={<EditMusclePage />} />
                     <Route
                       path="groups"
                       element={<MuscleGroupsManagementPage />}
                     />
+
+                    <Route path="new" element={<CreateMusclePage />} />
+                    <Route path=":id/edit" element={<EditMusclePage />} />
+
                     <Route path=":id" element={<MuscleDetail />} />
+                    <Route index element={<MuscleList />} />
                   </Route>
 
                   {/* Equipment */}

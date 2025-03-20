@@ -5,13 +5,13 @@ export interface Equipment {
   id: string;
   name: string;
   category:
-    | 'FREE_WEIGHTS'
-    | 'MACHINES'
-    | 'CABLES'
-    | 'BODYWEIGHT'
-    | 'CARDIO'
-    | 'ACCESSORIES'
-    | 'OTHER';
+    | 'free_weights'
+    | 'machines'
+    | 'cables'
+    | 'bodyweight'
+    | 'cardio'
+    | 'accessories'
+    | 'other';
   description: string | null;
   isCommon: boolean;
   alternatives?: {
@@ -63,7 +63,8 @@ export const equipmentService = {
   },
 
   // Get equipment with pagination
-  getEquipmentWithPagination: async (
+  // Get equipment with pagination and filters
+  getEquipment: async (
     params: EquipmentFilterParams = {}
   ): Promise<PaginatedResponse<Equipment>> => {
     const queryParams = new URLSearchParams();

@@ -1,3 +1,4 @@
+// src/types/muscleFormTypes.ts
 import { z } from 'zod';
 
 export interface MuscleFormData {
@@ -6,6 +7,7 @@ export interface MuscleFormData {
   description?: string;
   muscleGroupId: string;
   svgFile?: File;
+  keepExistingSvg?: boolean;
 }
 
 export const defaultMuscleFormData: MuscleFormData = {
@@ -13,7 +15,7 @@ export const defaultMuscleFormData: MuscleFormData = {
   commonName: '',
   description: '',
   muscleGroupId: '',
-  svgUrl: '',
+  keepExistingSvg: true,
 };
 
 export const FORM_VALIDATION_RULES = {
@@ -21,10 +23,6 @@ export const FORM_VALIDATION_RULES = {
     required: 'Name is required',
     minLength: { value: 2, message: 'Name must be at least 2 characters' },
     maxLength: { value: 100, message: 'Name must be less than 100 characters' },
-    pattern: {
-      value: /^[A-Za-z\s-]+$/,
-      message: 'Name must contain only letters, spaces, and hyphens',
-    },
   },
   commonName: {
     maxLength: {

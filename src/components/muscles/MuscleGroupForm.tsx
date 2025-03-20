@@ -9,7 +9,7 @@ import { MuscleGroup } from '../../api/muscleService';
 
 interface MuscleGroupFormData {
   name: string;
-  category: 'UPPER_BODY' | 'LOWER_BODY' | 'CORE';
+  category: 'upper_body' | 'lower_body' | 'core';
   description: string;
   parentGroupId: string | null;
 }
@@ -37,7 +37,7 @@ const MuscleGroupForm: React.FC<MuscleGroupFormProps> = ({
   } = useForm<MuscleGroupFormData>({
     defaultValues: {
       name: initialData?.name || '',
-      category: initialData?.category || 'UPPER_BODY',
+      category: initialData?.category || 'upper_body',
       description: initialData?.description || '',
       parentGroupId: initialData?.parentGroupId || null,
     },
@@ -52,7 +52,7 @@ const MuscleGroupForm: React.FC<MuscleGroupFormProps> = ({
     if (initialData) {
       reset({
         name: initialData.name || '',
-        category: initialData.category || 'UPPER_BODY',
+        category: initialData.category || 'upper_body',
         description: initialData.description || '',
         parentGroupId: initialData.parentGroupId || null,
       });
@@ -92,9 +92,9 @@ const MuscleGroupForm: React.FC<MuscleGroupFormProps> = ({
             className="mt-1"
             disabled={isSubmitting || isLoading}
           >
-            <option value="UPPER_BODY">Upper Body</option>
-            <option value="LOWER_BODY">Lower Body</option>
-            <option value="CORE">Core</option>
+            <option value="upper_body">Upper Body</option>
+            <option value="lower_body">Lower Body</option>
+            <option value="core">Core</option>
           </Select>
           {errors.category && (
             <p className="mt-1 text-sm text-red-600">
