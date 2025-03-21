@@ -4,7 +4,7 @@ import apiClient from './client';
 export interface Exercise {
   id: string;
   name: string;
-  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
   movement_pattern: string;
   mechanics: 'COMPOUND' | 'ISOLATION';
   force: 'PUSH' | 'PULL';
@@ -37,7 +37,7 @@ export interface ExerciseFilterParams {
   page?: number;
   per_page?: number;
   sort?: string;
-  order?: 'asc' | 'desc';
+  order?: 'ASC' | 'DESC'; // Changed from lowercase to uppercase
 }
 
 export const exerciseService = {
@@ -50,13 +50,20 @@ export const exerciseService = {
     // Add all params to query string
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== '') {
-        queryParams.append(key, String(value));
+        // Convert order parameter to uppercase if it exists
+        if (key === 'order' && typeof value === 'string') {
+          queryParams.append(key, value.toUpperCase());
+        } else {
+          queryParams.append(key, String(value));
+        }
       }
     });
 
     const response = await apiClient.get(
       `/exercises?${queryParams.toString()}`
     );
+
+    console.log(response, 'execros');
 
     return response.data;
   },

@@ -1,24 +1,28 @@
 // src/types/exerciseFormTypes.ts
 
-export type ExerciseDifficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+export type ExerciseDifficulty = 'beginner' | 'intermediate' | 'advanced';
 
 export type MovementPattern =
-  | 'SQUAT'
-  | 'HINGE'
-  | 'PUSH'
-  | 'PULL'
-  | 'CARRY'
-  | 'ROTATION'
-  | 'LUNGE'
-  | 'CORE';
+  | 'squat'
+  | 'hinge'
+  | 'push'
+  | 'pull'
+  | 'carry'
+  | 'rotation'
+  | 'lunge'
+  | 'core';
 
-export type Mechanics = 'COMPOUND' | 'ISOLATION';
+export type Mechanics = 'compound' | 'isolation';
 
-export type Force = 'PUSH' | 'PULL';
+export type Force = 'push' | 'pull';
 
-export type PlaneOfMotion = 'SAGITTAL' | 'FRONTAL' | 'TRANSVERSE';
+export type PlaneOfMotion =
+  | 'sagittal'
+  | 'frontal'
+  | 'transverse'
+  | 'multi-planar';
 
-export type ExerciseStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+export type ExerciseStatus = 'draft' | 'published' | 'archived';
 
 export interface ExerciseFormData {
   name: string;
@@ -37,14 +41,14 @@ export interface ExerciseFormData {
 export const defaultExerciseFormData: ExerciseFormData = {
   name: '',
   description: '',
-  difficulty: 'BEGINNER',
-  movement_pattern: 'SQUAT',
-  mechanics: 'COMPOUND',
-  force: 'PUSH',
+  difficulty: 'beginner',
+  movement_pattern: 'squat',
+  mechanics: 'compound',
+  force: 'push',
   equipment_required: false,
   bilateral: true,
-  plane_of_motion: 'SAGITTAL',
-  status: 'DRAFT',
+  plane_of_motion: 'sagittal',
+  status: 'draft',
   instructions: '',
 };
 

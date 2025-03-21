@@ -46,6 +46,7 @@ export const useMuscleForm = ({
 
       if (muscleId) {
         // Update existing muscle
+
         await muscleService.updateMuscleWithSvg(muscleId, formData);
         showToast({
           type: 'success',

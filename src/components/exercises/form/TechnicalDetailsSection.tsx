@@ -28,14 +28,14 @@ const TechnicalDetailsSection: React.FC = () => {
           helperText="The primary movement pattern of the exercise"
         >
           <Select {...register('movement_pattern')} className="mt-1">
-            <option value="SQUAT">Squat</option>
-            <option value="HINGE">Hinge</option>
-            <option value="PUSH">Push</option>
-            <option value="PULL">Pull</option>
-            <option value="CARRY">Carry</option>
-            <option value="ROTATION">Rotation</option>
-            <option value="LUNGE">Lunge</option>
-            <option value="CORE">Core</option>
+            <option value="squat">Squat</option>
+            <option value="hinge">Hinge</option>
+            <option value="push">Push</option>
+            <option value="pull">Pull</option>
+            <option value="carry">Carry</option>
+            <option value="rotation">Rotation</option>
+            <option value="lunge">Lunge</option>
+            <option value="core">Core</option>
           </Select>
         </FormField>
 
@@ -46,8 +46,8 @@ const TechnicalDetailsSection: React.FC = () => {
           helperText="Type of mechanical movement"
         >
           <Select {...register('mechanics')} className="mt-1">
-            <option value="COMPOUND">Compound</option>
-            <option value="ISOLATION">Isolation</option>
+            <option value="compound">Compound</option>
+            <option value="isolation">Isolation</option>
           </Select>
         </FormField>
 
@@ -58,8 +58,8 @@ const TechnicalDetailsSection: React.FC = () => {
           helperText="Primary force application"
         >
           <Select {...register('force')} className="mt-1">
-            <option value="PUSH">Push</option>
-            <option value="PULL">Pull</option>
+            <option value="push">Push</option>
+            <option value="pull">Pull</option>
           </Select>
         </FormField>
 
@@ -70,9 +70,10 @@ const TechnicalDetailsSection: React.FC = () => {
           helperText="Primary plane of movement"
         >
           <Select {...register('plane_of_motion')} className="mt-1">
-            <option value="SAGITTAL">Sagittal</option>
-            <option value="FRONTAL">Frontal</option>
-            <option value="TRANSVERSE">Transverse</option>
+            <option value="sagittal">Sagittal</option>
+            <option value="frontal">Frontal</option>
+            <option value="transverse">Transverse</option>
+            <option value="multi-planar">Multi-Palnar</option>
           </Select>
         </FormField>
 

@@ -133,10 +133,10 @@ export const muscleService = {
 
   // Create a muscle with SVG
   createMuscleWithSvg: async (formData: FormData): Promise<Muscle> => {
-    console.log('FormData contents:');
-    for (const pair of formData.entries()) {
-      console.log(pair[0], ':', pair[1]);
-    }
+    // console.log('FormData contents:');
+    // for (const pair of formData.entries()) {
+    //   console.log(pair[0], ':', pair[1]);
+    // }
     const response = await apiClient.post('/muscles/with-svg', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -146,14 +146,35 @@ export const muscleService = {
   },
 
   // Update a muscle with SVG
+  // updateMuscleWithSvg: async (
+  //   id: string,
+  //   formData: FormData
+  // ): Promise<Muscle> => {
+  //   const response = await apiClient.put(`/muscles/${id}`, formData, {
+  //     headers: {
+  //       'Content-Type': 'multipart/form-data',
+  //     },
+  //   });
+  //   return response.data.data;
+  // },
+
+  // Update a muscle with SVG
   updateMuscleWithSvg: async (
     id: string,
     formData: FormData
   ): Promise<Muscle> => {
-    const response = await apiClient.put(`/muscles/${id}`, formData, {
+    // Debug: Log FormData contents
+    // console.log('FormData contents for update:');
+    // for (const pair of formData.entries()) {
+    //   console.log(pair[0], ':', pair[1]);
+    // }
+
+    // Let Axios set the correct Content-Type with boundary
+    const response = await apiClient.put(`/muscles/${id}/with-svg`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      // Don't use transformRequest here as it can interfere with FormData processing
     });
     return response.data.data;
   },

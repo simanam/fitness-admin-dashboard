@@ -38,13 +38,13 @@ const ExerciseForm = () => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
-    difficulty: 'INTERMEDIATE',
-    movement_pattern: 'SQUAT',
-    mechanics: 'COMPOUND',
-    force: 'PUSH',
+    difficulty: 'intermediate',
+    movement_pattern: 'squat',
+    mechanics: 'compound',
+    force: 'push',
     equipment_required: false,
     bilateral: true,
-    plane_of_motion: 'SAGITTAL',
+    plane_of_motion: 'sagittal',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -65,13 +65,13 @@ const ExerciseForm = () => {
         setFormData({
           name: exercise.name || '',
           description: exercise.description || '',
-          difficulty: exercise.difficulty || 'INTERMEDIATE',
-          movement_pattern: exercise.movement_pattern || 'SQUAT',
-          mechanics: exercise.mechanics || 'COMPOUND',
-          force: exercise.force || 'PUSH',
+          difficulty: exercise.difficulty || 'intermediate',
+          movement_pattern: exercise.movement_pattern || 'squat',
+          mechanics: exercise.mechanics || 'compound',
+          force: exercise.force || 'push',
           equipment_required: exercise.equipment_required || false,
           bilateral: exercise.bilateral || true,
-          plane_of_motion: exercise.plane_of_motion || 'SAGITTAL',
+          plane_of_motion: exercise.plane_of_motion || 'sagittal',
         });
       } catch (error) {
         console.error('Error fetching exercise:', error);
@@ -324,9 +324,9 @@ const ExerciseForm = () => {
               value={formData.difficulty}
               onChange={handleChange}
               options={[
-                { value: 'BEGINNER', label: 'Beginner' },
-                { value: 'INTERMEDIATE', label: 'Intermediate' },
-                { value: 'ADVANCED', label: 'Advanced' },
+                { value: 'beginner', label: 'Beginner' },
+                { value: 'intermediate', label: 'Intermediate' },
+                { value: 'advanced', label: 'Advanced' },
               ]}
             />
 
@@ -336,14 +336,14 @@ const ExerciseForm = () => {
               value={formData.movement_pattern}
               onChange={handleChange}
               options={[
-                { value: 'SQUAT', label: 'Squat' },
-                { value: 'HINGE', label: 'Hinge' },
-                { value: 'PUSH', label: 'Push' },
-                { value: 'PULL', label: 'Pull' },
-                { value: 'CARRY', label: 'Carry' },
-                { value: 'ROTATION', label: 'Rotation' },
-                { value: 'LUNGE', label: 'Lunge' },
-                { value: 'CORE', label: 'Core' },
+                { value: 'squat', label: 'Squat' },
+                { value: 'hinge', label: 'Hinge' },
+                { value: 'push', label: 'Push' },
+                { value: 'pull', label: 'Pull' },
+                { value: 'carry', label: 'Carry' },
+                { value: 'rotation', label: 'Rotation' },
+                { value: 'lunge', label: 'Lunge' },
+                { value: 'core', label: 'Core' },
               ]}
             />
 
@@ -353,8 +353,8 @@ const ExerciseForm = () => {
               value={formData.mechanics}
               onChange={handleChange}
               options={[
-                { value: 'COMPOUND', label: 'Compound' },
-                { value: 'ISOLATION', label: 'Isolation' },
+                { value: 'compound', label: 'Compound' },
+                { value: 'isolation', label: 'Isolation' },
               ]}
               helperText="Compound exercises work multiple muscle groups, isolation exercises focus on a single muscle group."
             />
@@ -365,8 +365,8 @@ const ExerciseForm = () => {
               value={formData.force}
               onChange={handleChange}
               options={[
-                { value: 'PUSH', label: 'Push' },
-                { value: 'PULL', label: 'Pull' },
+                { value: 'push', label: 'Push' },
+                { value: 'pull', label: 'Pull' },
               ]}
             />
 
@@ -376,11 +376,11 @@ const ExerciseForm = () => {
               value={formData.plane_of_motion}
               onChange={handleChange}
               options={[
-                { value: 'SAGITTAL', label: 'Sagittal - Front to Back' },
-                { value: 'FRONTAL', label: 'Frontal - Side to Side' },
-                { value: 'TRANSVERSE', label: 'Transverse - Rotational' },
+                { value: 'sagittal', label: 'Sagittal - Front to Back' },
+                { value: 'frontal', label: 'Frontal - Side to Side' },
+                { value: 'transverse', label: 'Transverse - Rotational' },
                 {
-                  value: 'MULTI_PLANAR',
+                  value: 'multi-planar',
                   label: 'Multi-Planar - Multiple Planes',
                 },
               ]}

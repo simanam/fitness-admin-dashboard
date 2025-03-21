@@ -57,9 +57,9 @@ const BasicInfoSection: React.FC = () => {
           helperText="Select the appropriate difficulty level"
         >
           <Select {...register('difficulty')} className="mt-1">
-            <option value="BEGINNER">Beginner</option>
-            <option value="INTERMEDIATE">Intermediate</option>
-            <option value="ADVANCED">Advanced</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
           </Select>
         </FormField>
 
