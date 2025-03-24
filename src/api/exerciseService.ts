@@ -4,6 +4,7 @@ import apiClient from './client';
 export interface Exercise {
   id: string;
   name: string;
+  description: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   movement_pattern: string;
   mechanics: 'COMPOUND' | 'ISOLATION';
@@ -14,6 +15,7 @@ export interface Exercise {
   plane_of_motion: string;
   created_at: string;
   updated_at: string;
+  instructions?: string; // Add this field if it's missing
 }
 
 export interface PaginatedResponse<T> {

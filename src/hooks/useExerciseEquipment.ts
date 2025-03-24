@@ -36,11 +36,16 @@ export const useExerciseEquipment = ({
   const fetchData = async () => {
     setIsLoading(true);
     try {
+      console.log('Fetching equipment data for exercise:', exerciseId);
+
       // Fetch both equipment links and available equipment in parallel
       const [linksData, allEquipment] = await Promise.all([
         exerciseEquipmentService.getEquipmentLinks(exerciseId),
         equipmentService.getAllEquipment(),
       ]);
+
+      console.log('Equipment links received:', linksData);
+      console.log('All available equipment:', allEquipment);
 
       // Sort links by order
       const sortedLinks = [...linksData].sort((a, b) => a.order - b.order);
@@ -59,9 +64,18 @@ export const useExerciseEquipment = ({
       const available = allEquipment.filter(
         (item) => !linkedIds.includes(item.id)
       );
+
+      console.log('Available equipment (not yet linked):', available);
       setAvailableEquipment(available);
     } catch (error) {
       console.error('Error fetching equipment data:', error);
+
+      // More detailed error logging
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+      }
+
       showToast({
         type: 'error',
         title: 'Error',

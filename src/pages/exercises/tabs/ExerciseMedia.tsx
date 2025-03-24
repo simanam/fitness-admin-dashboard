@@ -1,5 +1,5 @@
 // src/pages/exercises/tabs/ExerciseMedia.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Upload,
   CheckCircle,
@@ -7,14 +7,16 @@ import {
   Layers,
   Camera,
 } from 'lucide-react';
-import { useMediaManagement } from '../../../hooks/useMediaManagement';
+import { useToast } from '../../../hooks/useToast';
 import MediaUploader from '../../../components/media/MediaUploader';
 import MediaGallery from '../../../components/media/MediaGallery';
 import MediaReorder from '../../../components/media/MediaReorder';
+import ConfirmationDialog from '../../../components/ui/confirmation-dialog';
+import EmptyState from '../../../components/ui/empty-state';
+import { useMediaManagement } from '../../../hooks/useMediaManagement';
 import MediaCompletenessChecker from '../../../components/media/MediaCompletenessChecker';
 import MediaStatistics from '../../../components/media/MediaStatistics';
 import MediaAngleCoverage from '../../../components/media/MediaAngleCoverage';
-import ConfirmationDialog from '../../../components/ui/confirmation-dialog';
 
 interface ExerciseMediaProps {
   exerciseId: string;
@@ -26,6 +28,7 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
     mediaFiles,
     isLoading,
     isDeleting,
+    error,
     uploadMedia,
     removeMedia,
     setPrimaryMedia,
@@ -34,6 +37,7 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
     fetchMedia,
   } = useMediaManagement({ exerciseId });
 
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'gallery' | 'upload' | 'reorder'>(
     'gallery'
   );
@@ -56,13 +60,12 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
   // Confirm media deletion
   const confirmDeleteMedia = async () => {
     if (!mediaToDelete) return;
-
     await removeMedia(mediaToDelete);
     setShowDeleteDialog(false);
     setMediaToDelete(null);
   };
 
-  // Direct upload request with specified angle
+  // Request to upload media for a specific angle
   const handleRequestUploadForAngle = (viewAngle: string) => {
     setActiveTab('upload');
 
@@ -76,16 +79,49 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
     }, 100);
   };
 
+  // Display error state if the hook encountered any errors
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+        <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-red-900 mb-2">
+          Problem Loading Media
+        </h3>
+        <p className="text-red-700 mb-4">{error}</p>
+        <button
+          onClick={() => fetchMedia()}
+          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  // Display loading state
+  if (isLoading && media.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Media Statistics & Completeness Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <MediaCompletenessChecker
-          exerciseId={exerciseId}
-          onCheck={fetchMedia}
-        />
+        {/* These components should be properly implemented elsewhere */}
+        {typeof MediaCompletenessChecker !== 'undefined' && (
+          <MediaCompletenessChecker
+            exerciseId={exerciseId}
+            onCheck={fetchMedia}
+          />
+        )}
 
-        <MediaStatistics exerciseId={exerciseId} />
+        {typeof MediaStatistics !== 'undefined' && (
+          <MediaStatistics exerciseId={exerciseId} />
+        )}
       </div>
 
       {/* Tab navigation */}
@@ -126,19 +162,37 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
       <div>
         {activeTab === 'gallery' && (
           <div className="space-y-6">
-            {/* Angle Coverage Overview */}
-            <MediaAngleCoverage
-              media={media}
-              onRequestUpload={handleRequestUploadForAngle}
-            />
+            {/* Angle Coverage Overview - if component exists */}
+            {typeof MediaAngleCoverage !== 'undefined' && (
+              <MediaAngleCoverage
+                media={media}
+                onRequestUpload={handleRequestUploadForAngle}
+              />
+            )}
 
             {/* Gallery Component */}
-            <MediaGallery
-              media={media}
-              onSetPrimary={setPrimaryMedia}
-              onDelete={handleRemoveMedia}
-              isLoading={isLoading}
-            />
+            {media.length > 0 ? (
+              <MediaGallery
+                media={media}
+                onSetPrimary={setPrimaryMedia}
+                onDelete={handleRemoveMedia}
+                isLoading={isLoading}
+              />
+            ) : (
+              <EmptyState
+                icon={<Camera size={36} className="text-gray-400" />}
+                title="No media available"
+                description="Upload images, videos, or SVGs to showcase this exercise."
+                action={
+                  <button
+                    onClick={() => setActiveTab('upload')}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-black hover:bg-gray-800"
+                  >
+                    Upload Media
+                  </button>
+                }
+              />
+            )}
           </div>
         )}
 
@@ -196,7 +250,7 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
           </div>
         )}
 
-        {activeTab === 'reorder' && (
+        {activeTab === 'reorder' && media.length > 0 && (
           <MediaReorder media={media} onReorder={reorderMedia} />
         )}
       </div>
@@ -227,7 +281,6 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
           </div>
         }
         confirmText="Delete"
-        cancelText="Cancel"
         type="danger"
         isLoading={isDeleting}
       />

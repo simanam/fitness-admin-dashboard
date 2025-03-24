@@ -1,13 +1,40 @@
 // src/components/exercises/form/TechnicalDetailsSection.tsx
-import React from 'react';
-import { useFormContext } from 'react-hook-form';
+// Update to include equipment selection
+
+import React, { useState, useEffect } from 'react';
+import { useFormContext, Controller } from 'react-hook-form';
 import { Select } from '../../../components/ui/select';
 import { Checkbox } from '../../../components/ui/checkbox';
 import FormField from './FormField';
 import { FORM_SECTIONS } from '../../../types/exerciseFormTypes';
+import equipmentService from '../../../api/equipmentService';
 
 const TechnicalDetailsSection: React.FC = () => {
-  const { register } = useFormContext();
+  const { register, watch, control } = useFormContext();
+  const equipmentRequired = watch('equipment_required');
+  const [equipment, setEquipment] = useState<{ id: string; name: string }[]>(
+    []
+  );
+  const [isLoadingEquipment, setIsLoadingEquipment] = useState(false);
+
+  // Load equipment options when equipment_required is checked
+  useEffect(() => {
+    if (equipmentRequired) {
+      const fetchEquipment = async () => {
+        setIsLoadingEquipment(true);
+        try {
+          const data = await equipmentService.getAllEquipment();
+          setEquipment(data.map((item) => ({ id: item.id, name: item.name })));
+        } catch (error) {
+          console.error('Error fetching equipment:', error);
+        } finally {
+          setIsLoadingEquipment(false);
+        }
+      };
+
+      fetchEquipment();
+    }
+  }, [equipmentRequired]);
 
   return (
     <div className="space-y-6">
@@ -21,6 +48,7 @@ const TechnicalDetailsSection: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Original technical details fields... */}
         <FormField
           name="movement_pattern"
           label="Movement Pattern"
@@ -73,7 +101,7 @@ const TechnicalDetailsSection: React.FC = () => {
             <option value="sagittal">Sagittal</option>
             <option value="frontal">Frontal</option>
             <option value="transverse">Transverse</option>
-            <option value="multi-planar">Multi-Palnar</option>
+            <option value="multi-planar">Multi-Planar</option>
           </Select>
         </FormField>
 
@@ -86,6 +114,41 @@ const TechnicalDetailsSection: React.FC = () => {
               helperText="Check if this exercise requires equipment"
             />
           </div>
+
+          {/* Show equipment selection when equipment_required is checked */}
+          {equipmentRequired && (
+            <div className="mt-4">
+              <FormField
+                name="primary_equipment"
+                label="Select Primary Equipment"
+                helperText="Choose the main equipment needed for this exercise"
+              >
+                <Controller
+                  name="primary_equipment"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      className="mt-1"
+                      disabled={isLoadingEquipment}
+                    >
+                      <option value="">Select equipment...</option>
+                      {equipment.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
+                />
+                {isLoadingEquipment && (
+                  <div className="mt-2 text-sm text-gray-500">
+                    Loading equipment options...
+                  </div>
+                )}
+              </FormField>
+            </div>
+          )}
 
           <div>
             <Checkbox
