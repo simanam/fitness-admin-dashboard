@@ -3,18 +3,18 @@
 export type ExerciseDifficulty = 'beginner' | 'intermediate' | 'advanced';
 
 export type MovementPattern =
-  | 'squat'
-  | 'hinge'
   | 'push'
   | 'pull'
+  | 'squat'
+  | 'hinge'
+  | 'lunge'
   | 'carry'
   | 'rotation'
-  | 'lunge'
-  | 'core';
+  | 'gait';
 
 export type Mechanics = 'compound' | 'isolation';
 
-export type Force = 'push' | 'pull';
+export type Force = 'push' | 'pull' | 'carry' | 'static';
 
 export type PlaneOfMotion =
   | 'sagittal'
@@ -35,21 +35,59 @@ export interface ExerciseFormData {
   bilateral: boolean;
   plane_of_motion: PlaneOfMotion;
   status: ExerciseStatus;
-  instructions?: string;
+  setup_position?: string;
+  form_points?: {
+    setup: string[];
+    execution: string[];
+    breathing: string[];
+    alignment: string[];
+  };
+  common_mistakes?: {
+    mistakes: Array<{
+      description: string;
+      correction: string;
+      risk_level: 'low' | 'medium' | 'high';
+    }>;
+  };
+  safety_info?: {
+    risk_level: 'low' | 'medium' | 'high';
+    contraindications: Array<{
+      condition: string;
+      severity: 'absolute' | 'relative';
+      recommendation: string;
+    }>;
+    precautions: string[];
+    warning_signs: string[];
+  };
+  tempo_recommendations?: {
+    default: string;
+    variations?: Array<{
+      tempo: string;
+      purpose: string;
+      difficulty: string;
+    }>;
+    tempo_notes?: string;
+  };
 }
 
 export const defaultExerciseFormData: ExerciseFormData = {
   name: '',
   description: '',
   difficulty: 'beginner',
-  movement_pattern: 'squat',
+  movement_pattern: 'push',
   mechanics: 'compound',
   force: 'push',
   equipment_required: false,
   bilateral: true,
   plane_of_motion: 'sagittal',
   status: 'draft',
-  instructions: '',
+  setup_position: '',
+  form_points: {
+    setup: [],
+    execution: [],
+    breathing: [],
+    alignment: [],
+  },
 };
 
 export const FORM_VALIDATION_RULES = {
@@ -94,6 +132,10 @@ export const FORM_SECTIONS = {
   instructions: {
     title: 'Instructions',
     description: 'Provide detailed instructions for performing the exercise',
+  },
+  safety: {
+    title: 'Safety & Form',
+    description: 'Add safety information and form guidelines',
   },
   media: {
     title: 'Media',

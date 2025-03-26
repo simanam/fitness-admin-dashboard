@@ -5,66 +5,91 @@ import { ChevronRight, Save, X } from 'lucide-react';
 import {
   ExerciseFormData,
   FORM_VALIDATION_RULES,
+  FORM_SECTIONS,
 } from '../../../types/exerciseFormTypes';
 import BasicInfoSection from './BasicInfoSection';
 import TechnicalDetailsSection from './TechnicalDetailsSection';
 import InstructionsSection from './InstructionsSection';
-import MediaSection from './MediaSection';
+import SafetyFormSection from './SafetyFormSection';
+import MediaUploadSection from './MediaUploadSection';
 
 interface ExerciseFormProps {
   initialData?: ExerciseFormData;
-  exerciseId?: string;
-  onSubmit: (data: ExerciseFormData) => Promise<void>;
+  onSubmit: (data: ExerciseFormData, mediaFiles?: File[]) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
 
 const ExerciseForm: React.FC<ExerciseFormProps> = ({
   initialData,
-  exerciseId,
   onSubmit,
   onCancel,
   isSubmitting = false,
 }) => {
   const [activeSection, setActiveSection] = useState(0);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [mediaMetadata, setMediaMetadata] = useState<any[]>([]);
 
   const methods = useForm<ExerciseFormData>({
     defaultValues: initialData,
     mode: 'onChange',
-    rules: FORM_VALIDATION_RULES,
   });
 
   const {
     handleSubmit,
-    formState: { isDirty, isValid },
+    formState: { isDirty, isValid, errors },
   } = methods;
+
+  const handleFormSubmit = (data: ExerciseFormData) => {
+    onSubmit(data, mediaFiles.length > 0 ? mediaFiles : undefined);
+  };
+
+  const handleAddMedia = (file: File, metadata: any) => {
+    setMediaFiles([...mediaFiles, file]);
+    setMediaMetadata([...mediaMetadata, metadata]);
+  };
+
+  const handleRemoveMedia = (index: number) => {
+    const newFiles = [...mediaFiles];
+    const newMetadata = [...mediaMetadata];
+    newFiles.splice(index, 1);
+    newMetadata.splice(index, 1);
+    setMediaFiles(newFiles);
+    setMediaMetadata(newMetadata);
+  };
 
   const sections = [
     {
       id: 'basic',
-      title: 'Basic Information',
+      title: FORM_SECTIONS.basic.title,
       component: <BasicInfoSection />,
     },
     {
       id: 'technical',
-      title: 'Technical Details',
+      title: FORM_SECTIONS.technical.title,
       component: <TechnicalDetailsSection />,
     },
     {
       id: 'instructions',
-      title: 'Instructions',
+      title: FORM_SECTIONS.instructions.title,
       component: <InstructionsSection />,
     },
-    // Keep the Media section, but only show it when editing an existing exercise
-    ...(exerciseId
-      ? [
-          {
-            id: 'media',
-            title: 'Media',
-            component: <MediaSection exerciseId={exerciseId} />,
-          },
-        ]
-      : []),
+    {
+      id: 'safety',
+      title: FORM_SECTIONS.safety.title,
+      component: <SafetyFormSection />,
+    },
+    {
+      id: 'media',
+      title: FORM_SECTIONS.media.title,
+      component: (
+        <MediaUploadSection
+          onAddMedia={handleAddMedia}
+          onRemoveMedia={handleRemoveMedia}
+          mediaFiles={mediaFiles}
+        />
+      ),
+    },
   ];
 
   const handleNext = () => {
@@ -79,69 +104,18 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
     }
   };
 
-  const renderActionButtons = () => {
-    return (
-      <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-        <div>
-          {activeSection > 0 && (
-            <button
-              type="button"
-              onClick={handlePrevious}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-            >
-              Previous
-            </button>
-          )}
-        </div>
-        <div className="flex space-x-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            disabled={isSubmitting}
-          >
-            <X className="h-4 w-4 mr-1" />
-            Cancel
-          </button>
-
-          {/* For new exercise, show submit button on the last available section (Instructions) */}
-          {(!exerciseId && activeSection === sections.length - 1) ||
-          (exerciseId && activeSection === sections.length - 1) ? (
-            <button
-              type="submit"
-              disabled={!isDirty || !isValid || isSubmitting}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="h-4 w-4 mr-1" />
-              {isSubmitting ? 'Saving...' : 'Save Exercise'}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleNext}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800"
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
         {/* Progress steps */}
         <div className="border-b border-gray-200 pb-4">
-          <nav className="flex justify-between">
+          <nav className="flex flex-wrap justify-between">
             {sections.map((section, index) => (
               <React.Fragment key={section.id}>
                 <button
                   type="button"
                   onClick={() => setActiveSection(index)}
-                  className={`flex items-center ${
+                  className={`flex items-center mb-2 ${
                     index === activeSection
                       ? 'text-black'
                       : 'text-gray-500 hover:text-gray-700'
@@ -160,7 +134,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
                   </span>
                 </button>
                 {index < sections.length - 1 && (
-                  <ChevronRight className="h-5 w-5 text-gray-400 mx-2" />
+                  <ChevronRight className="h-5 w-5 text-gray-400 mx-2 hidden md:block" />
                 )}
               </React.Fragment>
             ))}
@@ -171,7 +145,50 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
         <div className="min-h-[400px]">{sections[activeSection].component}</div>
 
         {/* Navigation and action buttons */}
-        {renderActionButtons()}
+        <div className="flex justify-between items-center pt-6 border-t border-gray-200">
+          <div>
+            {activeSection > 0 && (
+              <button
+                type="button"
+                onClick={handlePrevious}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+              >
+                Previous
+              </button>
+            )}
+          </div>
+          <div className="flex space-x-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              disabled={isSubmitting}
+            >
+              <X className="h-4 w-4 mr-1" />
+              Cancel
+            </button>
+
+            {activeSection < sections.length - 1 ? (
+              <button
+                type="button"
+                onClick={handleNext}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800"
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!isValid || isSubmitting}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="h-4 w-4 mr-1" />
+                {isSubmitting ? 'Saving...' : 'Save Exercise'}
+              </button>
+            )}
+          </div>
+        </div>
       </form>
     </FormProvider>
   );

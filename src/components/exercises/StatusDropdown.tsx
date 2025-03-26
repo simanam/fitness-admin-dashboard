@@ -1,68 +1,85 @@
 // src/components/exercises/StatusDropdown.tsx
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { useExerciseStatus } from '../../hooks/useExerciseStatus';
-import StatusBadge from './StatusBadge';
 
 interface StatusDropdownProps {
   exerciseId: string;
   currentStatus: string;
-  onStatusChange?: () => void;
+  onStatusChange: () => void;
   disabled?: boolean;
 }
 
-export const StatusDropdown = ({
+const StatusDropdown: React.FC<StatusDropdownProps> = ({
   exerciseId,
   currentStatus,
   onStatusChange,
   disabled = false,
-}: StatusDropdownProps) => {
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const { updateStatus, isUpdating } = useExerciseStatus({
-    onSuccess: () => {
-      onStatusChange?.();
-      setIsOpen(false);
-    },
+    onSuccess: onStatusChange,
   });
 
-  const statusOptions = {
-    DRAFT: ['PUBLISHED', 'ARCHIVED'],
-    PUBLISHED: ['DRAFT', 'ARCHIVED'],
-    ARCHIVED: ['DRAFT', 'PUBLISHED'],
-  };
+  const statuses = [
+    { value: 'draft', label: 'Draft', color: 'bg-gray-100 text-gray-800' },
+    {
+      value: 'published',
+      label: 'Published',
+      color: 'bg-green-100 text-green-800',
+    },
+    {
+      value: 'archived',
+      label: 'Archived',
+      color: 'bg-yellow-100 text-yellow-800',
+    },
+  ];
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (isUpdating) return;
-    await updateStatus(exerciseId, newStatus);
+  const currentStatusObject =
+    statuses.find((s) => s.value === currentStatus.toLowerCase()) ||
+    statuses[0];
+
+  const handleStatusChange = async (status: string) => {
+    setIsOpen(false);
+    if (status !== currentStatus && !isUpdating && !disabled) {
+      await updateStatus(exerciseId, status);
+    }
   };
 
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-full ${
+          currentStatusObject.color
+        } ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
         disabled={disabled || isUpdating}
-        className="flex items-center space-x-1 focus:outline-none disabled:opacity-50"
       >
-        <StatusBadge status={currentStatus} />
-        <ChevronDown className="h-4 w-4 text-gray-500" />
+        <span>{currentStatusObject.label}</span>
+        {!disabled && <ChevronDown className="ml-1 h-3 w-3" />}
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-40 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-          <div className="py-1" role="menu">
-            {statusOptions[currentStatus as keyof typeof statusOptions].map(
-              (status) => (
+        <div className="absolute z-10 mt-1 w-36 bg-white rounded-md shadow-lg">
+          <ul className="py-1">
+            {statuses.map((status) => (
+              <li key={status.value}>
                 <button
-                  key={status}
-                  onClick={() => handleStatusChange(status)}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  role="menuitem"
+                  onClick={() => handleStatusChange(status.value)}
+                  className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between ${
+                    status.value === currentStatus.toLowerCase()
+                      ? 'bg-gray-100'
+                      : 'hover:bg-gray-50'
+                  }`}
                 >
-                  <StatusBadge status={status} />
+                  <span>{status.label}</span>
+                  {status.value === currentStatus.toLowerCase() && (
+                    <Check className="h-4 w-4 text-green-500" />
+                  )}
                 </button>
-              )
-            )}
-          </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

@@ -41,6 +41,7 @@ const ExerciseDetail = () => {
       setIsLoading(true);
       try {
         const data = await exerciseService.getExercise(id);
+        console.log(data, 'djdj');
         setExercise(data);
       } catch (error) {
         console.error('Error fetching exercise:', error);

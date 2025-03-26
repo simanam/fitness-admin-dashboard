@@ -7,15 +7,38 @@ export interface Exercise {
   description: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   movement_pattern: string;
-  mechanics: 'COMPOUND' | 'ISOLATION';
-  force: 'PUSH' | 'PULL';
+  mechanics: 'compound' | 'isolation';
+  force: 'push' | 'pull' | 'carry' | 'static';
   equipment_required: boolean;
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  status: 'draft' | 'published' | 'archived';
   bilateral: boolean;
   plane_of_motion: string;
+  setup_position?: string;
+  form_points?: {
+    setup: string[];
+    execution: string[];
+    breathing: string[];
+    alignment: string[];
+  };
+  common_mistakes?: {
+    mistakes: Array<{
+      description: string;
+      correction: string;
+      risk_level: string;
+    }>;
+  };
+  safety_info?: {
+    risk_level: string;
+    contraindications: any[];
+    precautions: string[];
+    warning_signs: string[];
+  };
+  tempo_recommendations?: {
+    default: string;
+    variations?: any[];
+  };
   created_at: string;
   updated_at: string;
-  instructions?: string; // Add this field if it's missing
 }
 
 export interface PaginatedResponse<T> {
@@ -39,7 +62,7 @@ export interface ExerciseFilterParams {
   page?: number;
   per_page?: number;
   sort?: string;
-  order?: 'ASC' | 'DESC'; // Changed from lowercase to uppercase
+  order?: 'asc' | 'desc';
 }
 
 export const exerciseService = {
@@ -52,20 +75,13 @@ export const exerciseService = {
     // Add all params to query string
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== '') {
-        // Convert order parameter to uppercase if it exists
-        if (key === 'order' && typeof value === 'string') {
-          queryParams.append(key, value.toUpperCase());
-        } else {
-          queryParams.append(key, String(value));
-        }
+        queryParams.append(key, String(value));
       }
     });
 
     const response = await apiClient.get(
       `/exercises?${queryParams.toString()}`
     );
-
-    console.log(response, 'execros');
 
     return response.data;
   },
@@ -78,7 +94,57 @@ export const exerciseService = {
 
   // Create a new exercise
   createExercise: async (exercise: Partial<Exercise>): Promise<Exercise> => {
-    const response = await apiClient.post('/exercises', exercise);
+    // Transform any uppercase enum values to lowercase to match backend
+    const transformedExercise = {
+      ...exercise,
+      difficulty: exercise.difficulty?.toLowerCase(),
+      mechanics: exercise.mechanics?.toLowerCase(),
+      force: exercise.force?.toLowerCase(),
+      status: exercise.status?.toLowerCase(),
+      plane_of_motion: exercise.plane_of_motion?.toLowerCase(),
+      movement_pattern: exercise.movement_pattern?.toLowerCase(),
+    };
+
+    const response = await apiClient.post('/exercises', transformedExercise);
+    return response.data.data;
+  },
+
+  // Create exercise with media
+  createExerciseWithMedia: async (
+    exerciseData: Partial<Exercise>,
+    mediaFiles: File[],
+    mediaMetadata: any[]
+  ): Promise<Exercise> => {
+    const formData = new FormData();
+
+    // Add exercise data as JSON string
+    formData.append(
+      'exerciseData',
+      JSON.stringify({
+        ...exerciseData,
+        difficulty: exerciseData.difficulty?.toLowerCase(),
+        mechanics: exerciseData.mechanics?.toLowerCase(),
+        force: exerciseData.force?.toLowerCase(),
+        status: exerciseData.status?.toLowerCase(),
+        plane_of_motion: exerciseData.plane_of_motion?.toLowerCase(),
+        movement_pattern: exerciseData.movement_pattern?.toLowerCase(),
+      })
+    );
+
+    // Add media files
+    mediaFiles.forEach((file, index) => {
+      formData.append(`files[]`, file);
+    });
+
+    // Add media metadata
+    formData.append('videoMetadata', JSON.stringify(mediaMetadata));
+
+    const response = await apiClient.post('/exercises/with-media', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
     return response.data.data;
   },
 
@@ -87,7 +153,21 @@ export const exerciseService = {
     id: string,
     exercise: Partial<Exercise>
   ): Promise<Exercise> => {
-    const response = await apiClient.put(`/exercises/${id}`, exercise);
+    // Transform any uppercase enum values to lowercase to match backend
+    const transformedExercise = {
+      ...exercise,
+      difficulty: exercise.difficulty?.toLowerCase(),
+      mechanics: exercise.mechanics?.toLowerCase(),
+      force: exercise.force?.toLowerCase(),
+      status: exercise.status?.toLowerCase(),
+      plane_of_motion: exercise.plane_of_motion?.toLowerCase(),
+      movement_pattern: exercise.movement_pattern?.toLowerCase(),
+    };
+
+    const response = await apiClient.put(
+      `/exercises/${id}`,
+      transformedExercise
+    );
     return response.data.data;
   },
 
@@ -101,7 +181,9 @@ export const exerciseService = {
     id: string,
     status: string
   ): Promise<Exercise> => {
-    const response = await apiClient.put(`/exercises/${id}/status`, { status });
+    const response = await apiClient.put(`/exercises/${id}/status`, {
+      status: status.toLowerCase(),
+    });
     return response.data.data;
   },
 
@@ -112,8 +194,28 @@ export const exerciseService = {
   ): Promise<{ updatedCount: number }> => {
     const response = await apiClient.post('/exercises/status/bulk', {
       ids,
-      status,
+      status: status.toLowerCase(),
     });
+    return response.data.data;
+  },
+
+  // Publish an exercise
+  publishExercise: async (id: string): Promise<Exercise> => {
+    const response = await apiClient.post(`/exercises/${id}/publish`);
+    return response.data.data;
+  },
+
+  // Archive an exercise
+  archiveExercise: async (id: string): Promise<Exercise> => {
+    const response = await apiClient.post(`/exercises/${id}/archive`);
+    return response.data.data;
+  },
+
+  // Find similar exercises
+  findSimilarExercises: async (id: string, limit = 5): Promise<Exercise[]> => {
+    const response = await apiClient.get(
+      `/exercises/${id}/similar?limit=${limit}`
+    );
     return response.data.data;
   },
 };

@@ -1,91 +1,137 @@
 // src/components/exercises/form/BasicInfoSection.tsx
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Input } from '../../../components/ui/input';
-import { Textarea } from '../../../components/ui/textarea';
-import { Select } from '../../../components/ui/select';
-import FormField from './FormField';
-import { FORM_SECTIONS } from '../../../types/exerciseFormTypes';
-import { AlertCircle } from 'lucide-react';
+import { Input } from '../../ui/input';
+import { Textarea } from '../../ui/textarea';
+import { Select } from '../../ui/select';
+import { Checkbox } from '../../ui/checkbox';
 
 const BasicInfoSection: React.FC = () => {
-  const { register } = useFormContext();
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext();
 
   return (
     <div className="space-y-6">
+      {/* Exercise Name */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900">
-          {FORM_SECTIONS.basic.title}
-        </h3>
-        <p className="mt-1 text-sm text-gray-500">
-          {FORM_SECTIONS.basic.description}
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Exercise Name <span className="text-red-500">*</span>
+        </label>
+        <Input
+          id="name"
+          {...register('name', {
+            required: 'Exercise name is required',
+            minLength: {
+              value: 3,
+              message: 'Name must be at least 3 characters',
+            },
+            maxLength: {
+              value: 100,
+              message: 'Name must be less than 100 characters',
+            },
+          })}
+          placeholder="Enter exercise name"
+        />
+        {errors.name && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.name.message as string}
+          </p>
+        )}
+      </div>
+
+      {/* Exercise Description */}
+      <div>
+        <label
+          htmlFor="description"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Description <span className="text-red-500">*</span>
+        </label>
+        <Textarea
+          id="description"
+          {...register('description', {
+            required: 'Description is required',
+            minLength: {
+              value: 10,
+              message: 'Description must be at least 10 characters',
+            },
+          })}
+          placeholder="Provide a detailed description of the exercise"
+          rows={4}
+        />
+        {errors.description && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.description.message as string}
+          </p>
+        )}
+      </div>
+
+      {/* Difficulty */}
+      <div>
+        <label
+          htmlFor="difficulty"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Difficulty Level <span className="text-red-500">*</span>
+        </label>
+        <Select
+          id="difficulty"
+          {...register('difficulty', {
+            required: 'Difficulty level is required',
+          })}
+        >
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </Select>
+        {errors.difficulty && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.difficulty.message as string}
+          </p>
+        )}
+      </div>
+
+      {/* Status */}
+      <div>
+        <label
+          htmlFor="status"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Status
+        </label>
+        <Select id="status" {...register('status')}>
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+          <option value="archived">Archived</option>
+        </Select>
+        <p className="mt-1 text-xs text-gray-500">
+          Draft exercises are only visible to administrators
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        <FormField
-          name="name"
-          label="Exercise Name"
-          required
-          helperText="Enter a clear, descriptive name for the exercise"
-        >
-          <Input
-            {...register('name')}
-            placeholder="e.g., Barbell Back Squat"
-            className="mt-1"
-          />
-        </FormField>
+      {/* Equipment Required */}
+      <div>
+        <Checkbox
+          id="equipment_required"
+          {...register('equipment_required')}
+          label="Equipment Required"
+          helperText="Check if this exercise requires equipment to perform"
+        />
+      </div>
 
-        <FormField
-          name="description"
-          label="Description"
-          required
-          helperText="Provide a brief overview of the exercise"
-        >
-          <Textarea
-            {...register('description')}
-            placeholder="Describe the exercise and its primary benefits..."
-            rows={4}
-            className="mt-1"
-          />
-        </FormField>
-
-        <FormField
-          name="difficulty"
-          label="Difficulty Level"
-          required
-          helperText="Select the appropriate difficulty level"
-        >
-          <Select {...register('difficulty')} className="mt-1">
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
-          </Select>
-        </FormField>
-
-        <div className="bg-yellow-50 border border-yellow-100 rounded-md p-4">
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-yellow-400" />
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">
-                Important Note
-              </h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>
-                  Choose the difficulty level carefully as it affects how the
-                  exercise appears in progression paths and recommendations.
-                  Consider:
-                </p>
-                <ul className="list-disc list-inside mt-2">
-                  <li>Technical complexity</li>
-                  <li>Required strength/fitness level</li>
-                  <li>Coordination demands</li>
-                  <li>Risk level with improper form</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Bilateral */}
+      <div>
+        <Checkbox
+          id="bilateral"
+          {...register('bilateral')}
+          label="Bilateral Exercise"
+          helperText="Check if this exercise works both sides of the body equally"
+        />
       </div>
     </div>
   );

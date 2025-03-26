@@ -302,18 +302,21 @@ const ExerciseEquipmentManager: React.FC<ExerciseEquipmentManagerProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Select Equipment <span className="text-red-500">*</span>
             </label>
+            {/* {availableEquipment.map((item) => {
+              console.log(item, 'item');
+            })} */}
             <Select
-              options={[
-                { value: '', label: 'Select equipment to add' },
-                ...availableEquipment.map((item) => ({
-                  value: item.id,
-                  label: `${item.name} (${formatCategoryName(item.category)})`,
-                })),
-              ]}
               value={selectedEquipmentId}
               onChange={(e) => setSelectedEquipmentId(e.target.value)}
               disabled={isSubmitting}
-            />
+            >
+              <option value="">Select equipment to add</option>
+              {availableEquipment.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} ({formatCategoryName(item.category)})
+                </option>
+              ))}
+            </Select>
             {availableEquipment.length === 0 && (
               <p className="mt-1 text-sm text-yellow-600">
                 All available equipment has already been assigned to this

@@ -1,186 +1,168 @@
 // src/components/exercises/form/TechnicalDetailsSection.tsx
-// Update to include equipment selection
-
-import React, { useState, useEffect } from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
-import { Select } from '../../../components/ui/select';
-import { Checkbox } from '../../../components/ui/checkbox';
-import FormField from './FormField';
-import { FORM_SECTIONS } from '../../../types/exerciseFormTypes';
-import equipmentService from '../../../api/equipmentService';
+import React from 'react';
+import { useFormContext } from 'react-hook-form';
+import { Select } from '../../ui/select';
+import { Input } from '../../ui/input';
+import { Textarea } from '../../ui/textarea';
 
 const TechnicalDetailsSection: React.FC = () => {
-  const { register, watch, control } = useFormContext();
-  const equipmentRequired = watch('equipment_required');
-  const [equipment, setEquipment] = useState<{ id: string; name: string }[]>(
-    []
-  );
-  const [isLoadingEquipment, setIsLoadingEquipment] = useState(false);
-
-  // Load equipment options when equipment_required is checked
-  useEffect(() => {
-    if (equipmentRequired) {
-      const fetchEquipment = async () => {
-        setIsLoadingEquipment(true);
-        try {
-          const data = await equipmentService.getAllEquipment();
-          setEquipment(data.map((item) => ({ id: item.id, name: item.name })));
-        } catch (error) {
-          console.error('Error fetching equipment:', error);
-        } finally {
-          setIsLoadingEquipment(false);
-        }
-      };
-
-      fetchEquipment();
-    }
-  }, [equipmentRequired]);
+  const {
+    register,
+    formState: { errors },
+    watch,
+  } = useFormContext();
 
   return (
     <div className="space-y-6">
+      {/* Movement Pattern */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900">
-          {FORM_SECTIONS.technical.title}
-        </h3>
-        <p className="mt-1 text-sm text-gray-500">
-          {FORM_SECTIONS.technical.description}
+        <label
+          htmlFor="movement_pattern"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Movement Pattern <span className="text-red-500">*</span>
+        </label>
+        <Select
+          id="movement_pattern"
+          {...register('movement_pattern', {
+            required: 'Movement pattern is required',
+          })}
+        >
+          <option value="push">Push</option>
+          <option value="pull">Pull</option>
+          <option value="squat">Squat</option>
+          <option value="hinge">Hinge</option>
+          <option value="lunge">Lunge</option>
+          <option value="carry">Carry</option>
+          <option value="rotation">Rotation</option>
+          <option value="gait">Gait</option>
+        </Select>
+        {errors.movement_pattern && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.movement_pattern.message as string}
+          </p>
+        )}
+      </div>
+
+      {/* Mechanics */}
+      <div>
+        <label
+          htmlFor="mechanics"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Mechanics <span className="text-red-500">*</span>
+        </label>
+        <Select
+          id="mechanics"
+          {...register('mechanics', {
+            required: 'Mechanics is required',
+          })}
+        >
+          <option value="compound">Compound</option>
+          <option value="isolation">Isolation</option>
+        </Select>
+        {errors.mechanics && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.mechanics.message as string}
+          </p>
+        )}
+        <p className="mt-1 text-xs text-gray-500">
+          Compound exercises work multiple muscle groups, isolation exercises
+          focus on a single muscle
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Original technical details fields... */}
-        <FormField
-          name="movement_pattern"
-          label="Movement Pattern"
-          required
-          helperText="The primary movement pattern of the exercise"
+      {/* Force */}
+      <div>
+        <label
+          htmlFor="force"
+          className="block text-sm font-medium text-gray-700 mb-1"
         >
-          <Select {...register('movement_pattern')} className="mt-1">
-            <option value="squat">Squat</option>
-            <option value="hinge">Hinge</option>
-            <option value="push">Push</option>
-            <option value="pull">Pull</option>
-            <option value="carry">Carry</option>
-            <option value="rotation">Rotation</option>
-            <option value="lunge">Lunge</option>
-            <option value="core">Core</option>
-          </Select>
-        </FormField>
-
-        <FormField
-          name="mechanics"
-          label="Exercise Mechanics"
-          required
-          helperText="Type of mechanical movement"
+          Force Type <span className="text-red-500">*</span>
+        </label>
+        <Select
+          id="force"
+          {...register('force', {
+            required: 'Force type is required',
+          })}
         >
-          <Select {...register('mechanics')} className="mt-1">
-            <option value="compound">Compound</option>
-            <option value="isolation">Isolation</option>
-          </Select>
-        </FormField>
-
-        <FormField
-          name="force"
-          label="Force Type"
-          required
-          helperText="Primary force application"
-        >
-          <Select {...register('force')} className="mt-1">
-            <option value="push">Push</option>
-            <option value="pull">Pull</option>
-          </Select>
-        </FormField>
-
-        <FormField
-          name="plane_of_motion"
-          label="Plane of Motion"
-          required
-          helperText="Primary plane of movement"
-        >
-          <Select {...register('plane_of_motion')} className="mt-1">
-            <option value="sagittal">Sagittal</option>
-            <option value="frontal">Frontal</option>
-            <option value="transverse">Transverse</option>
-            <option value="multi-planar">Multi-Planar</option>
-          </Select>
-        </FormField>
-
-        <div className="md:col-span-2 space-y-4">
-          <div>
-            <Checkbox
-              id="equipment_required"
-              {...register('equipment_required')}
-              label="Equipment Required"
-              helperText="Check if this exercise requires equipment"
-            />
-          </div>
-
-          {/* Show equipment selection when equipment_required is checked */}
-          {equipmentRequired && (
-            <div className="mt-4">
-              <FormField
-                name="primary_equipment"
-                label="Select Primary Equipment"
-                helperText="Choose the main equipment needed for this exercise"
-              >
-                <Controller
-                  name="primary_equipment"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      className="mt-1"
-                      disabled={isLoadingEquipment}
-                    >
-                      <option value="">Select equipment...</option>
-                      {equipment.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </Select>
-                  )}
-                />
-                {isLoadingEquipment && (
-                  <div className="mt-2 text-sm text-gray-500">
-                    Loading equipment options...
-                  </div>
-                )}
-              </FormField>
-            </div>
-          )}
-
-          <div>
-            <Checkbox
-              id="bilateral"
-              {...register('bilateral')}
-              label="Bilateral Movement"
-              helperText="Check if the exercise works both sides simultaneously"
-            />
-          </div>
-        </div>
+          <option value="push">Push</option>
+          <option value="pull">Pull</option>
+          <option value="carry">Carry</option>
+          <option value="static">Static</option>
+        </Select>
+        {errors.force && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.force.message as string}
+          </p>
+        )}
       </div>
 
-      <div className="bg-gray-50 rounded-md p-4">
-        <h4 className="text-sm font-medium text-gray-900 mb-2">
-          Movement Classifications Guide
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+      {/* Plane of Motion */}
+      <div>
+        <label
+          htmlFor="plane_of_motion"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Plane of Motion <span className="text-red-500">*</span>
+        </label>
+        <Select
+          id="plane_of_motion"
+          {...register('plane_of_motion', {
+            required: 'Plane of motion is required',
+          })}
+        >
+          <option value="sagittal">Sagittal</option>
+          <option value="frontal">Frontal</option>
+          <option value="transverse">Transverse</option>
+          <option value="multi-planar">Multi-planar</option>
+        </Select>
+        {errors.plane_of_motion && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.plane_of_motion.message as string}
+          </p>
+        )}
+        <p className="mt-1 text-xs text-gray-500">
+          Sagittal: forward/backward, Frontal: side to side, Transverse:
+          rotational
+        </p>
+      </div>
+
+      {/* Tempo Recommendations */}
+      <div>
+        <label
+          htmlFor="tempo_default"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Tempo Recommendation (optional)
+        </label>
+        <div className="space-y-4">
           <div>
-            <p className="font-medium mb-1">Movement Patterns:</p>
-            <ul className="list-disc list-inside pl-2 space-y-1">
-              <li>Squat: Vertical displacement, knee/hip dominant</li>
-              <li>Hinge: Hip dominant, forward torso lean</li>
-              <li>Push: Moving resistance away from body</li>
-              <li>Pull: Moving resistance toward body</li>
-            </ul>
+            <label
+              htmlFor="tempo_default"
+              className="block text-xs font-medium text-gray-600 mb-1"
+            >
+              Default Tempo
+            </label>
+            <Input
+              id="tempo_default"
+              {...register('tempo_recommendations.default')}
+              placeholder="e.g., 3-1-2-0"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Format: eccentric-bottom hold-concentric-top hold (in seconds)
+            </p>
           </div>
+
           <div>
-            <p className="font-medium mb-1">Mechanics:</p>
-            <ul className="list-disc list-inside pl-2 space-y-1">
-              <li>Compound: Multiple joint movement</li>
-              <li>Isolation: Single joint movement</li>
-            </ul>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Tempo Notes (optional)
+            </label>
+            <Textarea
+              {...register('tempo_recommendations.tempo_notes')}
+              placeholder="Any additional notes about tempo"
+              rows={2}
+            />
           </div>
         </div>
       </div>
