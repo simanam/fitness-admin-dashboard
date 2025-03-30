@@ -1,10 +1,11 @@
 // src/hooks/useMediaManagement.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from './useToast';
 import exerciseMediaService, {
   ExerciseMedia,
 } from '../api/exerciseMediaService';
 import { MediaFile } from '../components/media/MediaUploader';
+import { debounce } from 'lodash';
 
 interface UseMediaManagementProps {
   exerciseId: string;
@@ -21,8 +22,8 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch media data
-  const fetchMedia = async () => {
+  // Use useCallback to memoize the fetch function
+  const fetchMediaImpl = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -53,28 +54,51 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [exerciseId, showToast]);
+
+  // Create a debounced version of the fetch function
+  const fetchMediaDebounced = useRef(debounce(fetchMediaImpl, 300)).current;
+
+  // Public fetch media function
+  const fetchMedia = useCallback(() => {
+    fetchMediaDebounced();
+  }, [fetchMediaDebounced]);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      fetchMediaDebounced.cancel();
+    };
+  }, [fetchMediaDebounced]);
 
   // Load media on mount
   useEffect(() => {
     fetchMedia();
-  }, [exerciseId]);
+  }, [exerciseId, fetchMedia]);
 
   // Handle media upload
   const uploadMedia = async (file: File, viewAngle?: string) => {
     // Create FormData for upload
+
+    console.log(file, viewAngle, 'file mansb');
     const formData = new FormData();
     formData.append('exerciseId', exerciseId);
     formData.append('file', file);
-    formData.append('viewAngle', viewAngle || 'FRONT');
+    const normalizedViewAngle = (viewAngle || 'FRONT').toLowerCase();
+    formData.append('viewangle', normalizedViewAngle);
     formData.append(
       'mediaType',
       file.type.startsWith('video')
-        ? 'VIDEO'
+        ? 'video'
         : file.type === 'image/svg+xml'
-          ? 'SVG'
-          : 'IMAGE'
+          ? 'svg'
+          : 'image'
     );
+
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    formData.append('format', fileExtension || '');
+
+    formData.append('title', file.name);
 
     // Create temporary media file for UI
     const tempId = `temp-${Date.now()}`;
@@ -91,7 +115,7 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
       size: file.size,
       progress: 0,
       status: 'uploading',
-      viewAngle: (viewAngle as any) || 'FRONT',
+      viewAngle: (viewAngle as any) || 'front',
     };
 
     setMediaFiles((prev) => [...prev, newFile]);
@@ -320,6 +344,7 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
     setPrimaryMedia,
     updateViewAngle,
     reorderMedia,
+    fetchMediaDebounced, // Expose this for cancellation in cleanup
   };
 };
 

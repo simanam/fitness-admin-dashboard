@@ -19,6 +19,7 @@ const MuscleTargetingVisualization = ({
 
   // Group targets by muscle group
   useEffect(() => {
+    console.log(targets, 'hshshsh');
     const groups = targets.reduce<{ [key: string]: MuscleTarget[] }>(
       (acc, target) => {
         if (!target.muscle?.muscleGroup) return acc;
@@ -40,22 +41,28 @@ const MuscleTargetingVisualization = ({
   // Get color based on role
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'PRIMARY':
+      case 'primary':
         return {
           bg: 'bg-red-500',
           border: 'border-red-600',
           text: 'text-white',
         };
-      case 'SECONDARY':
+      case 'secondary':
         return {
           bg: 'bg-blue-500',
           border: 'border-blue-600',
           text: 'text-white',
         };
-      case 'TERTIARY':
+      case 'synergist':
         return {
           bg: 'bg-green-500',
           border: 'border-green-600',
+          text: 'text-white',
+        };
+      case 'stabilizer':
+        return {
+          bg: 'bg-purple-500',
+          border: 'border-purple-600',
           text: 'text-white',
         };
       default:
@@ -66,7 +73,6 @@ const MuscleTargetingVisualization = ({
         };
     }
   };
-
   // Get bubble size based on activation percentage
   const getBubbleSize = (percentage: number) => {
     // Scale from 40px to a maximum of 80px
@@ -149,7 +155,11 @@ const MuscleTargetingVisualization = ({
           </div>
           <div className="flex items-center">
             <div className="w-4 h-4 rounded-full bg-green-500 mr-2"></div>
-            <span className="text-xs text-gray-600">Tertiary</span>
+            <span className="text-xs text-gray-600">Synergist</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 rounded-full bg-purple-500 mr-2"></div>
+            <span className="text-xs text-gray-600">Stabilizer</span>
           </div>
           <div className="flex items-center ml-4">
             <div className="flex items-center">

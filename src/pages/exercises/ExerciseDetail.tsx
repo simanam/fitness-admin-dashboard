@@ -41,7 +41,7 @@ const ExerciseDetail = () => {
       setIsLoading(true);
       try {
         const data = await exerciseService.getExercise(id);
-        console.log(data, 'djdj');
+
         setExercise(data);
       } catch (error) {
         console.error('Error fetching exercise:', error);
@@ -101,7 +101,6 @@ const ExerciseDetail = () => {
         message: 'Exercise published successfully',
       });
     } catch (error) {
-      console.error('Error publishing exercise:', error);
       showToast({
         type: 'error',
         title: 'Error',

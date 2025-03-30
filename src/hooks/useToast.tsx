@@ -27,7 +27,11 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
 
   const showToast = useCallback((props: Omit<ToastProps, 'id'>) => {
-    const id = Date.now().toString();
+    // Instead of using just timestamp:
+    // const id = Date.now().toString();
+
+    // Use timestamp + random number to ensure uniqueness:
+    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const toast = { ...props, id };
     setToasts((prevToasts) => [...prevToasts, toast]);
 

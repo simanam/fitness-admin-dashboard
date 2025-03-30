@@ -48,6 +48,8 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
         muscleService.getMuscles(),
       ]);
 
+      console.log(targetsData, 'tage dat', musclesData, 'memem');
+
       setMuscleTargets(targetsData);
       setAllMuscles(musclesData);
     } catch (error) {
@@ -231,15 +233,17 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
 
   // Group targets by role for display
   const primaryTargets = muscleTargets.filter(
-    (target) => target.role === 'PRIMARY'
+    (target) => target.role === 'primary'
   );
   const secondaryTargets = muscleTargets.filter(
-    (target) => target.role === 'SECONDARY'
+    (target) => target.role === 'secondary'
   );
-  const tertiaryTargets = muscleTargets.filter(
-    (target) => target.role === 'TERTIARY'
+  const synergistTargets = muscleTargets.filter(
+    (target) => target.role === 'synergist'
   );
-
+  const stabilizerTargets = muscleTargets.filter(
+    (target) => target.role === 'stabilizer'
+  );
   // State for muscle visualization
   const [visualizationOpen, setVisualizationOpen] = useState(true);
 
@@ -313,14 +317,13 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
       {/* Muscle targets list */}
       {muscleTargets.length > 0 ? (
         <div className="space-y-6">
-          {/* Primary targets */}
           <MuscleTargetList
             title="Primary Muscles"
             description="These muscles are the main focus of the exercise"
             targets={primaryTargets}
             onEdit={handleEditTarget}
             onDelete={handleDeleteConfirm}
-            role="PRIMARY"
+            role="primary"
           />
 
           {/* Secondary targets */}
@@ -330,17 +333,27 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
             targets={secondaryTargets}
             onEdit={handleEditTarget}
             onDelete={handleDeleteConfirm}
-            role="SECONDARY"
+            role="secondary"
           />
 
-          {/* Tertiary targets */}
+          {/* Synergist targets */}
           <MuscleTargetList
-            title="Tertiary Muscles"
-            description="These muscles are minimally involved in the movement"
-            targets={tertiaryTargets}
+            title="Synergist Muscles"
+            description="These muscles help coordinate the movement"
+            targets={synergistTargets}
             onEdit={handleEditTarget}
             onDelete={handleDeleteConfirm}
-            role="TERTIARY"
+            role="synergist"
+          />
+
+          {/* Stabilizer targets */}
+          <MuscleTargetList
+            title="Stabilizer Muscles"
+            description="These muscles help maintain posture and stability during the exercise"
+            targets={stabilizerTargets}
+            onEdit={handleEditTarget}
+            onDelete={handleDeleteConfirm}
+            role="stabilizer"
           />
         </div>
       ) : (

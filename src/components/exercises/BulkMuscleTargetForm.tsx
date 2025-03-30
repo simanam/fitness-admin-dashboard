@@ -8,7 +8,7 @@ import { Label } from '../ui/label';
 interface MuscleSelection {
   muscle: Muscle;
   selected: boolean;
-  role: 'PRIMARY' | 'SECONDARY' | 'TERTIARY';
+  role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
   activationPercentage: number;
 }
 
@@ -43,7 +43,7 @@ const BulkMuscleTargetForm = ({
     const initialSelections = muscles.map((muscle) => ({
       muscle,
       selected: false,
-      role: 'SECONDARY' as const,
+      role: 'secondary' as const,
       activationPercentage: 30,
     }));
 
@@ -89,7 +89,7 @@ const BulkMuscleTargetForm = ({
   // Update role for a muscle
   const updateMuscleRole = (
     muscleId: string,
-    role: 'PRIMARY' | 'SECONDARY' | 'TERTIARY'
+    role: 'primary' | 'secondary' | 'synergist' | 'stabilizer'
   ) => {
     setMuscleSelections((prev) =>
       prev.map((item) =>
@@ -230,10 +230,10 @@ const BulkMuscleTargetForm = ({
                               <button
                                 type="button"
                                 onClick={() =>
-                                  updateMuscleRole(muscle.id, 'PRIMARY')
+                                  updateMuscleRole(muscle.id, 'primary')
                                 }
                                 className={`px-2 py-1 text-xs rounded ${
-                                  role === 'PRIMARY'
+                                  role === 'primary'
                                     ? 'bg-red-100 text-red-800'
                                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                                 }`}
@@ -243,10 +243,10 @@ const BulkMuscleTargetForm = ({
                               <button
                                 type="button"
                                 onClick={() =>
-                                  updateMuscleRole(muscle.id, 'SECONDARY')
+                                  updateMuscleRole(muscle.id, 'secondary')
                                 }
                                 className={`px-2 py-1 text-xs rounded ${
-                                  role === 'SECONDARY'
+                                  role === 'secondary'
                                     ? 'bg-blue-100 text-blue-800'
                                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                                 }`}
@@ -256,15 +256,28 @@ const BulkMuscleTargetForm = ({
                               <button
                                 type="button"
                                 onClick={() =>
-                                  updateMuscleRole(muscle.id, 'TERTIARY')
+                                  updateMuscleRole(muscle.id, 'synergist')
                                 }
                                 className={`px-2 py-1 text-xs rounded ${
-                                  role === 'TERTIARY'
+                                  role === 'synergist'
                                     ? 'bg-green-100 text-green-800'
                                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                                 }`}
                               >
-                                Tertiary
+                                Synergist
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateMuscleRole(muscle.id, 'stabilizer')
+                                }
+                                className={`px-2 py-1 text-xs rounded ${
+                                  role === 'stabilizer'
+                                    ? 'bg-purple-100 text-purple-800'
+                                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                }`}
+                              >
+                                Stabilizer
                               </button>
                             </div>
                           </div>

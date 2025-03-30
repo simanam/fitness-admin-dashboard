@@ -1,344 +1,272 @@
 // src/components/media/MediaStatistics.tsx
-import { useState, useEffect } from 'react';
-import {
-  BarChart,
-  ChevronDown,
-  ChevronUp,
-  FileVideo,
-  Image as ImageIcon,
-  FileImage,
-} from 'lucide-react';
-import {
-  exerciseMediaService,
-  MediaStats,
-} from '../../api/exerciseMediaService';
-import { cn } from '../../lib/utils';
+import React, { useMemo } from 'react';
+import { FileVideo, Image as ImageIcon, FileUp, RefreshCw } from 'lucide-react';
+
+// Original interface expected by the component
+interface MediaStats {
+  totalCount: number;
+  byType: {
+    VIDEO: number;
+    IMAGE: number;
+    SVG: number;
+  };
+  byViewAngle: {
+    FRONT: number;
+    SIDE: number;
+    REAR: number;
+    ANGLE: number;
+  };
+  totalDuration: number;
+  totalSize: number;
+}
+
+// New interface that matches your API response
+interface NewMediaStatsFormat {
+  video: {
+    count: number;
+    totalDuration: number;
+    totalSize: number;
+    countByAngle: {
+      [key: string]: number;
+    };
+    hasPrimary: boolean;
+  };
+  image: {
+    count: number;
+    totalSize: number;
+    countByAngle: {
+      [key: string]: number;
+    };
+    hasPrimary: boolean;
+  };
+  svg?: {
+    count: number;
+    totalSize: number;
+    countByAngle: {
+      [key: string]: number;
+    };
+    hasPrimary: boolean;
+  };
+}
 
 interface MediaStatisticsProps {
   exerciseId: string;
-  className?: string;
+  statsData: NewMediaStatsFormat | null;
+  isLoading: boolean;
+  error: string | null;
+  onRefresh: () => void;
 }
 
-const MediaStatistics = ({ exerciseId, className }: MediaStatisticsProps) => {
-  const [stats, setStats] = useState<MediaStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(true);
+const defaultStats: MediaStats = {
+  totalCount: 0,
+  byType: {
+    VIDEO: 0,
+    IMAGE: 0,
+    SVG: 0,
+  },
+  byViewAngle: {
+    FRONT: 0,
+    SIDE: 0,
+    REAR: 0,
+    ANGLE: 0,
+  },
+  totalDuration: 0,
+  totalSize: 0,
+};
 
-  // Fetch media statistics
-  const fetchStats = async () => {
-    setIsLoading(true);
-    setError(null);
+const MediaStatistics: React.FC<MediaStatisticsProps> = ({
+  exerciseId,
+  statsData,
+  isLoading,
+  error,
+  onRefresh,
+}) => {
+  // Transform the new format to the expected format
+  const stats = useMemo(() => {
+    if (!statsData) return defaultStats;
 
-    try {
-      const data = await exerciseMediaService.getMediaStats(exerciseId);
-      setStats(data);
-    } catch (err) {
-      console.error('Error fetching media statistics:', err);
-      setError('Failed to load media statistics');
-    } finally {
-      setIsLoading(false);
+    // Initialize the transformed stats object
+    const transformedStats: MediaStats = {
+      totalCount: 0,
+      byType: {
+        VIDEO: statsData.video?.count || 0,
+        IMAGE: statsData.image?.count || 0,
+        SVG: statsData.svg?.count || 0,
+      },
+      byViewAngle: {
+        FRONT: 0,
+        SIDE: 0,
+        REAR: 0,
+        ANGLE: 0,
+      },
+      totalDuration: statsData.video?.totalDuration || 0,
+      totalSize:
+        (statsData.video?.totalSize || 0) +
+        (statsData.image?.totalSize || 0) +
+        (statsData.svg?.totalSize || 0),
+    };
+
+    // Calculate totalCount
+    transformedStats.totalCount =
+      transformedStats.byType.VIDEO +
+      transformedStats.byType.IMAGE +
+      transformedStats.byType.SVG;
+
+    // Process angles for videos
+    if (statsData.video?.countByAngle) {
+      for (const [angle, count] of Object.entries(
+        statsData.video.countByAngle
+      )) {
+        const upperAngle = angle.toUpperCase();
+        transformedStats.byViewAngle[upperAngle] =
+          (transformedStats.byViewAngle[upperAngle] || 0) + count;
+      }
     }
+
+    // Process angles for images
+    if (statsData.image?.countByAngle) {
+      for (const [angle, count] of Object.entries(
+        statsData.image.countByAngle
+      )) {
+        const upperAngle = angle.toUpperCase();
+        transformedStats.byViewAngle[upperAngle] =
+          (transformedStats.byViewAngle[upperAngle] || 0) + count;
+      }
+    }
+
+    // Process angles for SVGs if they exist
+    if (statsData.svg?.countByAngle) {
+      for (const [angle, count] of Object.entries(statsData.svg.countByAngle)) {
+        const upperAngle = angle.toUpperCase();
+        transformedStats.byViewAngle[upperAngle] =
+          (transformedStats.byViewAngle[upperAngle] || 0) + count;
+      }
+    }
+
+    return transformedStats;
+  }, [statsData]);
+
+  // Always safely access properties using optional chaining
+  const videoCount = stats?.byType?.VIDEO ?? 0;
+  const imageCount = stats?.byType?.IMAGE ?? 0;
+  const svgCount = stats?.byType?.SVG ?? 0;
+
+  const formatDuration = (seconds: number) => {
+    if (!seconds) return '0s';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return minutes > 0
+      ? `${minutes}m ${remainingSeconds}s`
+      : `${remainingSeconds}s`;
   };
 
-  // Load data on component mount
-  useEffect(() => {
-    fetchStats();
-  }, [exerciseId]);
-
-  // Format file size (bytes to MB)
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  const formatSize = (bytes: number) => {
+    if (!bytes) return '0 MB';
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(1)} MB`;
   };
-
-  // Show loading state
-  if (isLoading && !stats) {
-    return (
-      <div
-        className={cn(
-          'animate-pulse space-y-3 p-4 bg-white border rounded-lg',
-          className
-        )}
-      >
-        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="h-20 bg-gray-200 rounded"></div>
-          <div className="h-20 bg-gray-200 rounded"></div>
-          <div className="h-20 bg-gray-200 rounded"></div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error && !stats) {
-    return (
-      <div
-        className={cn(
-          'p-4 bg-red-50 text-red-800 border border-red-200 rounded-lg',
-          className
-        )}
-      >
-        <p>{error}</p>
-        <button
-          onClick={fetchStats}
-          className="mt-2 text-sm underline hover:no-underline"
-        >
-          Try again
-        </button>
-      </div>
-    );
-  }
-
-  // Show empty state
-  if (!stats || stats.totalCount === 0) {
-    return null; // Hide statistics if no media
-  }
 
   return (
-    <div
-      className={cn('border rounded-lg overflow-hidden bg-white', className)}
-    >
-      {/* Header */}
-      <div
-        className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center">
-          <BarChart className="h-5 w-5 text-gray-500 mr-2" />
-          <h3 className="font-medium text-gray-900">Media Statistics</h3>
-        </div>
-        <button className="text-gray-500">
-          {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-        </button>
+    <div className="p-4 bg-white border border-gray-200 rounded-lg">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-medium text-gray-900">Media Statistics</h3>
+        {!isLoading && (
+          <button
+            onClick={onRefresh}
+            className="text-gray-500 hover:text-gray-700 p-1 rounded-full"
+            title="Refresh statistics"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
-      {/* Content (collapsible) */}
-      {isExpanded && (
-        <div className="p-4">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            {/* Total Count */}
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="text-sm text-gray-500 mb-1">Total Media</div>
-              <div className="text-2xl font-semibold text-gray-900">
-                {stats.totalCount}
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                <div className="text-center">
-                  <FileVideo className="h-4 w-4 text-purple-500 mx-auto" />
-                  <div className="text-xs text-gray-500 mt-1">
-                    {stats.byType.VIDEO || 0}
+      {error ? (
+        <div className="text-red-600 text-sm mb-4 p-2 bg-red-50 rounded-md">
+          {error}
+        </div>
+      ) : null}
+
+      {isLoading ? (
+        <div className="flex justify-center py-6">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">Media Types</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <FileVideo className="h-4 w-4 text-blue-600 mr-2" />
+                    <span className="text-sm">Videos</span>
                   </div>
+                  <span className="text-sm font-medium">{videoCount}</span>
                 </div>
-                <div className="text-center">
-                  <ImageIcon className="h-4 w-4 text-green-500 mx-auto" />
-                  <div className="text-xs text-gray-500 mt-1">
-                    {stats.byType.IMAGE || 0}
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <ImageIcon className="h-4 w-4 text-green-600 mr-2" />
+                    <span className="text-sm">Images</span>
                   </div>
+                  <span className="text-sm font-medium">{imageCount}</span>
                 </div>
-                <div className="text-center">
-                  <FileImage className="h-4 w-4 text-blue-500 mx-auto" />
-                  <div className="text-xs text-gray-500 mt-1">
-                    {stats.byType.SVG || 0}
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <FileUp className="h-4 w-4 text-purple-600 mr-2" />
+                    <span className="text-sm">SVGs</span>
                   </div>
+                  <span className="text-sm font-medium">{svgCount}</span>
                 </div>
               </div>
             </div>
 
-            {/* View Angles */}
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="text-sm text-gray-500 mb-1">View Angles</div>
-              <div className="grid grid-cols-2 gap-2 mt-1">
-                <div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mr-1"></div>
-                    <span className="text-xs text-gray-600">Front</span>
-                  </div>
-                  <div className="font-medium">
-                    {stats.byViewAngle.FRONT || 0}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
-                    <span className="text-xs text-gray-600">Side</span>
-                  </div>
-                  <div className="font-medium">
-                    {stats.byViewAngle.SIDE || 0}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-purple-500 mr-1"></div>
-                    <span className="text-xs text-gray-600">Rear</span>
-                  </div>
-                  <div className="font-medium">
-                    {stats.byViewAngle.REAR || 0}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></div>
-                    <span className="text-xs text-gray-600">Angle</span>
-                  </div>
-                  <div className="font-medium">
-                    {stats.byViewAngle.ANGLE || 0}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Media Details */}
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="text-sm text-gray-500 mb-1">Media Details</div>
-              <div className="space-y-2 mt-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-600">Total Size</span>
-                  <span className="font-medium">
-                    {formatFileSize(stats.totalSize)}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">View Angles</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Front View</span>
+                  <span className="text-sm font-medium">
+                    {stats?.byViewAngle?.FRONT ?? 0}
                   </span>
                 </div>
-                {stats.totalDuration > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">
-                      Video Duration
-                    </span>
-                    <span className="font-medium">
-                      {stats.totalDuration.toFixed(1)}s
-                    </span>
-                  </div>
-                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Side View</span>
+                  <span className="text-sm font-medium">
+                    {stats?.byViewAngle?.SIDE ?? 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Rear View</span>
+                  <span className="text-sm font-medium">
+                    {stats?.byViewAngle?.REAR ?? 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Angle View</span>
+                  <span className="text-sm font-medium">
+                    {stats?.byViewAngle?.ANGLE ?? 0}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* View Angle Distribution Visualization */}
-          <div className="mt-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">
-              Media Distribution by View Angle
-            </h4>
-            <div className="h-8 bg-gray-100 rounded-lg overflow-hidden flex">
-              {stats.byViewAngle.FRONT > 0 && (
-                <div
-                  className="bg-blue-500 h-full flex items-center justify-center text-xs text-white font-medium"
-                  style={{
-                    width: `${(stats.byViewAngle.FRONT / stats.totalCount) * 100}%`,
-                  }}
-                >
-                  {stats.byViewAngle.FRONT > 1 ? 'Front' : ''}
-                </div>
-              )}
-              {stats.byViewAngle.SIDE > 0 && (
-                <div
-                  className="bg-green-500 h-full flex items-center justify-center text-xs text-white font-medium"
-                  style={{
-                    width: `${(stats.byViewAngle.SIDE / stats.totalCount) * 100}%`,
-                  }}
-                >
-                  {stats.byViewAngle.SIDE > 1 ? 'Side' : ''}
-                </div>
-              )}
-              {stats.byViewAngle.REAR > 0 && (
-                <div
-                  className="bg-purple-500 h-full flex items-center justify-center text-xs text-white font-medium"
-                  style={{
-                    width: `${(stats.byViewAngle.REAR / stats.totalCount) * 100}%`,
-                  }}
-                >
-                  {stats.byViewAngle.REAR > 1 ? 'Rear' : ''}
-                </div>
-              )}
-              {stats.byViewAngle.ANGLE > 0 && (
-                <div
-                  className="bg-yellow-500 h-full flex items-center justify-center text-xs text-white font-medium"
-                  style={{
-                    width: `${(stats.byViewAngle.ANGLE / stats.totalCount) * 100}%`,
-                  }}
-                >
-                  {stats.byViewAngle.ANGLE > 1 ? 'Angle' : ''}
-                </div>
-              )}
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="bg-gray-50 p-3 rounded-lg text-center">
+              <div className="text-sm text-gray-600">Total Duration</div>
+              <div className="font-medium">
+                {formatDuration(stats?.totalDuration ?? 0)}
+              </div>
             </div>
-
-            {/* Legend */}
-            <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-600">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
-                <span>Front: {stats.byViewAngle.FRONT || 0}</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
-                <span>Side: {stats.byViewAngle.SIDE || 0}</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-purple-500 mr-1"></div>
-                <span>Rear: {stats.byViewAngle.REAR || 0}</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-yellow-500 mr-1"></div>
-                <span>Angle: {stats.byViewAngle.ANGLE || 0}</span>
+            <div className="bg-gray-50 p-3 rounded-lg text-center">
+              <div className="text-sm text-gray-600">Total Size</div>
+              <div className="font-medium">
+                {formatSize(stats?.totalSize ?? 0)}
               </div>
             </div>
           </div>
-
-          {/* Media Type Distribution Visualization */}
-          <div className="mt-6">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">
-              Media Distribution by Type
-            </h4>
-            <div className="h-8 bg-gray-100 rounded-lg overflow-hidden flex">
-              {stats.byType.VIDEO > 0 && (
-                <div
-                  className="bg-purple-500 h-full flex items-center justify-center text-xs text-white font-medium"
-                  style={{
-                    width: `${(stats.byType.VIDEO / stats.totalCount) * 100}%`,
-                  }}
-                >
-                  {stats.byType.VIDEO > 1 ? 'Videos' : ''}
-                </div>
-              )}
-              {stats.byType.IMAGE > 0 && (
-                <div
-                  className="bg-green-500 h-full flex items-center justify-center text-xs text-white font-medium"
-                  style={{
-                    width: `${(stats.byType.IMAGE / stats.totalCount) * 100}%`,
-                  }}
-                >
-                  {stats.byType.IMAGE > 1 ? 'Images' : ''}
-                </div>
-              )}
-              {stats.byType.SVG > 0 && (
-                <div
-                  className="bg-blue-500 h-full flex items-center justify-center text-xs text-white font-medium"
-                  style={{
-                    width: `${(stats.byType.SVG / stats.totalCount) * 100}%`,
-                  }}
-                >
-                  {stats.byType.SVG > 1 ? 'SVGs' : ''}
-                </div>
-              )}
-            </div>
-
-            {/* Legend */}
-            <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-600">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-purple-500 mr-1"></div>
-                <span>Videos: {stats.byType.VIDEO || 0}</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
-                <span>Images: {stats.byType.IMAGE || 0}</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
-                <span>SVGs: {stats.byType.SVG || 0}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );

@@ -22,7 +22,7 @@ export interface MediaFile {
   size: number;
   progress?: number;
   status?: 'uploading' | 'success' | 'error';
-  viewAngle?: 'FRONT' | 'SIDE' | 'REAR' | 'ANGLE';
+  viewAngle?: 'front' | 'side' | 'rear' | 'angle';
   isPrimary?: boolean;
 }
 
@@ -54,10 +54,10 @@ export function MediaUploader({
   const [selectedViewAngle, setSelectedViewAngle] = useState<string>('FRONT');
 
   const viewAngles = [
-    { value: 'FRONT', label: 'Front View' },
-    { value: 'SIDE', label: 'Side View' },
-    { value: 'REAR', label: 'Rear View' },
-    { value: 'ANGLE', label: 'Angle View' },
+    { value: 'front', label: 'Front View' },
+    { value: 'side', label: 'Side View' },
+    { value: 'rear', label: 'Rear View' },
+    { value: 'angle', label: 'Angle View' },
   ];
 
   const handleFileSelect = (file: File) => {

@@ -3,14 +3,14 @@
 export type ExerciseDifficulty = 'beginner' | 'intermediate' | 'advanced';
 
 export type MovementPattern =
-  | 'push'
-  | 'pull'
   | 'squat'
   | 'hinge'
-  | 'lunge'
+  | 'push'
+  | 'pull'
   | 'carry'
   | 'rotation'
-  | 'gait';
+  | 'lunge'
+  | 'core';
 
 export type Mechanics = 'compound' | 'isolation';
 
@@ -24,6 +24,13 @@ export type PlaneOfMotion =
 
 export type ExerciseStatus = 'draft' | 'published' | 'archived';
 
+export interface FormPoints {
+  setup: string[];
+  execution: string[];
+  breathing: string[];
+  alignment: string[];
+}
+
 export interface ExerciseFormData {
   name: string;
   description: string;
@@ -35,38 +42,29 @@ export interface ExerciseFormData {
   bilateral: boolean;
   plane_of_motion: PlaneOfMotion;
   status: ExerciseStatus;
-  setup_position?: string;
-  form_points?: {
-    setup: string[];
-    execution: string[];
-    breathing: string[];
-    alignment: string[];
-  };
-  common_mistakes?: {
-    mistakes: Array<{
-      description: string;
-      correction: string;
-      risk_level: 'low' | 'medium' | 'high';
-    }>;
-  };
+  instructions?: string;
+  form_points?: FormPoints;
   safety_info?: {
-    risk_level: 'low' | 'medium' | 'high';
+    risk_level: string;
     contraindications: Array<{
       condition: string;
-      severity: 'absolute' | 'relative';
+      severity: string;
       recommendation: string;
     }>;
     precautions: string[];
     warning_signs: string[];
   };
+  common_mistakes?: {
+    mistakes: Array<{
+      description: string;
+      correction: string;
+      risk_level: string;
+    }>;
+  };
   tempo_recommendations?: {
     default: string;
-    variations?: Array<{
-      tempo: string;
-      purpose: string;
-      difficulty: string;
-    }>;
     tempo_notes?: string;
+    variations?: any[];
   };
 }
 
@@ -74,19 +72,32 @@ export const defaultExerciseFormData: ExerciseFormData = {
   name: '',
   description: '',
   difficulty: 'beginner',
-  movement_pattern: 'push',
+  movement_pattern: 'squat',
   mechanics: 'compound',
   force: 'push',
   equipment_required: false,
   bilateral: true,
   plane_of_motion: 'sagittal',
   status: 'draft',
-  setup_position: '',
+  instructions: '',
   form_points: {
     setup: [],
     execution: [],
     breathing: [],
     alignment: [],
+  },
+  safety_info: {
+    risk_level: 'low',
+    contraindications: [],
+    precautions: [],
+    warning_signs: [],
+  },
+  common_mistakes: {
+    mistakes: [],
+  },
+  tempo_recommendations: {
+    default: '',
+    tempo_notes: '',
   },
 };
 
@@ -134,8 +145,8 @@ export const FORM_SECTIONS = {
     description: 'Provide detailed instructions for performing the exercise',
   },
   safety: {
-    title: 'Safety & Form',
-    description: 'Add safety information and form guidelines',
+    title: 'Safety',
+    description: 'Add safety information and common mistakes',
   },
   media: {
     title: 'Media',

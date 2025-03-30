@@ -44,6 +44,53 @@ const MediaPreview = ({
     setIsMuted(!isMuted);
   };
 
+  // Get the best video URL to use
+  const getVideoUrl = () => {
+    // First try to use the high quality version if available
+
+    // if (media.url) {
+    //   return media.url;
+    // }
+
+    if (media.urls?.qualities?.high) {
+      return media.urls.qualities.high;
+    }
+
+    // Then try the desktop version
+    if (media.urls?.desktop?.url) {
+      return media.urls.desktop.url;
+    }
+
+    // Fall back to original
+    if (media.urls?.original) {
+      return media.urls.original;
+    }
+
+    // Last resort, use the direct URL
+    return media.url;
+  };
+
+  // Get the best poster image to use
+  const getPosterUrl = () => {
+    // First try to use the poster
+    if (media.urls?.poster) {
+      return media.urls.poster;
+    }
+
+    // // Then try the thumbnail
+    if (media.urls?.thumbnail) {
+      return media.urls.thumbnail;
+    }
+
+    // // Then try the preview
+    if (media.urls?.preview) {
+      return media.urls.preview;
+    }
+
+    // No poster available
+    return '';
+  };
+
   // Set up video event listeners
   useEffect(() => {
     const video = videoRef.current;
@@ -95,16 +142,23 @@ const MediaPreview = ({
         )}
 
         {/* Media content */}
-        {media.mediaType === 'VIDEO' && (
+        {media.mediaType === 'video' && (
           <div className="relative w-full">
             <video
               ref={videoRef}
-              src={media.urls?.fullsize || media.url}
-              poster={media.urls?.thumbnail}
+              src={getVideoUrl()}
+              poster={getPosterUrl()}
               className="w-full h-auto max-h-[70vh]"
               controls={false}
               preload="auto"
               onLoadStart={() => setIsLoading(true)}
+              onError={(e) => {
+                console.error('Video error:', e);
+                setIsLoading(false);
+                setError(
+                  'Error loading video. The URL may be invalid or the format unsupported.'
+                );
+              }}
             />
 
             {/* Video controls */}
@@ -134,9 +188,9 @@ const MediaPreview = ({
           </div>
         )}
 
-        {media.mediaType === 'IMAGE' && (
+        {media.mediaType === 'image' && (
           <img
-            src={media.urls?.fullsize || media.url}
+            src={media.urls?.original || media.url}
             alt={media.title || 'Exercise image'}
             className="max-w-full max-h-[70vh] object-contain"
             onLoad={() => setIsLoading(false)}
@@ -147,7 +201,7 @@ const MediaPreview = ({
           />
         )}
 
-        {media.mediaType === 'SVG' && (
+        {media.mediaType === 'svg' && (
           <img
             src={media.url}
             alt={media.title || 'Exercise SVG'}
@@ -173,9 +227,9 @@ const MediaPreview = ({
                 <span
                   className={cn(
                     'inline-block w-2 h-2 rounded-full',
-                    media.mediaType === 'VIDEO'
+                    media.mediaType === 'video'
                       ? 'bg-purple-500'
-                      : media.mediaType === 'IMAGE'
+                      : media.mediaType === 'image'
                         ? 'bg-green-500'
                         : 'bg-blue-500'
                   )}
@@ -202,6 +256,27 @@ const MediaPreview = ({
                 </div>
               )}
             </div>
+
+            {/* Show dimensions if available */}
+            {media.metadata?.dimensions && (
+              <div className="mt-1 text-sm text-gray-500">
+                Dimensions:{' '}
+                <span className="font-medium">
+                  {media.metadata.dimensions.width} ×{' '}
+                  {media.metadata.dimensions.height}
+                </span>
+              </div>
+            )}
+
+            {/* Show size if available */}
+            {media.metadata?.size && (
+              <div className="mt-1 text-sm text-gray-500">
+                Size:{' '}
+                <span className="font-medium">
+                  {(media.metadata.size / (1024 * 1024)).toFixed(2)} MB
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-2 mt-2 sm:mt-0">

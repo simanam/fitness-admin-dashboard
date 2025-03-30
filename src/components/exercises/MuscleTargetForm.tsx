@@ -10,14 +10,14 @@ interface MuscleTargetFormProps {
   muscles: Muscle[];
   onSubmit: (data: {
     muscleId: string;
-    role: 'PRIMARY' | 'SECONDARY' | 'TERTIARY';
+    role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
     activationPercentage: number;
   }) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   initialData?: {
     muscleId: string;
-    role: 'PRIMARY' | 'SECONDARY' | 'TERTIARY';
+    role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
     activationPercentage: number;
   };
   editMode?: boolean;
@@ -32,9 +32,9 @@ const MuscleTargetForm = ({
   editMode = false,
 }: MuscleTargetFormProps) => {
   const [muscleId, setMuscleId] = useState<string>(initialData?.muscleId || '');
-  const [role, setRole] = useState<'PRIMARY' | 'SECONDARY' | 'TERTIARY'>(
-    initialData?.role || 'PRIMARY'
-  );
+  const [role, setRole] = useState<
+    'primary' | 'secondary' | 'synergist' | 'stabilizer'
+  >(initialData?.role || 'primary');
   const [activationPercentage, setActivationPercentage] = useState<number>(
     initialData?.activationPercentage || 50
   );
@@ -87,20 +87,24 @@ const MuscleTargetForm = ({
 
     await onSubmit({
       muscleId,
-      role,
+      role: role.toLowerCase() as 'PRIMARY' | 'SECONDARY' | 'TERTIARY',
       activationPercentage,
     });
   };
 
   // Get role color for style indicators
-  const getRoleColor = (roleType: 'PRIMARY' | 'SECONDARY' | 'TERTIARY') => {
+  const getRoleColor = (
+    roleType: 'primary' | 'secondary' | 'synergist' | 'stabilizer'
+  ) => {
     switch (roleType) {
-      case 'PRIMARY':
+      case 'primary':
         return 'bg-red-100 text-red-800 border-red-200';
-      case 'SECONDARY':
+      case 'secondary':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'TERTIARY':
+      case 'synergist':
         return 'bg-green-100 text-green-800 border-green-200';
+      case 'stabilizer':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -170,34 +174,45 @@ const MuscleTargetForm = ({
         <RadioGroup
           value={role}
           onValueChange={(value) =>
-            setRole(value as 'PRIMARY' | 'SECONDARY' | 'TERTIARY')
+            setRole(
+              value as 'primary' | 'secondary' | 'synergist' | 'stabilizer'
+            )
           }
           className="flex flex-col sm:flex-row gap-4"
         >
           <div
-            className={`flex items-center space-x-2 border rounded-lg p-3 ${role === 'PRIMARY' ? 'ring-2 ring-gray-900' : ''} ${getRoleColor('PRIMARY')}`}
+            className={`flex items-center space-x-2 border rounded-lg p-3 ${role === 'primary' ? 'ring-2 ring-gray-900' : ''} ${getRoleColor('primary')}`}
           >
-            <RadioGroupItem id="primary" value="PRIMARY" />
+            <RadioGroupItem id="primary" value="primary" />
             <Label htmlFor="primary" className="font-medium cursor-pointer">
               Primary
             </Label>
           </div>
 
           <div
-            className={`flex items-center space-x-2 border rounded-lg p-3 ${role === 'SECONDARY' ? 'ring-2 ring-gray-900' : ''} ${getRoleColor('SECONDARY')}`}
+            className={`flex items-center space-x-2 border rounded-lg p-3 ${role === 'secondary' ? 'ring-2 ring-gray-900' : ''} ${getRoleColor('secondary')}`}
           >
-            <RadioGroupItem id="secondary" value="SECONDARY" />
+            <RadioGroupItem id="secondary" value="secondary" />
             <Label htmlFor="secondary" className="font-medium cursor-pointer">
               Secondary
             </Label>
           </div>
 
           <div
-            className={`flex items-center space-x-2 border rounded-lg p-3 ${role === 'TERTIARY' ? 'ring-2 ring-gray-900' : ''} ${getRoleColor('TERTIARY')}`}
+            className={`flex items-center space-x-2 border rounded-lg p-3 ${role === 'synergist' ? 'ring-2 ring-gray-900' : ''} ${getRoleColor('synergist')}`}
           >
-            <RadioGroupItem id="tertiary" value="TERTIARY" />
-            <Label htmlFor="tertiary" className="font-medium cursor-pointer">
-              Tertiary
+            <RadioGroupItem id="synergist" value="synergist" />
+            <Label htmlFor="synergist" className="font-medium cursor-pointer">
+              Synergist
+            </Label>
+          </div>
+
+          <div
+            className={`flex items-center space-x-2 border rounded-lg p-3 ${role === 'stabilizer' ? 'ring-2 ring-gray-900' : ''} ${getRoleColor('stabilizer')}`}
+          >
+            <RadioGroupItem id="stabilizer" value="stabilizer" />
+            <Label htmlFor="stabilizer" className="font-medium cursor-pointer">
+              Stabilizer
             </Label>
           </div>
         </RadioGroup>
@@ -212,8 +227,12 @@ const MuscleTargetForm = ({
             with moderate engagement
           </p>
           <p>
-            <span className="font-medium">Tertiary:</span> Minimally involved
-            stabilizing muscles
+            <span className="font-medium">Synergist:</span> Muscles that assist
+            in the movement
+          </p>
+          <p>
+            <span className="font-medium">Stabilizer:</span> Muscles that help
+            maintain posture during the exercise
           </p>
         </div>
       </div>

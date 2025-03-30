@@ -10,7 +10,6 @@ import {
   Star,
   Play,
   Maximize2,
-  Check,
 } from 'lucide-react';
 import { ExerciseMedia } from '../../api/exerciseMediaService';
 import { cn } from '../../lib/utils';
@@ -27,8 +26,8 @@ export interface MediaGalleryProps {
 }
 
 type ViewMode = 'grid' | 'list';
-type MediaType = 'all' | 'VIDEO' | 'IMAGE' | 'SVG';
-type ViewAngle = 'all' | 'FRONT' | 'SIDE' | 'REAR' | 'ANGLE';
+type MediaType = 'all' | 'video' | 'image' | 'svg';
+type ViewAngle = 'all' | 'front' | 'side' | 'rear' | 'angle';
 
 const MediaGallery = ({
   media,
@@ -87,13 +86,34 @@ const MediaGallery = ({
     setShowPreview(true);
   };
 
+  // Helper to get video preview image
+  const getVideoPreviewImage = (item: ExerciseMedia) => {
+    // Try to use poster first, as it's specifically designed for video previews
+    if (item.urls?.poster) {
+      return item.urls.poster;
+    }
+
+    // Fall back to thumbnail if poster is not available
+    if (item.urls?.thumbnail) {
+      return item.urls.thumbnail;
+    }
+
+    // Try preview as another fallback
+    if (item.urls?.preview) {
+      return item.urls.preview;
+    }
+
+    // If none of the above are available, return null
+    return null;
+  };
+
   // Get media type counts for filter buttons
   const getTypeCounts = () => {
     const counts = {
       all: media.length,
-      VIDEO: media.filter((item) => item.mediaType === 'VIDEO').length,
-      IMAGE: media.filter((item) => item.mediaType === 'IMAGE').length,
-      SVG: media.filter((item) => item.mediaType === 'SVG').length,
+      video: media.filter((item) => item.mediaType === 'video').length,
+      image: media.filter((item) => item.mediaType === 'image').length,
+      svg: media.filter((item) => item.mediaType === 'svg').length,
     };
     return counts;
   };
@@ -102,10 +122,10 @@ const MediaGallery = ({
   const getAngleCounts = () => {
     const counts = {
       all: media.length,
-      FRONT: media.filter((item) => item.viewAngle === 'FRONT').length,
-      SIDE: media.filter((item) => item.viewAngle === 'SIDE').length,
-      REAR: media.filter((item) => item.viewAngle === 'REAR').length,
-      ANGLE: media.filter((item) => item.viewAngle === 'ANGLE').length,
+      front: media.filter((item) => item.viewAngle === 'front').length,
+      side: media.filter((item) => item.viewAngle === 'side').length,
+      rear: media.filter((item) => item.viewAngle === 'rear').length,
+      angle: media.filter((item) => item.viewAngle === 'angle').length,
     };
     return counts;
   };
@@ -116,6 +136,8 @@ const MediaGallery = ({
   // Render media item based on type (grid mode)
   const renderMediaItem = (item: ExerciseMedia) => {
     const isPrimary = item.isPrimary;
+    const videoPreviewUrl =
+      item.mediaType === 'video' ? getVideoPreviewImage(item) : null;
 
     return (
       <div
@@ -134,13 +156,20 @@ const MediaGallery = ({
           )}
           onClick={() => handlePreview(item)}
         >
-          {item.mediaType === 'VIDEO' && (
+          {item.mediaType === 'video' && (
             <div className="h-full w-full bg-gray-100 relative flex items-center justify-center">
-              {item.urls?.thumbnail ? (
+              {videoPreviewUrl ? (
                 <img
-                  src={item.urls.thumbnail}
+                  src={videoPreviewUrl}
                   alt={item.title || 'Video thumbnail'}
                   className="h-full w-full object-cover"
+                  onError={(e) => {
+                    // If the image fails to load, show the fallback video icon
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement?.classList.add(
+                      'fallback-video-display'
+                    );
+                  }}
                 />
               ) : (
                 <Video className="h-12 w-12 text-gray-400" />
@@ -151,20 +180,42 @@ const MediaGallery = ({
             </div>
           )}
 
-          {item.mediaType === 'IMAGE' && (
-            <img
-              src={item.url}
-              alt={item.title || 'Exercise image'}
-              className="h-full w-full object-cover"
-            />
+          {item.mediaType === 'image' && (
+            <div className="h-full w-full bg-gray-100 relative flex items-center justify-center">
+              <img
+                src={item.url}
+                alt={item.title || 'Exercise image'}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  // If the image fails to load, show a fallback icon
+                  e.currentTarget.style.display = 'none';
+                  const fallbackIcon = document.createElement('div');
+                  fallbackIcon.innerHTML =
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+                  fallbackIcon.className =
+                    'h-12 w-12 text-gray-400 absolute inset-0 flex items-center justify-center';
+                  e.currentTarget.parentElement?.appendChild(fallbackIcon);
+                }}
+              />
+            </div>
           )}
 
-          {item.mediaType === 'SVG' && (
+          {item.mediaType === 'svg' && (
             <div className="h-full w-full bg-gray-50 flex items-center justify-center p-2">
               <img
                 src={item.url}
                 alt={item.title || 'Exercise SVG'}
                 className="h-full w-full object-contain"
+                onError={(e) => {
+                  // If the SVG fails to load, show a fallback icon
+                  e.currentTarget.style.display = 'none';
+                  const fallbackIcon = document.createElement('div');
+                  fallbackIcon.innerHTML =
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
+                  fallbackIcon.className =
+                    'h-12 w-12 text-gray-400 absolute inset-0 flex items-center justify-center';
+                  e.currentTarget.parentElement?.appendChild(fallbackIcon);
+                }}
               />
             </div>
           )}
@@ -203,9 +254,9 @@ const MediaGallery = ({
           <span
             className={cn(
               'text-xs px-2 py-0.5 rounded-full',
-              item.mediaType === 'VIDEO'
+              item.mediaType === 'video'
                 ? 'bg-purple-100 text-purple-800'
-                : item.mediaType === 'IMAGE'
+                : item.mediaType === 'image'
                   ? 'bg-green-100 text-green-800'
                   : 'bg-blue-100 text-blue-800'
             )}
@@ -302,43 +353,43 @@ const MediaGallery = ({
               >
                 All ({typeCounts.all})
               </button>
-              {typeCounts.VIDEO > 0 && (
+              {typeCounts.video > 0 && (
                 <button
-                  onClick={() => setMediaTypeFilter('VIDEO')}
+                  onClick={() => setMediaTypeFilter('video')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
-                    mediaTypeFilter === 'VIDEO'
+                    mediaTypeFilter === 'video'
                       ? 'bg-purple-600 text-white'
                       : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
                   )}
                 >
-                  Videos ({typeCounts.VIDEO})
+                  Videos ({typeCounts.video})
                 </button>
               )}
-              {typeCounts.IMAGE > 0 && (
+              {typeCounts.image > 0 && (
                 <button
-                  onClick={() => setMediaTypeFilter('IMAGE')}
+                  onClick={() => setMediaTypeFilter('image')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
-                    mediaTypeFilter === 'IMAGE'
+                    mediaTypeFilter === 'image'
                       ? 'bg-green-600 text-white'
                       : 'bg-green-100 text-green-700 hover:bg-green-200'
                   )}
                 >
-                  Images ({typeCounts.IMAGE})
+                  Images ({typeCounts.image})
                 </button>
               )}
-              {typeCounts.SVG > 0 && (
+              {typeCounts.svg > 0 && (
                 <button
-                  onClick={() => setMediaTypeFilter('SVG')}
+                  onClick={() => setMediaTypeFilter('svg')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
-                    mediaTypeFilter === 'SVG'
+                    mediaTypeFilter === 'svg'
                       ? 'bg-blue-600 text-white'
                       : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                   )}
                 >
-                  SVGs ({typeCounts.SVG})
+                  SVGs ({typeCounts.svg})
                 </button>
               )}
             </div>
@@ -361,56 +412,56 @@ const MediaGallery = ({
               >
                 All
               </button>
-              {angleCounts.FRONT > 0 && (
+              {angleCounts.front > 0 && (
                 <button
-                  onClick={() => setViewAngleFilter('FRONT')}
+                  onClick={() => setViewAngleFilter('front')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
-                    viewAngleFilter === 'FRONT'
+                    viewAngleFilter === 'front'
                       ? 'bg-gray-900 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   )}
                 >
-                  Front ({angleCounts.FRONT})
+                  Front ({angleCounts.front})
                 </button>
               )}
-              {angleCounts.SIDE > 0 && (
+              {angleCounts.side > 0 && (
                 <button
-                  onClick={() => setViewAngleFilter('SIDE')}
+                  onClick={() => setViewAngleFilter('side')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
-                    viewAngleFilter === 'SIDE'
+                    viewAngleFilter === 'side'
                       ? 'bg-gray-900 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   )}
                 >
-                  Side ({angleCounts.SIDE})
+                  Side ({angleCounts.side})
                 </button>
               )}
-              {angleCounts.REAR > 0 && (
+              {angleCounts.rear > 0 && (
                 <button
-                  onClick={() => setViewAngleFilter('REAR')}
+                  onClick={() => setViewAngleFilter('rear')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
-                    viewAngleFilter === 'REAR'
+                    viewAngleFilter === 'rear'
                       ? 'bg-gray-900 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   )}
                 >
-                  Rear ({angleCounts.REAR})
+                  Rear ({angleCounts.rear})
                 </button>
               )}
-              {angleCounts.ANGLE > 0 && (
+              {angleCounts.angle > 0 && (
                 <button
-                  onClick={() => setViewAngleFilter('ANGLE')}
+                  onClick={() => setViewAngleFilter('angle')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
-                    viewAngleFilter === 'ANGLE'
+                    viewAngleFilter === 'angle'
                       ? 'bg-gray-900 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   )}
                 >
-                  Angle ({angleCounts.ANGLE})
+                  Angle ({angleCounts.angle})
                 </button>
               )}
             </div>
@@ -491,6 +542,20 @@ const MediaGallery = ({
           />
         </Modal>
       )}
+
+      {/* Add fallback styles */}
+      <style jsx>{`
+        .fallback-video-display {
+          position: relative;
+        }
+        .fallback-video-display::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-color: #f3f4f6;
+          z-index: 0;
+        }
+      `}</style>
     </div>
   );
 };

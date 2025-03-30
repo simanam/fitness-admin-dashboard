@@ -6,12 +6,14 @@ import {
   ExerciseFormData,
   FORM_VALIDATION_RULES,
   FORM_SECTIONS,
+  defaultExerciseFormData,
 } from '../../../types/exerciseFormTypes';
 import BasicInfoSection from './BasicInfoSection';
 import TechnicalDetailsSection from './TechnicalDetailsSection';
 import InstructionsSection from './InstructionsSection';
 import SafetyFormSection from './SafetyFormSection';
 import MediaUploadSection from './MediaUploadSection';
+import { parseInstructions } from '../../../utils/instructionsParser';
 
 interface ExerciseFormProps {
   initialData?: ExerciseFormData;
@@ -30,21 +32,55 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaMetadata, setMediaMetadata] = useState<any[]>([]);
 
+  // Prepare initial data with properly initialized form_points
+  const preparedInitialData = initialData
+    ? {
+        ...initialData,
+        form_points: initialData.form_points || {
+          setup: [],
+          execution: [],
+          breathing: [],
+          alignment: [],
+        },
+      }
+    : defaultExerciseFormData;
+
   const methods = useForm<ExerciseFormData>({
-    defaultValues: initialData,
+    defaultValues: preparedInitialData,
     mode: 'onChange',
   });
 
   const {
     handleSubmit,
     formState: { isDirty, isValid, errors },
+    getValues,
   } = methods;
 
   const handleFormSubmit = (data: ExerciseFormData) => {
+    // Ensure form_points is properly parsed from instructions
+    // This is a safety measure in case the useEffect in InstructionsSection
+    // doesn't trigger before submission
+    if (data.instructions) {
+      const parsedFormPoints = parseInstructions(data.instructions);
+      data.form_points = parsedFormPoints;
+    }
+
+    // Ensure form_points exists even if empty
+    if (!data.form_points) {
+      data.form_points = {
+        setup: [],
+        execution: [],
+        breathing: [],
+        alignment: [],
+      };
+    }
+
+    // Pass data and media files to the parent onSubmit
     onSubmit(data, mediaFiles.length > 0 ? mediaFiles : undefined);
   };
 
   const handleAddMedia = (file: File, metadata: any) => {
+    console.log(file, mediaFiles, 'gegegeg');
     setMediaFiles([...mediaFiles, file]);
     setMediaMetadata([...mediaMetadata, metadata]);
   };
@@ -180,7 +216,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
             ) : (
               <button
                 type="submit"
-                disabled={!isValid || isSubmitting}
+                disabled={isSubmitting}
                 className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="h-4 w-4 mr-1" />

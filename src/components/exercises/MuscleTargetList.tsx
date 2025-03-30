@@ -8,7 +8,7 @@ interface MuscleTargetListProps {
   targets: MuscleTarget[];
   onEdit: (target: MuscleTarget) => void;
   onDelete: (target: MuscleTarget) => void;
-  role: 'PRIMARY' | 'SECONDARY' | 'TERTIARY';
+  role: 'primary' | 'secondary' | 'synergist' | 'stabilizer'; // Updated case and enum values
 }
 
 const MuscleTargetList = ({
@@ -22,26 +22,33 @@ const MuscleTargetList = ({
   // Get styling based on role
   const getRoleStyles = () => {
     switch (role) {
-      case 'PRIMARY':
+      case 'primary':
         return {
           headerBg: 'bg-red-50',
           headerBorder: 'border-red-100',
           headerText: 'text-red-800',
           icon: <Layers className="h-5 w-5 text-red-600" />,
         };
-      case 'SECONDARY':
+      case 'secondary':
         return {
           headerBg: 'bg-blue-50',
           headerBorder: 'border-blue-100',
           headerText: 'text-blue-800',
           icon: <Layers className="h-5 w-5 text-blue-600" />,
         };
-      case 'TERTIARY':
+      case 'synergist':
         return {
           headerBg: 'bg-green-50',
           headerBorder: 'border-green-100',
           headerText: 'text-green-800',
           icon: <Layers className="h-5 w-5 text-green-600" />,
+        };
+      case 'stabilizer':
+        return {
+          headerBg: 'bg-purple-50',
+          headerBorder: 'border-purple-100',
+          headerText: 'text-purple-800',
+          icon: <Layers className="h-5 w-5 text-purple-600" />,
         };
       default:
         return {
@@ -52,7 +59,6 @@ const MuscleTargetList = ({
         };
     }
   };
-
   const { headerBg, headerBorder, headerText, icon } = getRoleStyles();
 
   // If no targets, don't render the section
@@ -93,11 +99,13 @@ const MuscleTargetList = ({
                   <div className="w-full max-w-xs bg-gray-200 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full ${
-                        role === 'PRIMARY'
+                        role === 'primary'
                           ? 'bg-red-500'
-                          : role === 'SECONDARY'
+                          : role === 'secondary'
                             ? 'bg-blue-500'
-                            : 'bg-green-500'
+                            : role === 'synergist'
+                              ? 'bg-green-500'
+                              : 'bg-purple-500'
                       }`}
                       style={{ width: `${target.activationPercentage}%` }}
                     ></div>

@@ -1,15 +1,52 @@
 // src/components/exercises/form/InstructionsSection.tsx
-import React from 'react';
-import { useFormContext } from 'react-hook-form';
+import React, { useEffect } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { Info } from 'lucide-react';
 import { Textarea } from '../../ui/textarea';
 import { ExerciseFormData } from '../../../types/exerciseFormTypes';
+import {
+  parseInstructions,
+  formatInstructions,
+} from '../../../utils/instructionsParser';
 
 const InstructionsSection: React.FC = () => {
   const {
     register,
+    setValue,
+    getValues,
     formState: { errors },
   } = useFormContext<ExerciseFormData>();
+
+  // Watch the instructions field to update form_points when it changes
+  const instructions = useWatch({ name: 'instructions' });
+
+  // Keep form_points in sync with instructions text
+  useEffect(() => {
+    if (instructions) {
+      const parsedFormPoints = parseInstructions(instructions);
+      // Set the form_points object based on parsed instructions
+      setValue('form_points', parsedFormPoints, { shouldDirty: true });
+    }
+  }, [instructions, setValue]);
+
+  // Initialize instructions from form_points if coming from existing exercise
+  useEffect(() => {
+    const currentInstructions = getValues('instructions');
+    const formPoints = getValues('form_points');
+
+    // If we have form_points but no instructions text, format the instructions
+    if (
+      !currentInstructions &&
+      formPoints &&
+      (formPoints.setup.length > 0 ||
+        formPoints.execution.length > 0 ||
+        formPoints.breathing.length > 0 ||
+        formPoints.alignment.length > 0)
+    ) {
+      const formattedInstructions = formatInstructions(formPoints);
+      setValue('instructions', formattedInstructions, { shouldDirty: false });
+    }
+  }, [getValues, setValue]);
 
   return (
     <div className="space-y-8">

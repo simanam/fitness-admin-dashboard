@@ -65,6 +65,7 @@ const MediaUploadSection: React.FC<MediaUploadSectionProps> = ({
       description,
       format: selectedFile.name.split('.').pop()?.toLowerCase(),
     };
+    console.log(selectedFile, metadata, 'u[lpoadseciotn');
 
     onAddMedia(selectedFile, metadata);
     resetForm();

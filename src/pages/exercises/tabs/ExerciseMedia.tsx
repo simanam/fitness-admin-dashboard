@@ -1,14 +1,9 @@
 // src/pages/exercises/tabs/ExerciseMedia.tsx
-import { useState, useEffect } from 'react';
-import {
-  Upload,
-  CheckCircle,
-  AlertTriangle,
-  Layers,
-  Camera,
-} from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Camera, AlertTriangle } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import MediaUploader from '../../../components/media/MediaUploader';
+
 import MediaGallery from '../../../components/media/MediaGallery';
 import MediaReorder from '../../../components/media/MediaReorder';
 import ConfirmationDialog from '../../../components/ui/confirmation-dialog';
@@ -17,6 +12,7 @@ import { useMediaManagement } from '../../../hooks/useMediaManagement';
 import MediaCompletenessChecker from '../../../components/media/MediaCompletenessChecker';
 import MediaStatistics from '../../../components/media/MediaStatistics';
 import MediaAngleCoverage from '../../../components/media/MediaAngleCoverage';
+import exerciseMediaService from '../../../api/exerciseMediaService';
 
 interface ExerciseMediaProps {
   exerciseId: string;
@@ -43,6 +39,86 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
   );
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [mediaToDelete, setMediaToDelete] = useState<string | null>(null);
+  const [mediaStats, setMediaStats] = useState(null);
+  const [mediaCompleteness, setMediaCompleteness] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [loadingCompleteness, setLoadingCompleteness] = useState(false);
+  const [statsError, setStatsError] = useState(null);
+  const [completenessError, setCompletenessError] = useState(null);
+
+  // Only fetch media data on mount and when exerciseId changes
+  useEffect(() => {
+    fetchMedia();
+    // No need to cleanup since we don't want to cancel this request
+  }, [exerciseId]);
+
+  // Delay loading stats and completeness info to avoid rate limiting
+  useEffect(() => {
+    // Only fetch secondary data after media has loaded
+    if (!isLoading && media.length > 0) {
+      // Fetch stats first with a delay
+      setLoadingStats(true);
+      const statsTimer = setTimeout(() => {
+        fetchMediaStats();
+      }, 1000);
+
+      // Then fetch completeness data with a longer delay
+      setLoadingCompleteness(true);
+      const completenessTimer = setTimeout(() => {
+        fetchMediaCompleteness();
+      }, 2000);
+
+      return () => {
+        clearTimeout(statsTimer);
+        clearTimeout(completenessTimer);
+      };
+    }
+  }, [isLoading, media.length, exerciseId]);
+
+  // Fetch media stats with proper error handling
+  const fetchMediaStats = useCallback(async () => {
+    try {
+      const stats = await exerciseMediaService.getMediaStats(exerciseId);
+      setMediaStats(stats);
+      setStatsError(null);
+    } catch (err) {
+      console.error('Error fetching media stats:', err);
+      setStatsError('Failed to load statistics');
+    } finally {
+      setLoadingStats(false);
+    }
+  }, [exerciseId]);
+
+  // Fetch media completeness with proper error handling
+  const fetchMediaCompleteness = useCallback(async () => {
+    try {
+      const completeness =
+        await exerciseMediaService.checkMediaCompleteness(exerciseId);
+
+      setMediaCompleteness(completeness);
+      setCompletenessError(null);
+    } catch (err) {
+      console.error('Error checking media completeness:', err);
+      setCompletenessError('Failed to check media completeness');
+    } finally {
+      setLoadingCompleteness(false);
+    }
+  }, [exerciseId]);
+
+  // Fetch all data - to be used for refresh buttons
+  const refreshAllData = useCallback(() => {
+    fetchMedia();
+    // Add delays to avoid rate limiting
+    setTimeout(() => {
+      setLoadingStats(true);
+      fetchMediaStats();
+    }, 1000);
+
+    setTimeout(() => {
+      setLoadingCompleteness(true);
+      fetchMediaCompleteness();
+    }, 2000);
+  }, [fetchMedia, fetchMediaStats, fetchMediaCompleteness]);
 
   // Handle media removal with confirmation
   const handleRemoveMedia = (mediaId: string) => {
@@ -60,7 +136,21 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
   // Confirm media deletion
   const confirmDeleteMedia = async () => {
     if (!mediaToDelete) return;
-    await removeMedia(mediaToDelete);
+    const success = await removeMedia(mediaToDelete);
+
+    if (success) {
+      // Refresh stats and completeness data after a short delay
+      setTimeout(() => {
+        setLoadingStats(true);
+        fetchMediaStats();
+      }, 1000);
+
+      setTimeout(() => {
+        setLoadingCompleteness(true);
+        fetchMediaCompleteness();
+      }, 2000);
+    }
+
     setShowDeleteDialog(false);
     setMediaToDelete(null);
   };
@@ -79,6 +169,27 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
     }, 100);
   };
 
+  // Handle successful media upload
+  const handleMediaUpload = async (file: File, viewAngle?: string) => {
+    console.log(file, viewAngle, 'sjsjsj');
+    const success = await uploadMedia(file, viewAngle);
+
+    if (success) {
+      // Refresh stats and completeness after upload with delays to avoid rate limiting
+      setTimeout(() => {
+        setLoadingStats(true);
+        fetchMediaStats();
+      }, 1000);
+
+      setTimeout(() => {
+        setLoadingCompleteness(true);
+        fetchMediaCompleteness();
+      }, 2000);
+    }
+
+    return success;
+  };
+
   // Display error state if the hook encountered any errors
   if (error) {
     return (
@@ -89,7 +200,7 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
         </h3>
         <p className="text-red-700 mb-4">{error}</p>
         <button
-          onClick={() => fetchMedia()}
+          onClick={() => refreshAllData()}
           className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
         >
           Try Again
@@ -111,16 +222,31 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
     <div className="space-y-6">
       {/* Media Statistics & Completeness Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* These components should be properly implemented elsewhere */}
+        {/* Pass down loaded data instead of letting component fetch */}
         {typeof MediaCompletenessChecker !== 'undefined' && (
           <MediaCompletenessChecker
             exerciseId={exerciseId}
-            onCheck={fetchMedia}
+            completenessData={mediaCompleteness}
+            isLoading={loadingCompleteness}
+            error={completenessError}
+            onCheck={() => {
+              setLoadingCompleteness(true);
+              fetchMediaCompleteness();
+            }}
           />
         )}
 
         {typeof MediaStatistics !== 'undefined' && (
-          <MediaStatistics exerciseId={exerciseId} />
+          <MediaStatistics
+            exerciseId={exerciseId}
+            statsData={mediaStats}
+            isLoading={loadingStats}
+            error={statsError}
+            onRefresh={() => {
+              setLoadingStats(true);
+              fetchMediaStats();
+            }}
+          />
         )}
       </div>
 
@@ -211,7 +337,7 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
 
               <MediaUploader
                 mediaFiles={mediaFiles}
-                onMediaAdd={uploadMedia}
+                onMediaAdd={handleMediaUpload}
                 onMediaRemove={handleRemoveMedia}
                 onSetPrimary={setPrimaryMedia}
                 onUpdateViewAngle={updateViewAngle}

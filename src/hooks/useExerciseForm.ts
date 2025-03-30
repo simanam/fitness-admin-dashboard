@@ -7,6 +7,7 @@ import {
   defaultExerciseFormData,
 } from '../types/exerciseFormTypes';
 import exerciseService from '../api/exerciseService';
+import { parseInstructions } from '../utils/instructionsParser';
 
 interface UseExerciseFormProps {
   exerciseId?: string;
@@ -28,15 +29,26 @@ export const useExerciseForm = ({
   const handleSubmit = async (data: ExerciseFormData, mediaFiles?: File[]) => {
     setIsSubmitting(true);
     try {
-      // Ensure form_points exists with all required arrays
-      const formData = {
+      // Parse instructions to ensure form_points is properly set
+      const parsedFormPoints = parseInstructions(data.instructions || '');
+
+      // Prepare form data with form_points properly set
+      const processedData = {
         ...data,
+        // Ensure form_points exists with all required arrays
         form_points: {
-          setup: data.form_points?.setup || [],
-          execution: data.form_points?.execution || [],
-          breathing: data.form_points?.breathing || [],
-          alignment: data.form_points?.alignment || [],
+          setup: parsedFormPoints.setup || [],
+          execution: parsedFormPoints.execution || [],
+          breathing: parsedFormPoints.breathing || [],
+          alignment: parsedFormPoints.alignment || [],
         },
+        // Transform any uppercase enum values to lowercase to match backend
+        difficulty: data.difficulty?.toLowerCase(),
+        mechanics: data.mechanics?.toLowerCase(),
+        force: data.force?.toLowerCase(),
+        status: data.status?.toLowerCase(),
+        plane_of_motion: data.plane_of_motion?.toLowerCase(),
+        movement_pattern: data.movement_pattern?.toLowerCase(),
       };
 
       // If we have media files, use the createExerciseWithMedia endpoint
@@ -52,7 +64,7 @@ export const useExerciseForm = ({
         }));
 
         const newExercise = await exerciseService.createExerciseWithMedia(
-          formData,
+          processedData,
           mediaFiles,
           mediaMetadata
         );
@@ -66,7 +78,7 @@ export const useExerciseForm = ({
         navigate(`/exercises/${newExercise.id}`);
       } else if (exerciseId) {
         // Update existing exercise
-        await exerciseService.updateExercise(exerciseId, formData);
+        await exerciseService.updateExercise(exerciseId, processedData);
         showToast({
           type: 'success',
           title: 'Success',
@@ -75,7 +87,7 @@ export const useExerciseForm = ({
         navigate(`/exercises/${exerciseId}`);
       } else {
         // Create new exercise without media
-        const newExercise = await exerciseService.createExercise(formData);
+        const newExercise = await exerciseService.createExercise(processedData);
         showToast({
           type: 'success',
           title: 'Success',
