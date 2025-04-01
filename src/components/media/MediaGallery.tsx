@@ -27,7 +27,7 @@ export interface MediaGalleryProps {
 
 type ViewMode = 'grid' | 'list';
 type MediaType = 'all' | 'video' | 'image' | 'svg';
-type ViewAngle = 'all' | 'front' | 'side' | 'rear' | 'angle';
+type ViewAngle = 'all' | 'front' | 'side' | 'back' | 'diagonal' | '45-degree';
 
 const MediaGallery = ({
   media,
@@ -124,8 +124,10 @@ const MediaGallery = ({
       all: media.length,
       front: media.filter((item) => item.viewAngle === 'front').length,
       side: media.filter((item) => item.viewAngle === 'side').length,
-      rear: media.filter((item) => item.viewAngle === 'rear').length,
-      angle: media.filter((item) => item.viewAngle === 'angle').length,
+      back: media.filter((item) => item.viewAngle === 'back').length,
+      diagonal: media.filter((item) => item.viewAngle === 'diagonal').length,
+      '45-degree': media.filter((item) => item.viewAngle === '45-degree')
+        .length,
     };
     return counts;
   };

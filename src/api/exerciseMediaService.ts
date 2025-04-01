@@ -6,7 +6,7 @@ export interface ExerciseMedia {
   exerciseId: string;
   mediaType: 'video' | 'image' | 'svg';
   url: string;
-  viewAngle: 'front' | 'side' | 'rear' | 'angle';
+  viewAngle: 'front' | 'side' | 'back' | 'diagonal' | '45-degree';
   isPrimary: boolean;
   duration?: number;
   format?: string;

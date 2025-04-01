@@ -27,8 +27,9 @@ const MediaAngleCoverage: React.FC<MediaAngleCoverageProps> = ({
     const baseAngles = [
       { id: 'front', label: 'Front View' },
       { id: 'side', label: 'Side View' },
-      { id: 'rear', label: 'Rear View' },
-      { id: 'angle', label: '45° Angle View' },
+      { id: 'back', label: 'Back View' }, // Changed from 'rear' to 'back'
+      { id: 'diagonal', label: 'Diagonal View' }, // Changed from 'angle' to 'diagonal'
+      { id: '45-degree', label: '45° Angle View' }, // Added this one
     ];
 
     // Then compute counts and flags for each angle

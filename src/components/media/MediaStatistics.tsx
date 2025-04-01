@@ -13,8 +13,9 @@ interface MediaStats {
   byViewAngle: {
     FRONT: number;
     SIDE: number;
-    REAR: number;
-    ANGLE: number;
+    BACK: number; // Changed from REAR to BACK
+    DIAGONAL: number; // Changed from ANGLE to DIAGONAL
+    FORTYFIVE: number; // Added this for 45-degree
   };
   totalDuration: number;
   totalSize: number;
@@ -237,15 +238,21 @@ const MediaStatistics: React.FC<MediaStatisticsProps> = ({
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm">Rear View</span>
+                  <span className="text-sm">Back View</span>
                   <span className="text-sm font-medium">
-                    {stats?.byViewAngle?.REAR ?? 0}
+                    {stats?.byViewAngle?.BACK ?? 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm">Angle View</span>
+                  <span className="text-sm">Diagonal View</span>
                   <span className="text-sm font-medium">
-                    {stats?.byViewAngle?.ANGLE ?? 0}
+                    {stats?.byViewAngle?.DIAGONAL ?? 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">45° Angle View</span>
+                  <span className="text-sm font-medium">
+                    {stats?.byViewAngle?.FORTYFIVE ?? 0}
                   </span>
                 </div>
               </div>
