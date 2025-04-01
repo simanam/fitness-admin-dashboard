@@ -7,6 +7,7 @@ import { useExerciseForm } from '../../hooks/useExerciseForm';
 import { useToast } from '../../hooks/useToast';
 import exerciseService from '../../api/exerciseService';
 import { ExerciseFormData } from '../../types/exerciseFormTypes';
+import { formatInstructions } from '../../utils/instructionsParser';
 
 const EditExercisePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,7 +42,43 @@ const EditExercisePage: React.FC = () => {
           bilateral: exercise.bilateral,
           plane_of_motion: exercise.plane_of_motion,
           status: exercise.status,
-          instructions: exercise.instructions || '',
+
+          // Handle form_points
+          form_points: {
+            setup: exercise.form_points?.setup || [],
+            execution: exercise.form_points?.execution || [],
+            breathing: exercise.form_points?.breathing || [],
+            alignment: exercise.form_points?.alignment || [],
+          },
+
+          // Generate instructions from form_points if they don't exist
+          instructions:
+            exercise.instructions ||
+            formatInstructions({
+              setup: exercise.form_points?.setup || [],
+              execution: exercise.form_points?.execution || [],
+              breathing: exercise.form_points?.breathing || [],
+              alignment: exercise.form_points?.alignment || [],
+            }),
+
+          // Handle common mistakes
+          common_mistakes: {
+            mistakes: exercise.common_mistakes?.mistakes || [],
+          },
+
+          // Handle safety info with proper defaults
+          safety_info: {
+            risk_level: exercise.safety_info?.risk_level || 'low',
+            precautions: exercise.safety_info?.precautions || [],
+            warning_signs: exercise.safety_info?.warning_signs || [],
+            contraindications: exercise.safety_info?.contraindications || [],
+          },
+
+          // Handle tempo recommendations
+          tempo_recommendations: {
+            default: exercise.tempo_recommendations?.default || '',
+            tempo_notes: exercise.tempo_recommendations?.tempo_notes || '',
+          },
         };
 
         setInitialData(formData);

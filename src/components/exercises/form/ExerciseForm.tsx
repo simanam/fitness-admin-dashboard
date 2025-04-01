@@ -1,5 +1,5 @@
 // src/components/exercises/form/ExerciseForm.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { ChevronRight, Save, X } from 'lucide-react';
 import {
@@ -17,6 +17,7 @@ import { parseInstructions } from '../../../utils/instructionsParser';
 
 interface ExerciseFormProps {
   initialData?: ExerciseFormData;
+  exerciseId?: string;
   onSubmit: (data: ExerciseFormData, mediaFiles?: File[]) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -24,6 +25,7 @@ interface ExerciseFormProps {
 
 const ExerciseForm: React.FC<ExerciseFormProps> = ({
   initialData,
+  exerciseId,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -32,15 +34,32 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaMetadata, setMediaMetadata] = useState<any[]>([]);
 
-  // Prepare initial data with properly initialized form_points
-  const preparedInitialData = initialData
+  // Ensure all nested objects are properly initialized
+  const preparedInitialData: ExerciseFormData = initialData
     ? {
         ...initialData,
-        form_points: initialData.form_points || {
-          setup: [],
-          execution: [],
-          breathing: [],
-          alignment: [],
+        // Ensure form_points structure is complete
+        form_points: {
+          setup: initialData.form_points?.setup || [],
+          execution: initialData.form_points?.execution || [],
+          breathing: initialData.form_points?.breathing || [],
+          alignment: initialData.form_points?.alignment || [],
+        },
+        // Ensure common_mistakes structure is complete
+        common_mistakes: {
+          mistakes: initialData.common_mistakes?.mistakes || [],
+        },
+        // Ensure safety_info structure is complete
+        safety_info: {
+          risk_level: initialData.safety_info?.risk_level || 'low',
+          precautions: initialData.safety_info?.precautions || [],
+          warning_signs: initialData.safety_info?.warning_signs || [],
+          contraindications: initialData.safety_info?.contraindications || [],
+        },
+        // Ensure tempo_recommendations structure is complete
+        tempo_recommendations: {
+          default: initialData.tempo_recommendations?.default || '',
+          tempo_notes: initialData.tempo_recommendations?.tempo_notes || '',
         },
       }
     : defaultExerciseFormData;
@@ -54,18 +73,24 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
     handleSubmit,
     formState: { isDirty, isValid, errors },
     getValues,
+    reset,
   } = methods;
 
+  // Update form values when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      reset(preparedInitialData);
+    }
+  }, [initialData, reset]);
+
   const handleFormSubmit = (data: ExerciseFormData) => {
-    // Ensure form_points is properly parsed from instructions
-    // This is a safety measure in case the useEffect in InstructionsSection
-    // doesn't trigger before submission
+    // Update form_points from instructions if they exist
     if (data.instructions) {
       const parsedFormPoints = parseInstructions(data.instructions);
       data.form_points = parsedFormPoints;
     }
 
-    // Ensure form_points exists even if empty
+    // Ensure all required nested objects exist
     if (!data.form_points) {
       data.form_points = {
         setup: [],
@@ -75,12 +100,31 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
       };
     }
 
+    if (!data.common_mistakes) {
+      data.common_mistakes = { mistakes: [] };
+    }
+
+    if (!data.safety_info) {
+      data.safety_info = {
+        risk_level: 'low',
+        precautions: [],
+        warning_signs: [],
+        contraindications: [],
+      };
+    }
+
+    if (!data.tempo_recommendations) {
+      data.tempo_recommendations = {
+        default: '',
+        tempo_notes: '',
+      };
+    }
+
     // Pass data and media files to the parent onSubmit
     onSubmit(data, mediaFiles.length > 0 ? mediaFiles : undefined);
   };
 
   const handleAddMedia = (file: File, metadata: any) => {
-    console.log(file, mediaFiles, 'gegegeg');
     setMediaFiles([...mediaFiles, file]);
     setMediaMetadata([...mediaMetadata, metadata]);
   };

@@ -38,10 +38,10 @@ const InstructionsSection: React.FC = () => {
     if (
       !currentInstructions &&
       formPoints &&
-      (formPoints.setup.length > 0 ||
-        formPoints.execution.length > 0 ||
-        formPoints.breathing.length > 0 ||
-        formPoints.alignment.length > 0)
+      (formPoints.setup?.length > 0 ||
+        formPoints.execution?.length > 0 ||
+        formPoints.breathing?.length > 0 ||
+        formPoints.alignment?.length > 0)
     ) {
       const formattedInstructions = formatInstructions(formPoints);
       setValue('instructions', formattedInstructions, { shouldDirty: false });
@@ -67,11 +67,17 @@ const InstructionsSection: React.FC = () => {
                 Formatting Tips
               </h4>
               <ul className="mt-1 text-sm text-blue-700 list-disc list-inside space-y-1">
-                <li>Start with setup instructions</li>
-                <li>Include execution steps</li>
-                <li>Add breathing cues if applicable</li>
-                <li>Include form/alignment guidance</li>
+                <li>
+                  Start with section headers like "Setup:", "Execution:", etc.
+                </li>
+                <li>Put each instruction point on a new line</li>
                 <li>Add a blank line between different sections</li>
+                <li>
+                  Numbered steps will be preserved for setup and execution
+                </li>
+                <li>
+                  Bullet points will be preserved for breathing and alignment
+                </li>
               </ul>
             </div>
           </div>
@@ -105,7 +111,7 @@ Alignment:
           />
           {errors.instructions && (
             <p className="mt-1 text-sm text-red-600">
-              {errors.instructions.message}
+              {errors.instructions.message as string}
             </p>
           )}
         </div>
@@ -115,8 +121,9 @@ Alignment:
         <h4 className="text-sm font-medium text-yellow-800">Note</h4>
         <p className="mt-1 text-sm text-yellow-700">
           Instructions will be automatically parsed into separate sections for
-          setup, execution, breathing, and alignment guidance in the exercise
-          database.
+          setup, execution, breathing, and alignment guidance. The system
+          recognizes section headers like "Setup:", "Execution:", "Breathing:",
+          and "Alignment:".
         </p>
       </div>
     </div>
