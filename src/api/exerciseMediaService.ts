@@ -58,9 +58,17 @@ const cache = {
 
 // Clear cache for a specific exercise
 const clearExerciseCache = (exerciseId: string) => {
-  cache.media.delete(exerciseId);
-  cache.stats.delete(exerciseId);
-  cache.completeness.delete(exerciseId);
+  if (exerciseId) {
+    // Clear specific exercise cache
+    cache.media.delete(exerciseId);
+    cache.stats.delete(exerciseId);
+    cache.completeness.delete(exerciseId);
+  } else {
+    // Clear all cache (be careful with this one)
+    cache.media.clear();
+    cache.stats.clear();
+    cache.completeness.clear();
+  }
 };
 
 // Rate limit tracking
@@ -179,7 +187,10 @@ export const exerciseMediaService = {
     }
     const exerciseId = formData.get('exerciseId') as string;
     if (exerciseId) {
-      clearExerciseCache(exerciseId);
+      // First, completely remove this exercise from the cache
+      cache.media.delete(exerciseId);
+      cache.stats.delete(exerciseId);
+      cache.completeness.delete(exerciseId);
     }
 
     // No retry for uploads - just queue them
@@ -288,6 +299,10 @@ export const exerciseMediaService = {
 
   // Get media statistics
   getMediaStats: async (exerciseId: string): Promise<MediaStats> => {
+    if (!exerciseId) {
+      console.error('getMediaStats called with undefined exerciseId');
+      throw new Error('Exercise ID is required');
+    }
     // Check cache first
     const cachedStats = cache.stats.get(exerciseId);
     if (

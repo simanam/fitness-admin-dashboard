@@ -48,8 +48,6 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
         muscleService.getMuscles(),
       ]);
 
-      console.log(targetsData, 'tage dat', musclesData, 'memem');
-
       setMuscleTargets(targetsData);
       setAllMuscles(musclesData);
     } catch (error) {

@@ -29,7 +29,10 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
 
     try {
       const mediaData = await exerciseMediaService.getExerciseMedia(exerciseId);
-      setMedia(mediaData);
+      const filteredMedia = mediaData.filter(
+        (item) => item.exerciseId === exerciseId
+      );
+      setMedia(filteredMedia);
 
       // Convert to format for MediaUploader
       const files: MediaFile[] = mediaData.map((item) => ({
@@ -80,7 +83,6 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
   const uploadMedia = async (file: File, viewAngle?: string) => {
     // Create FormData for upload
 
-    console.log(file, viewAngle, 'file mansb');
     const formData = new FormData();
     formData.append('exerciseId', exerciseId);
     formData.append('file', file);

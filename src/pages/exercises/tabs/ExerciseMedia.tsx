@@ -52,6 +52,16 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
     // No need to cleanup since we don't want to cancel this request
   }, [exerciseId]);
 
+  useEffect(() => {
+    // When exerciseId changes, clear the previous cache to avoid mixing data
+    return () => {
+      // This cleanup function runs when the component unmounts or exerciseId changes
+      if (exerciseMediaService && exerciseMediaService.clearCache) {
+        exerciseMediaService.clearCache(exerciseId);
+      }
+    };
+  }, [exerciseId]);
+
   // Delay loading stats and completeness info to avoid rate limiting
   useEffect(() => {
     // Only fetch secondary data after media has loaded
@@ -78,8 +88,26 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
   // Fetch media stats with proper error handling
   const fetchMediaStats = useCallback(async () => {
     try {
+      if (!exerciseId) {
+        console.error('Cannot fetch stats: exerciseId is undefined');
+        setStatsError('Missing exercise ID');
+        setLoadingStats(false);
+        return;
+      }
+
       const stats = await exerciseMediaService.getMediaStats(exerciseId);
-      setMediaStats(stats);
+
+      // Safety check - make sure the stats belong to the current exercise
+      // If your API doesn't return this info, you might need to modify it
+      if (stats.exerciseId && stats.exerciseId !== exerciseId) {
+        console.warn(
+          'Stats data mismatch - received stats for a different exercise'
+        );
+        setMediaStats(null); // Avoid displaying wrong data
+      } else {
+        setMediaStats(stats);
+      }
+
       setStatsError(null);
     } catch (err) {
       console.error('Error fetching media stats:', err);

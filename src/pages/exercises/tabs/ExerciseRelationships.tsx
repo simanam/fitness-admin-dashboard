@@ -82,7 +82,7 @@ const ExerciseRelationships = ({
           relationshipService.getExerciseRelationships(exerciseId),
           relationshipService.getProgressionPath(exerciseId),
           exerciseService.getExercises({
-            status: 'PUBLISHED',
+            status: 'published',
             per_page: 100,
           }),
         ]);

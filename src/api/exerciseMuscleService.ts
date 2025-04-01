@@ -27,7 +27,7 @@ export const exerciseMuscleService = {
     // This route matches the backend route in the routes file:
     // "/:id/muscles" for getExerciseMuscles
     const response = await apiClient.get(`/exercises/${exerciseId}/muscles`);
-    console.log(response.data.data, 'sss');
+
     return response.data.data || [];
   },
 

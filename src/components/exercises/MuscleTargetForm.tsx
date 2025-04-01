@@ -178,7 +178,7 @@ const MuscleTargetForm = ({
               value as 'primary' | 'secondary' | 'synergist' | 'stabilizer'
             )
           }
-          className="flex flex-col sm:flex-row gap-4"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         >
           <div
             className={`flex items-center space-x-2 border rounded-lg p-3 ${role === 'primary' ? 'ring-2 ring-gray-900' : ''} ${getRoleColor('primary')}`}

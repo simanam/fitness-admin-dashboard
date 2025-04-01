@@ -19,7 +19,6 @@ const MuscleTargetingVisualization = ({
 
   // Group targets by muscle group
   useEffect(() => {
-    console.log(targets, 'hshshsh');
     const groups = targets.reduce<{ [key: string]: MuscleTarget[] }>(
       (acc, target) => {
         if (!target.muscle?.muscleGroup) return acc;
