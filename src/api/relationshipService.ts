@@ -6,7 +6,7 @@ export interface ExerciseRelationship {
   id: string;
   baseExerciseId: string;
   relatedExerciseId: string;
-  relationshipType: 'PROGRESSION' | 'VARIATION' | 'ALTERNATIVE';
+  relationshipType: 'progression' | 'variation' | 'alternative';
   difficultyChange: number;
   bidirectional: boolean;
   modificationDetails?: {
@@ -31,7 +31,7 @@ export interface ProgressionPath {
 export interface CreateRelationshipPayload {
   baseExerciseId: string;
   relatedExerciseId: string;
-  relationshipType: 'PROGRESSION' | 'VARIATION' | 'ALTERNATIVE';
+  relationshipType: 'progression' | 'variation' | 'alternative';
   difficultyChange?: number;
   bidirectional?: boolean;
   modificationDetails?: {

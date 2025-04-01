@@ -12,7 +12,7 @@ interface RelationshipEditModalProps {
   onClose: () => void;
   relationship: ExerciseRelationship | null;
   onUpdate: (data: {
-    relationshipType: 'PROGRESSION' | 'VARIATION' | 'ALTERNATIVE';
+    relationshipType: 'progression' | 'variation' | 'alternative';
     difficultyChange: number;
     bidirectional: boolean;
     modificationDetails?: {
@@ -36,8 +36,8 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
 }) => {
   // Form state
   const [relationshipType, setRelationshipType] = useState<
-    'PROGRESSION' | 'VARIATION' | 'ALTERNATIVE'
-  >('VARIATION');
+    'progression' | 'variation' | 'alternative'
+  >('variation');
   const [difficultyChange, setDifficultyChange] = useState<number>(0);
   const [bidirectional, setBidirectional] = useState<boolean>(false);
   const [modificationDetails, setModificationDetails] = useState<{
@@ -70,10 +70,10 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
     onUpdate({
       relationshipType,
       difficultyChange:
-        relationshipType === 'PROGRESSION' ? difficultyChange : 0,
-      bidirectional: relationshipType !== 'PROGRESSION' ? bidirectional : false,
+        relationshipType === 'progression' ? difficultyChange : 0,
+      bidirectional: relationshipType !== 'progression' ? bidirectional : false,
       modificationDetails:
-        relationshipType !== 'PROGRESSION' ? modificationDetails : undefined,
+        relationshipType !== 'progression' ? modificationDetails : undefined,
     });
   };
 
@@ -113,22 +113,22 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
           <Select
             options={[
               {
-                value: 'PROGRESSION',
+                value: 'progression',
                 label: 'Progression - Part of a difficulty progression',
               },
               {
-                value: 'VARIATION',
+                value: 'variation',
                 label: 'Variation - Similar movement pattern',
               },
               {
-                value: 'ALTERNATIVE',
+                value: 'alternative',
                 label: 'Alternative - Substitute exercise',
               },
             ]}
             value={relationshipType}
             onChange={(e) =>
               setRelationshipType(
-                e.target.value as 'PROGRESSION' | 'VARIATION' | 'ALTERNATIVE'
+                e.target.value as 'progression' | 'variation' | 'alternative'
               )
             }
             disabled={isSubmitting}
@@ -136,7 +136,7 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
         </div>
 
         {/* Conditional fields based on relationship type */}
-        {relationshipType === 'PROGRESSION' && (
+        {relationshipType === 'progression' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Difficulty Change
@@ -187,7 +187,7 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
         )}
 
         {/* Bidirectional checkbox (for non-progression relationships) */}
-        {relationshipType !== 'PROGRESSION' && (
+        {relationshipType !== 'progression' && (
           <div>
             <Checkbox
               id="bidirectional-edit"

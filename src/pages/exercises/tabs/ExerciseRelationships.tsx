@@ -54,8 +54,8 @@ const ExerciseRelationships = ({
   // Form state
   const [relatedExerciseId, setRelatedExerciseId] = useState<string>('');
   const [relationshipType, setRelationshipType] = useState<
-    'PROGRESSION' | 'VARIATION' | 'ALTERNATIVE'
-  >('VARIATION');
+    'progression' | 'variation' | 'alternative'
+  >('variation');
   const [difficultyChange, setDifficultyChange] = useState<number>(0);
   const [bidirectional, setBidirectional] = useState<boolean>(false);
   const [modificationDetails, setModificationDetails] = useState<{
@@ -118,7 +118,7 @@ const ExerciseRelationships = ({
   // Reset form state
   const resetForm = () => {
     setRelatedExerciseId('');
-    setRelationshipType('VARIATION');
+    setRelationshipType('variation');
     setDifficultyChange(0);
     setBidirectional(false);
     setModificationDetails({
@@ -146,10 +146,10 @@ const ExerciseRelationships = ({
         relatedExerciseId: relatedExerciseId,
         relationshipType: relationshipType,
         difficultyChange:
-          relationshipType === 'PROGRESSION' ? difficultyChange : 0,
+          relationshipType === 'progression' ? difficultyChange : 0,
         bidirectional: bidirectional,
         modificationDetails:
-          relationshipType !== 'PROGRESSION' ? modificationDetails : undefined,
+          relationshipType !== 'progression' ? modificationDetails : undefined,
       });
 
       showToast({
@@ -176,7 +176,7 @@ const ExerciseRelationships = ({
 
   // Handle relationship update
   const handleUpdateRelationship = async (data: {
-    relationshipType: 'PROGRESSION' | 'VARIATION' | 'ALTERNATIVE';
+    relationshipType: 'progression' | 'variation' | 'alternative';
     difficultyChange: number;
     bidirectional: boolean;
     modificationDetails?: {
@@ -260,13 +260,13 @@ const ExerciseRelationships = ({
 
   // Group relationships by type for display
   const progressionRelationships = relationships.filter(
-    (r) => r.relationshipType === 'PROGRESSION'
+    (r) => r.relationshipType === 'progression'
   );
   const variationRelationships = relationships.filter(
-    (r) => r.relationshipType === 'VARIATION'
+    (r) => r.relationshipType === 'variation'
   );
   const alternativeRelationships = relationships.filter(
-    (r) => r.relationshipType === 'ALTERNATIVE'
+    (r) => r.relationshipType === 'alternative'
   );
 
   // Get the related exercise object for display
@@ -283,7 +283,7 @@ const ExerciseRelationships = ({
     // If bidirectional or it's a variation (which are typically bidirectional)
     if (
       relationship.bidirectional ||
-      relationship.relationshipType === 'VARIATION'
+      relationship.relationshipType === 'variation'
     ) {
       return '↔️';
     }
@@ -679,17 +679,17 @@ const ExerciseRelationships = ({
               Related Exercise
             </label>
             <Select
-              options={[
-                { value: '', label: 'Select an exercise' },
-                ...exercises.map((e) => ({
-                  value: e.id,
-                  label: `${e.name} (${e.difficulty})`,
-                })),
-              ]}
               value={relatedExerciseId}
               onChange={(e) => setRelatedExerciseId(e.target.value)}
               disabled={isSubmitting}
-            />
+            >
+              <option value="">Select an exercise</option>
+              {exercises.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name} ({e.difficulty})
+                </option>
+              ))}
+            </Select>
             {exercises.length === 0 && (
               <p className="mt-1 text-sm text-yellow-600">
                 All published exercises are already related to this exercise.
@@ -703,32 +703,28 @@ const ExerciseRelationships = ({
               Relationship Type
             </label>
             <Select
-              options={[
-                {
-                  value: 'PROGRESSION',
-                  label: 'Progression - Part of a difficulty progression',
-                },
-                {
-                  value: 'VARIATION',
-                  label: 'Variation - Similar movement pattern',
-                },
-                {
-                  value: 'ALTERNATIVE',
-                  label: 'Alternative - Substitute exercise',
-                },
-              ]}
               value={relationshipType}
               onChange={(e) =>
                 setRelationshipType(
-                  e.target.value as 'PROGRESSION' | 'VARIATION' | 'ALTERNATIVE'
+                  e.target.value as 'progression' | 'variation' | 'alternative'
                 )
               }
               disabled={isSubmitting}
-            />
+            >
+              <option value="progression">
+                Progression - Part of a difficulty progression
+              </option>
+              <option value="variation">
+                Variation - Similar movement pattern
+              </option>
+              <option value="alternative">
+                Alternative - Substitute exercise
+              </option>
+            </Select>
           </div>
 
           {/* Conditional fields based on relationship type */}
-          {relationshipType === 'PROGRESSION' && (
+          {relationshipType === 'progression' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Difficulty Change
@@ -771,7 +767,7 @@ const ExerciseRelationships = ({
           )}
 
           {/* Bidirectional checkbox (for non-progression relationships) */}
-          {relationshipType !== 'PROGRESSION' && (
+          {relationshipType !== 'progression' && (
             <div>
               <Checkbox
                 id="bidirectional"
@@ -785,7 +781,7 @@ const ExerciseRelationships = ({
           )}
 
           {/* Modification details for non-progression relationships */}
-          {relationshipType !== 'PROGRESSION' && (
+          {relationshipType !== 'progression' && (
             <div className="space-y-3">
               <h5 className="text-sm font-medium text-gray-700">
                 Modification Details
