@@ -47,7 +47,7 @@ export function DataTable<T>({
   );
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [filterOpen, setFilterOpen] = useState<Record<string, boolean>>({});
-  const [filteredData, setFilteredData] = useState<T[]>(data);
+  const [filteredData, setFilteredData] = useState<T[]>([]);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string[]>(selectedIds);
 
@@ -155,7 +155,7 @@ export function DataTable<T>({
   };
 
   // Create skeleton loading state
-  const renderSkeletonRow = (index) => (
+  const renderSkeletonRow = (index: number) => (
     <tr key={`skeleton-row-${index}`}>
       {isSelectable && (
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

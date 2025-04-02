@@ -1,10 +1,8 @@
 // src/pages/equipment/tabs/EquipmentExercises.tsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Dumbbell } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
-import DataTable, { Column } from '../../../components/common/DataTable';
-import EmptyState from '../../../components/ui/empty-state';
+import EquipmentExercisesTable from '../components/EquipmentExercisesTable';
 import Pagination from '../../../components/ui/pagination';
 import equipmentExerciseService, {
   ExerciseWithEquipmentDetails,
@@ -41,6 +39,8 @@ const EquipmentExercises: React.FC<EquipmentExercisesProps> = ({
 
   // Using useCallback to prevent the function from being recreated on each render
   const fetchData = useCallback(async () => {
+    if (!equipmentId) return;
+
     setIsLoading(true);
     try {
       // For fetching exercises
@@ -113,83 +113,18 @@ const EquipmentExercises: React.FC<EquipmentExercisesProps> = ({
     fetchData();
   }, [fetchData]); // Only depend on the fetchData function
 
-  const handleViewExercise = (exercise: ExerciseWithEquipmentDetails) => {
-    navigate(`/exercises/${exercise.exercise?.id || exercise.id}`);
-  };
+  // Create a stable handler for view exercise
+  const handleViewExercise = useCallback(
+    (exercise: ExerciseWithEquipmentDetails) => {
+      navigate(`/exercises/${exercise.exercise?.id || exercise.id}`);
+    },
+    [navigate]
+  );
 
-  const columns: Column<ExerciseWithEquipmentDetails>[] = [
-    {
-      key: 'name',
-      title: 'Exercise Name',
-      sortable: true,
-      render: (exercise) =>
-        exercise.exercise?.name || exercise.name || 'Unnamed Exercise',
-    },
-    {
-      key: 'isRequired',
-      title: 'Requirement',
-      render: (exercise) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${
-            exercise.isRequired
-              ? 'bg-blue-100 text-blue-800'
-              : 'bg-gray-100 text-gray-800'
-          }`}
-        >
-          {exercise.isRequired ? 'Required' : 'Optional'}
-        </span>
-      ),
-    },
-    {
-      key: 'setupNotes',
-      title: 'Setup Notes',
-      render: (exercise) => (
-        <div className="max-w-md truncate">
-          {exercise.setupNotes || 'No setup notes available'}
-        </div>
-      ),
-    },
-    {
-      key: 'difficulty',
-      title: 'Difficulty',
-      render: (exercise) => {
-        // Safely access the difficulty property
-        const difficultyValue = (
-          exercise.exercise?.difficulty ||
-          exercise.difficulty ||
-          'BEGINNER'
-        ).toUpperCase();
-
-        const colors = {
-          BEGINNER: 'bg-green-100 text-green-800',
-          INTERMEDIATE: 'bg-blue-100 text-blue-800',
-          ADVANCED: 'bg-red-100 text-red-800',
-        };
-
-        const colorClass =
-          colors[difficultyValue as keyof typeof colors] || colors.BEGINNER;
-
-        return (
-          <span className={`px-2 py-1 text-xs rounded-full ${colorClass}`}>
-            {difficultyValue.toLowerCase()}
-          </span>
-        );
-      },
-    },
-    {
-      key: 'actions',
-      title: 'Actions',
-      render: (exercise) => (
-        <button
-          onClick={() => handleViewExercise(exercise)}
-          className="text-gray-600 hover:text-gray-900"
-          title="View Exercise"
-        >
-          <Eye size={18} />
-        </button>
-      ),
-    },
-  ];
+  // Create a stable handler for page changes
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -215,21 +150,11 @@ const EquipmentExercises: React.FC<EquipmentExercisesProps> = ({
         </div>
       </div>
 
-      {/* Exercises table */}
-      <DataTable
-        columns={columns}
+      {/* Exercises table - using the specialized component */}
+      <EquipmentExercisesTable
         data={exercises}
-        keyExtractor={(item) =>
-          item.id || `${item.exerciseId}-${item.equipmentId}`
-        }
         isLoading={isLoading}
-        emptyState={
-          <EmptyState
-            icon={<Dumbbell size={36} className="text-gray-400" />}
-            title="No related exercises"
-            description="This equipment is not used by any exercises yet."
-          />
-        }
+        onViewExercise={handleViewExercise}
       />
 
       {/* Pagination */}
@@ -241,7 +166,7 @@ const EquipmentExercises: React.FC<EquipmentExercisesProps> = ({
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setCurrentPage}
+            onPageChange={handlePageChange}
           />
         </div>
       )}
