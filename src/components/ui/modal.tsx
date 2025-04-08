@@ -45,7 +45,7 @@ export function Modal({
       >
         <div
           className={cn(
-            'relative w-full rounded-lg bg-white shadow-xl',
+            'relative w-full rounded-lg bg-white shadow-xl max-h-[90vh] overflow-y-auto',
             sizeClasses[size],
             className
           )}

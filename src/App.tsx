@@ -30,6 +30,14 @@ import AdminUserEdit from './pages/users/AdminUserEdit';
 import ClientList from './pages/clients/ClientList';
 import ClientDetail from './pages/clients/ClientDetail';
 import ClientForm from './pages/clients/ClientForm';
+import JointList from './pages/joints/JointList';
+import JointDetail from './pages/joints/JointDetail';
+import CreateJointPage from './pages/joints/CreateJointPage';
+import EditJointPage from './pages/joints/EditJointPage';
+import MovementPatternList from './pages/movement-patterns/MovementPatternList';
+import MovementPatternDetail from './pages/movement-patterns/MovementPatternDetail';
+import CreateMovementPatternPage from './pages/movement-patterns/CreateMovementPatternPage';
+import EditMovementPatternPage from './pages/movement-patterns/EditMovementPatternPage';
 
 function App() {
   return (
@@ -90,6 +98,24 @@ function App() {
                     <Route path="new" element={<ClientForm />} />
                     <Route path=":id" element={<ClientDetail />} />
                     <Route path=":id/edit" element={<ClientForm />} />
+                  </Route>
+                  {/* Joints */}
+                  <Route path="joints">
+                    <Route index element={<JointList />} />
+                    <Route path="new" element={<CreateJointPage />} />
+                    <Route path=":id" element={<JointDetail />} />
+                    <Route path=":id/edit" element={<EditJointPage />} />
+                  </Route>
+
+                  {/* Movement Patterns */}
+                  <Route path="movement-patterns">
+                    <Route index element={<MovementPatternList />} />
+                    <Route path="new" element={<CreateMovementPatternPage />} />
+                    <Route path=":id" element={<MovementPatternDetail />} />
+                    <Route
+                      path=":id/edit"
+                      element={<EditMovementPatternPage />}
+                    />
                   </Route>
                 </Route>
               </Route>

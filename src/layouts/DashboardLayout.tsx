@@ -1,58 +1,3 @@
-// // src/layouts/DashboardLayout.tsx
-// import { Outlet, useNavigate, Link } from 'react-router-dom';
-// import { useAuth } from '../context/AuthContext';
-
-// function DashboardLayout() {
-//   const { logout, user } = useAuth();
-//   const navigate = useNavigate();
-
-//   const handleLogout = async () => {
-//     await logout();
-//     navigate('/login');
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-white">
-//       <header className="border-b border-gray-200">
-//         <div className="mx-auto px-4 sm:px-6 lg:px-8">
-//           <div className="flex justify-between h-16">
-//             <div className="flex items-center">
-//               <h1 className="text-xl font-semibold text-black">
-//                 Fitness Admin
-//               </h1>
-//             </div>
-//             <div className="flex items-center">
-//               {user && (
-//                 <div className="ml-4 flex items-center md:ml-6">
-//                   <Link
-//                     to="/profile"
-//                     className="text-gray-700 mr-4 hover:underline"
-//                   >
-//                     {user.email}
-//                   </Link>
-//                   <button
-//                     onClick={handleLogout}
-//                     className="text-sm bg-black text-white px-3 py-1 rounded-md hover:bg-gray-800"
-//                   >
-//                     Logout
-//                   </button>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//         </div>
-//       </header>
-//       <main>
-//         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-//           <Outlet />
-//         </div>
-//       </main>
-//     </div>
-//   );
-// }
-
-// export default DashboardLayout;
-
 // src/layouts/DashboardLayout.tsx
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
@@ -69,6 +14,9 @@ import {
   Box,
   Users,
   Database,
+  Bone,
+  FileText,
+  Activity,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useSessionTimer } from '../hooks/useSessionTimer';
@@ -114,6 +62,24 @@ function DashboardLayout() {
       children: [
         { name: 'All Equipment', path: '/equipment' },
         { name: 'Add New', path: '/equipment/new' },
+      ],
+    },
+    {
+      name: 'Joints',
+      path: '/joints',
+      icon: <Bone size={20} />,
+      children: [
+        { name: 'All Joints', path: '/joints' },
+        { name: 'Add New', path: '/joints/new' },
+      ],
+    },
+    {
+      name: 'Movement Patterns',
+      path: '/movement-patterns',
+      icon: <Activity size={20} />,
+      children: [
+        { name: 'All Patterns', path: '/movement-patterns' },
+        { name: 'Add New', path: '/movement-patterns/new' },
       ],
     },
     { name: 'Admin Users', path: '/users', icon: <Users size={20} /> },

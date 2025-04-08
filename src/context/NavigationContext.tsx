@@ -7,7 +7,15 @@ import {
   useEffect,
 } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Home, Dumbbell, Layers, Box, Users, Database } from 'lucide-react';
+import {
+  Home,
+  Dumbbell,
+  Layers,
+  Box,
+  Users,
+  Database,
+  Bone,
+} from 'lucide-react';
 
 export interface NavItem {
   name: string;
@@ -87,6 +95,15 @@ export const NavigationProvider = ({ children }: NavigationProviderProps) => {
       children: [
         { name: 'All Clients', path: '/clients' },
         { name: 'Add New', path: '/clients/new' },
+      ],
+    },
+    {
+      name: 'Joints',
+      path: '/joints',
+      icon: <Bone size={20} />,
+      children: [
+        { name: 'All Joints', path: '/joints' },
+        { name: 'Add New', path: '/joints/new' },
       ],
     },
   ];

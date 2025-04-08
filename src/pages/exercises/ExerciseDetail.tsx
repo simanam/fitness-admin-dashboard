@@ -17,8 +17,15 @@ import ExerciseMuscles from './tabs/ExerciseMuscles';
 import ExerciseEquipment from './tabs/ExerciseEquipment';
 import ExerciseMedia from './tabs/ExerciseMedia';
 import ExerciseRelationships from './tabs/ExerciseRelationships';
+import ExerciseJoints from './tabs/ExerciseJoints';
 
-type TabKey = 'overview' | 'muscles' | 'equipment' | 'media' | 'relationships';
+type TabKey =
+  | 'overview'
+  | 'muscles'
+  | 'equipment'
+  | 'media'
+  | 'relationships'
+  | 'joints';
 
 const ExerciseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -150,6 +157,7 @@ const ExerciseDetail = () => {
     { key: 'equipment', label: 'Equipment' },
     { key: 'media', label: 'Media' },
     { key: 'relationships', label: 'Relationships' },
+    { key: 'joints', label: 'Joints' }, // Add this line
   ];
 
   // Render appropriate component based on active tab
@@ -171,6 +179,8 @@ const ExerciseDetail = () => {
         return (
           <ExerciseRelationships exerciseId={exercise.id} exercise={exercise} />
         );
+      case 'joints':
+        return <ExerciseJoints exerciseId={exercise.id} />;
       default:
         return null;
     }
