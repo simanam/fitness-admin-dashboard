@@ -1,14 +1,12 @@
 // src/pages/exercises/tabs/ExerciseMuscles.tsx
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, AlertTriangle } from 'lucide-react';
+import { Plus, AlertTriangle } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
-import exerciseMuscleService, {
-  CreateMuscleTargetPayload,
-} from '../../../api/exerciseMuscleService';
-import muscleService, {
-  Muscle,
-  MuscleTarget,
-} from '../../../api/muscleService';
+import exerciseMuscleService from '../../../api/exerciseMuscleService';
+import type { CreateMuscleTargetPayload } from '../../../api/exerciseMuscleService';
+import muscleService from '../../../api/muscleService';
+import type { Muscle } from '../../../api/muscleService';
+import type { MuscleTarget } from '../../../types/muscle';
 import ConfirmationDialog from '../../../components/ui/confirmation-dialog';
 import EmptyState from '../../../components/ui/empty-state';
 import MuscleTargetForm from '../../../components/exercises/MuscleTargetForm';
@@ -220,11 +218,11 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
   const getMuscleGroups = () => {
     const groupMap = new Map();
 
-    allMuscles.forEach((muscle) => {
+    for (const muscle of allMuscles) {
       if (muscle.muscleGroup && !groupMap.has(muscle.muscleGroup.id)) {
         groupMap.set(muscle.muscleGroup.id, muscle.muscleGroup);
       }
-    });
+    }
 
     return Array.from(groupMap.values());
   };
@@ -249,7 +247,7 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-48">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -263,6 +261,7 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
         <h3 className="text-lg font-medium text-gray-900">Target Muscles</h3>
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={() => setShowBulkAddModal(true)}
             disabled={availableMuscles.length === 0}
             className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md ${
@@ -275,6 +274,7 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
             Bulk Add
           </button>
           <button
+            type="button"
             onClick={() => setShowAddModal(true)}
             disabled={availableMuscles.length === 0}
             className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md ${
@@ -293,6 +293,7 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
       {muscleTargets.length > 0 && (
         <div className="flex justify-end mb-4">
           <button
+            type="button"
             onClick={() => setVisualizationOpen(!visualizationOpen)}
             className="text-sm text-gray-600 underline flex items-center"
           >
@@ -321,37 +322,34 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
             targets={primaryTargets}
             onEdit={handleEditTarget}
             onDelete={handleDeleteConfirm}
-            role="primary"
+            targetType="primary"
           />
 
-          {/* Secondary targets */}
           <MuscleTargetList
             title="Secondary Muscles"
             description="These muscles assist in the movement but aren't the main focus"
             targets={secondaryTargets}
             onEdit={handleEditTarget}
             onDelete={handleDeleteConfirm}
-            role="secondary"
+            targetType="secondary"
           />
 
-          {/* Synergist targets */}
           <MuscleTargetList
             title="Synergist Muscles"
             description="These muscles help coordinate the movement"
             targets={synergistTargets}
             onEdit={handleEditTarget}
             onDelete={handleDeleteConfirm}
-            role="synergist"
+            targetType="synergist"
           />
 
-          {/* Stabilizer targets */}
           <MuscleTargetList
             title="Stabilizer Muscles"
             description="These muscles help maintain posture and stability during the exercise"
             targets={stabilizerTargets}
             onEdit={handleEditTarget}
             onDelete={handleDeleteConfirm}
-            role="stabilizer"
+            targetType="stabilizer"
           />
         </div>
       ) : (
@@ -361,6 +359,7 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
           description="Add muscles that are targeted by this exercise."
           action={
             <button
+              type="button"
               onClick={() => setShowBulkAddModal(true)}
               disabled={availableMuscles.length === 0}
               className={`inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md ${

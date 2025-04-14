@@ -20,7 +20,6 @@ interface TierDropdownProps {
 }
 
 const TierDropdown: React.FC<TierDropdownProps> = ({
-  clientId,
   currentTier,
   onTierChange,
   disabled = false,

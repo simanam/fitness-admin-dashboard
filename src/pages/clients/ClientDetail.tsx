@@ -12,19 +12,18 @@ import {
   Building,
   Calendar,
   Ban,
-  Play,
   Plus,
 } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';
-import clientService, { Client } from '../../api/clientService';
-import apiKeyService from '../../api/apiKeyService';
+import type { Client } from '../../api/clientService';
+import clientService from '../../api/clientService';
 import ConfirmationDialog from '../../components/ui/confirmation-dialog';
 import Modal from '../../components/ui/modal';
 import StatusBadge from '../../components/clients/StatusBadge';
 import TierBadge from '../../components/clients/TierBadge';
 import ApiKeyList from '../../components/clients/ApiKeyList';
 import CreateApiKeyForm from '../../components/clients/CreateApiKeyForm';
-import { CreateKeyParams } from '../../api/apiKeyService';
+import type { CreateKeyParams } from '../../api/apiKeyService';
 import useApiKeys from '../../hooks/useApiKeys';
 import { Textarea } from '../../components/ui/textarea';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -54,7 +53,6 @@ const ClientDetail = () => {
     revokeApiKey,
     rotateApiKey,
     createApiKey,
-    fetchApiKeys,
   } = useApiKeys(id || '');
 
   // Fetch client data
@@ -315,6 +313,7 @@ const ClientDetail = () => {
                       <div>
                         {client.status === 'active' ? (
                           <button
+                            type="button"
                             onClick={() => setShowSuspendDialog(true)}
                             className="text-sm text-red-600 hover:text-red-800"
                           >
@@ -322,6 +321,7 @@ const ClientDetail = () => {
                           </button>
                         ) : client.status === 'suspended' ? (
                           <button
+                            type="button"
                             onClick={() => setShowReactivateDialog(true)}
                             className="text-sm text-green-600 hover:text-green-800"
                           >
@@ -340,6 +340,7 @@ const ClientDetail = () => {
                       </div>
                       <div>
                         <button
+                          type="button"
                           onClick={() =>
                             navigate(`/clients/${client.id}/edit?section=tier`)
                           }
@@ -410,6 +411,7 @@ const ClientDetail = () => {
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium text-gray-900">API Keys</h3>
               <button
+                type="button"
                 onClick={() => setShowCreateKeyModal(true)}
                 className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-black hover:bg-gray-800"
                 disabled={client.status !== 'active'}
@@ -460,7 +462,7 @@ const ClientDetail = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -474,6 +476,7 @@ const ClientDetail = () => {
           The client you're looking for doesn't exist or has been removed.
         </p>
         <button
+          type="button"
           onClick={() => navigate('/clients')}
           className="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
         >
@@ -490,6 +493,7 @@ const ClientDetail = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div className="flex items-center">
           <button
+            type="button"
             onClick={() => navigate('/clients')}
             className="mr-4 p-1 rounded-full text-gray-500 hover:bg-gray-100"
           >
@@ -506,6 +510,7 @@ const ClientDetail = () => {
 
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={() => navigate(`/clients/${id}/edit`)}
             className="flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
           >
@@ -520,6 +525,7 @@ const ClientDetail = () => {
         <div className="flex overflow-x-auto">
           {tabs.map((tab) => (
             <button
+              type="button"
               key={tab.key}
               onClick={() => setActiveTab(tab.key as TabKey)}
               className={`py-4 px-6 text-sm font-medium border-b-2 whitespace-nowrap flex items-center ${
@@ -557,10 +563,14 @@ const ClientDetail = () => {
               immediately revoke their API access.
             </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="suspendReason"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Reason for suspension <span className="text-red-500">*</span>
               </label>
               <Textarea
+                id="suspendReason"
                 value={suspendReason}
                 onChange={(e) => setSuspendReason(e.target.value)}
                 placeholder="Please provide a reason for suspension..."

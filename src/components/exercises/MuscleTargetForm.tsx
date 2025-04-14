@@ -1,23 +1,26 @@
 // src/components/exercises/MuscleTargetForm.tsx
 import { useState, useEffect } from 'react';
+import type { ChangeEvent } from 'react';
+import type { Muscle } from '../../api/muscleService';
 import { Slider } from '../ui/slider';
 import { Select } from '../ui/select';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
-import { Muscle } from '../../api/muscleService';
+
+type MuscleRole = 'primary' | 'secondary' | 'synergist' | 'stabilizer';
 
 interface MuscleTargetFormProps {
   muscles: Muscle[];
   onSubmit: (data: {
     muscleId: string;
-    role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
+    role: MuscleRole;
     activationPercentage: number;
   }) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   initialData?: {
     muscleId: string;
-    role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
+    role: MuscleRole;
     activationPercentage: number;
   };
   editMode?: boolean;
@@ -32,9 +35,7 @@ const MuscleTargetForm = ({
   editMode = false,
 }: MuscleTargetFormProps) => {
   const [muscleId, setMuscleId] = useState<string>(initialData?.muscleId || '');
-  const [role, setRole] = useState<
-    'primary' | 'secondary' | 'synergist' | 'stabilizer'
-  >(initialData?.role || 'primary');
+  const [role, setRole] = useState<MuscleRole>(initialData?.role || 'primary');
   const [activationPercentage, setActivationPercentage] = useState<number>(
     initialData?.activationPercentage || 50
   );
@@ -87,7 +88,7 @@ const MuscleTargetForm = ({
 
     await onSubmit({
       muscleId,
-      role: role.toLowerCase() as 'PRIMARY' | 'SECONDARY' | 'TERTIARY',
+      role,
       activationPercentage,
     });
   };
@@ -132,9 +133,10 @@ const MuscleTargetForm = ({
         <Select
           id="muscleId"
           value={muscleId}
-          onChange={(e) => setMuscleId(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+            setMuscleId(e.target.value)
+          }
           disabled={isSubmitting || editMode}
-          placeholder="Select a muscle"
         >
           <option value="">Select a muscle</option>
           {Object.entries(groupedMuscles).map(([groupName, groupMuscles]) => (
@@ -168,16 +170,16 @@ const MuscleTargetForm = ({
 
       {/* Role selection */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
+        <Label
+          htmlFor="muscle-role"
+          className="block text-sm font-medium text-gray-700 mb-3"
+        >
           Muscle Role
-        </label>
+        </Label>
         <RadioGroup
+          id="muscle-role"
           value={role}
-          onValueChange={(value) =>
-            setRole(
-              value as 'primary' | 'secondary' | 'synergist' | 'stabilizer'
-            )
-          }
+          onValueChange={(value) => setRole(value as MuscleRole)}
           className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         >
           <div
@@ -239,16 +241,20 @@ const MuscleTargetForm = ({
 
       {/* Activation percentage slider */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
+        <Label
+          htmlFor="activation-percentage"
+          className="block text-sm font-medium text-gray-700 mb-3"
+        >
           Activation Percentage:{' '}
           <span className="text-black">{activationPercentage}%</span>
           <span className="ml-2 text-sm font-normal text-gray-500">
             ({getActivationLabel(activationPercentage)})
           </span>
-        </label>
+        </Label>
 
         <div className="px-2">
           <Slider
+            id="activation-percentage"
             min={5}
             max={100}
             step={getStepSize(activationPercentage)}

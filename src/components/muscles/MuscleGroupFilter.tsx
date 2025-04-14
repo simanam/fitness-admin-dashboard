@@ -1,15 +1,16 @@
 // src/components/muscles/MuscleGroupFilter.tsx - Updated with Info Box
 import { useState } from 'react';
-import { ChevronDown, Info, Settings } from 'lucide-react';
+import { Info, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useMuscleGroups } from '../../hooks/useMuscleGroups';
+import type { FC } from 'react';
 
 interface MuscleGroupFilterProps {
   selectedGroupId?: string;
   onChange: (groupId: string | undefined) => void;
 }
 
-const MuscleGroupFilter: React.FC<MuscleGroupFilterProps> = ({
+const MuscleGroupFilter: FC<MuscleGroupFilterProps> = ({
   selectedGroupId,
   onChange,
 }) => {
@@ -25,7 +26,7 @@ const MuscleGroupFilter: React.FC<MuscleGroupFilterProps> = ({
   if (isLoading) {
     return (
       <div className="animate-pulse flex items-center space-x-2">
-        <div className="h-9 w-40 bg-gray-200 rounded"></div>
+        <div className="h-9 w-40 bg-gray-200 rounded" />
       </div>
     );
   }
@@ -35,6 +36,7 @@ const MuscleGroupFilter: React.FC<MuscleGroupFilterProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           <button
+            type="button"
             onClick={() => onChange(undefined)}
             className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
               !selectedGroupId
@@ -47,6 +49,7 @@ const MuscleGroupFilter: React.FC<MuscleGroupFilterProps> = ({
 
           {muscleGroups.map((group) => (
             <button
+              type="button"
               key={group.id}
               onClick={() => onChange(group.id)}
               className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
@@ -72,6 +75,7 @@ const MuscleGroupFilter: React.FC<MuscleGroupFilterProps> = ({
 
         <div className="flex items-center space-x-2">
           <button
+            type="button"
             onClick={() => setShowInfo(!showInfo)}
             className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
             title="About Muscle Groups"

@@ -4,7 +4,6 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { ChevronRight, Save, X } from 'lucide-react';
 import {
   ExerciseFormData,
-  FORM_VALIDATION_RULES,
   FORM_SECTIONS,
   defaultExerciseFormData,
 } from '../../../types/exerciseFormTypes';
@@ -25,7 +24,7 @@ interface ExerciseFormProps {
 
 const ExerciseForm: React.FC<ExerciseFormProps> = ({
   initialData,
-  exerciseId,
+
   onSubmit,
   onCancel,
   isSubmitting = false,

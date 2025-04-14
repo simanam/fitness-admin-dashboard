@@ -1,5 +1,5 @@
 // src/components/users/ActivityItem.tsx
-import React from 'react';
+import type { FC } from 'react';
 import {
   LogIn,
   LogOut,
@@ -10,13 +10,22 @@ import {
   Activity,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { AdminUserActivity } from '../../api/adminUserService';
+import type { AdminUserActivity } from '../../api/adminUserService';
 
 interface ActivityItemProps {
-  activity: AdminUserActivity;
+  activity: AdminUserActivity & {
+    action:
+      | 'LOGIN'
+      | 'LOGOUT'
+      | 'PASSWORD_CHANGE'
+      | 'CREATE'
+      | 'UPDATE'
+      | 'DELETE'
+      | string;
+  };
 }
 
-const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
+const ActivityItem: FC<ActivityItemProps> = ({ activity }) => {
   // Get icon based on activity action
   const getActivityIcon = () => {
     switch (activity.action) {
@@ -53,7 +62,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
       case 'DELETE':
         return `Deleted ${activity.details?.resource || 'resource'}`;
       default:
-        return `Performed ${activity.action.toLowerCase().replace('_', ' ')}`;
+        return `Performed ${String(activity.action).toLowerCase().replace('_', ' ')}`;
     }
   };
 
@@ -63,7 +72,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
       return formatDistanceToNow(new Date(activity.timestamp), {
         addSuffix: true,
       });
-    } catch (e) {
+    } catch {
       return 'Unknown time';
     }
   };

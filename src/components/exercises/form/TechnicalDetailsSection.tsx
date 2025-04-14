@@ -1,15 +1,14 @@
 // src/components/exercises/form/TechnicalDetailsSection.tsx
-import React from 'react';
+import type { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Select } from '../../ui/select';
 import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
 
-const TechnicalDetailsSection: React.FC = () => {
+const TechnicalDetailsSection: FC = () => {
   const {
     register,
     formState: { errors },
-    watch,
   } = useFormContext();
 
   return (
@@ -155,10 +154,14 @@ const TechnicalDetailsSection: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+            <label
+              htmlFor="tempo_notes"
+              className="block text-xs font-medium text-gray-600 mb-1"
+            >
               Tempo Notes (optional)
             </label>
             <Textarea
+              id="tempo_notes"
               {...register('tempo_recommendations.tempo_notes')}
               placeholder="Any additional notes about tempo"
               rows={2}

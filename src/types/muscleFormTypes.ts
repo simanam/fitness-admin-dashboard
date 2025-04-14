@@ -1,5 +1,4 @@
 // src/types/muscleFormTypes.ts
-import { z } from 'zod';
 
 export interface MuscleFormData {
   name: string;

@@ -1,6 +1,14 @@
 // src/components/exercises/MuscleTargetingVisualization.tsx
 import { useState, useEffect } from 'react';
-import { MuscleTarget } from '../../api/muscleService';
+import type { KeyboardEvent } from 'react';
+import type { Muscle } from '../../api/muscleService';
+
+interface MuscleTarget {
+  id: string;
+  muscle?: Muscle;
+  role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
+  activationPercentage: number;
+}
 
 interface MuscleTargetingVisualizationProps {
   targets: MuscleTarget[];
@@ -37,6 +45,17 @@ const MuscleTargetingVisualization = ({
     setGroupedTargets(groups);
   }, [targets]);
 
+  // Handle keyboard events for accessibility
+  const handleKeyPress = (
+    event: KeyboardEvent<HTMLDivElement>,
+    target: MuscleTarget
+  ) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onSelectTarget?.(target);
+    }
+  };
+
   // Get color based on role
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -72,9 +91,9 @@ const MuscleTargetingVisualization = ({
         };
     }
   };
+
   // Get bubble size based on activation percentage
   const getBubbleSize = (percentage: number) => {
-    // Scale from 40px to a maximum of 80px
     const minSize = 40;
     const maxSize = 80;
     const size = minSize + ((maxSize - minSize) * percentage) / 100;
@@ -115,6 +134,9 @@ const MuscleTargetingVisualization = ({
                         className={`rounded-full flex items-center justify-center ${bg} ${border} ${text} cursor-pointer transition-transform hover:scale-105 ${isSelected ? 'ring-4 ring-gray-800' : ''}`}
                         style={bubbleSize}
                         onClick={() => onSelectTarget?.(target)}
+                        onKeyPress={(e) => handleKeyPress(e, target)}
+                        role="button"
+                        tabIndex={0}
                         title={`${target.muscle?.name || 'Muscle'} - ${target.activationPercentage}% activation`}
                       >
                         <div className="text-center px-1">
@@ -145,31 +167,31 @@ const MuscleTargetingVisualization = ({
         <div className="text-sm font-medium text-gray-700 mb-2">Legend</div>
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-red-500 mr-2"></div>
+            <div className="w-4 h-4 rounded-full bg-red-500 mr-2" />
             <span className="text-xs text-gray-600">Primary</span>
           </div>
           <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-blue-500 mr-2"></div>
+            <div className="w-4 h-4 rounded-full bg-blue-500 mr-2" />
             <span className="text-xs text-gray-600">Secondary</span>
           </div>
           <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-green-500 mr-2"></div>
+            <div className="w-4 h-4 rounded-full bg-green-500 mr-2" />
             <span className="text-xs text-gray-600">Synergist</span>
           </div>
           <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-purple-500 mr-2"></div>
+            <div className="w-4 h-4 rounded-full bg-purple-500 mr-2" />
             <span className="text-xs text-gray-600">Stabilizer</span>
           </div>
           <div className="flex items-center ml-4">
             <div className="flex items-center">
-              <div className="w-3 h-3 rounded-full bg-gray-400 mr-1"></div>
+              <div className="w-3 h-3 rounded-full bg-gray-400 mr-1" />
               <span className="text-xs text-gray-600">
                 Small bubble = Low activation
               </span>
             </div>
             <div className="mx-2">→</div>
             <div className="flex items-center">
-              <div className="w-6 h-6 rounded-full bg-gray-400 mr-1"></div>
+              <div className="w-6 h-6 rounded-full bg-gray-400 mr-1" />
               <span className="text-xs text-gray-600">
                 Large bubble = High activation
               </span>

@@ -2,10 +2,7 @@
 import React, { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { ChevronRight, Save, X } from 'lucide-react';
-import {
-  EquipmentFormData,
-  FORM_VALIDATION_RULES,
-} from '../../../types/equipmentFormTypes';
+import { EquipmentFormData } from '../../../types/equipmentFormTypes';
 import BasicInfoSection from './BasicInfoSection';
 import AlternativesSection from './AlternativesSection';
 
@@ -31,7 +28,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({
 
   const {
     handleSubmit,
-    formState: { isDirty, isValid, errors },
+    formState: { isDirty, isValid },
   } = methods;
 
   const sections = [

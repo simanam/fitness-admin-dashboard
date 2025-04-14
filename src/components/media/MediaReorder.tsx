@@ -1,15 +1,14 @@
 // src/components/media/MediaReorder.tsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   GripVertical,
-  X,
   Save,
   RefreshCw,
   FileVideo,
   Image as ImageIcon,
   FileImage,
 } from 'lucide-react';
-import { ExerciseMedia } from '../../api/exerciseMediaService';
+import type { ExerciseMedia } from '../../api/exerciseMediaService';
 import { cn } from '../../lib/utils';
 
 interface MediaReorderProps {
@@ -24,7 +23,6 @@ const MediaReorder = ({ media, onReorder, className }: MediaReorderProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [draggedItem, setDraggedItem] = useState<ExerciseMedia | null>(null);
   const [draggedOverIndex, setDraggedOverIndex] = useState<number | null>(null);
 
   // Initialize items sorted by order
@@ -38,7 +36,6 @@ const MediaReorder = ({ media, onReorder, className }: MediaReorderProps) => {
     item: ExerciseMedia,
     index: number
   ) => {
-    setDraggedItem(item);
     // Store the index as data to be transferred
     e.dataTransfer.setData('text/plain', index.toString());
     // Set a custom drag image (optional)
@@ -63,14 +60,13 @@ const MediaReorder = ({ media, onReorder, className }: MediaReorderProps) => {
   // Handle drag end
   const handleDragEnd = (e: React.DragEvent) => {
     e.currentTarget.classList.remove('opacity-50');
-    setDraggedItem(null);
     setDraggedOverIndex(null);
   };
 
   // Handle drop
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    const dragIndex = Number.parseInt(e.dataTransfer.getData('text/plain'), 10);
 
     if (dragIndex === dropIndex) return;
 
@@ -126,12 +122,12 @@ const MediaReorder = ({ media, onReorder, className }: MediaReorderProps) => {
 
   // Get media type icon
   const getMediaTypeIcon = (mediaType: string) => {
-    switch (mediaType) {
-      case 'VIDEO':
+    switch (mediaType.toLowerCase()) {
+      case 'video':
         return <FileVideo className="h-4 w-4 text-purple-500" />;
-      case 'IMAGE':
+      case 'image':
         return <ImageIcon className="h-4 w-4 text-green-500" />;
-      case 'SVG':
+      case 'svg':
         return <FileImage className="h-4 w-4 text-blue-500" />;
       default:
         return <FileImage className="h-4 w-4 text-gray-500" />;
@@ -150,6 +146,7 @@ const MediaReorder = ({ media, onReorder, className }: MediaReorderProps) => {
           {isDirty && (
             <>
               <button
+                type="button"
                 onClick={handleReset}
                 disabled={isSubmitting}
                 className="inline-flex items-center px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
@@ -159,6 +156,7 @@ const MediaReorder = ({ media, onReorder, className }: MediaReorderProps) => {
               </button>
 
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={isSubmitting}
                 className="inline-flex items-center px-3 py-1 text-sm border border-transparent rounded-md text-white bg-black hover:bg-gray-800 disabled:opacity-50"
@@ -213,13 +211,13 @@ const MediaReorder = ({ media, onReorder, className }: MediaReorderProps) => {
                 </div>
 
                 <div className="flex-shrink-0 w-12 h-12 overflow-hidden rounded border border-gray-200 mr-3">
-                  {item.mediaType === 'VIDEO' && item.urls?.thumbnail ? (
+                  {item.mediaType === 'video' && item.urls?.thumbnail ? (
                     <img
                       src={item.urls.thumbnail}
                       alt="Video thumbnail"
                       className="w-full h-full object-cover"
                     />
-                  ) : item.mediaType === 'IMAGE' || item.mediaType === 'SVG' ? (
+                  ) : item.mediaType === 'image' || item.mediaType === 'svg' ? (
                     <img
                       src={item.url}
                       alt="Media preview"

@@ -1,7 +1,12 @@
 // src/hooks/useJoints.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from './useToast';
-import jointService, { Joint, JointFilterParams } from '../api/jointService';
+import jointService from '../api/jointService';
+import type {
+  Joint,
+  JointFilterParams,
+  PaginatedResponse,
+} from '../api/jointService';
 
 export const useJoints = () => {
   const [joints, setJoints] = useState<Joint[]>([]);
@@ -10,19 +15,14 @@ export const useJoints = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [itemsPerPage] = useState(20);
+  const itemsPerPage = 20; // Convert to constant since we don't need the setter
   const [sortKey, setSortKey] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('');
   const { showToast } = useToast();
 
-  // Fetch joints when dependencies change
-  useEffect(() => {
-    fetchJoints();
-  }, [currentPage, sortKey, sortOrder, searchQuery, typeFilter]);
-
-  const fetchJoints = async () => {
+  const fetchJoints = useCallback(async () => {
     setIsLoading(true);
     try {
       const params: JointFilterParams = {
@@ -48,7 +48,20 @@ export const useJoints = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    currentPage,
+    itemsPerPage,
+    searchQuery,
+    typeFilter,
+    sortKey,
+    sortOrder,
+    showToast,
+  ]);
+
+  // Fetch joints when dependencies change
+  useEffect(() => {
+    void fetchJoints();
+  }, [fetchJoints]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -92,7 +105,7 @@ export const useJoints = () => {
       if (joints.length === 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       } else {
-        fetchJoints(); // Refresh the list
+        void fetchJoints(); // Refresh the list
       }
       return true;
     } catch (error) {

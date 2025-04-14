@@ -1,5 +1,5 @@
 // src/pages/equipment/tabs/EquipmentExercises.tsx
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../../hooks/useToast';
 import EquipmentExercisesTable from '../components/EquipmentExercisesTable';
@@ -116,7 +116,7 @@ const EquipmentExercises: React.FC<EquipmentExercisesProps> = ({
   // Create a stable handler for view exercise
   const handleViewExercise = useCallback(
     (exercise: ExerciseWithEquipmentDetails) => {
-      navigate(`/exercises/${exercise.exercise?.id || exercise.id}`);
+      navigate(`/exercises/${exercise.id}`);
     },
     [navigate]
   );

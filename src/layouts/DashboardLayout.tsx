@@ -15,11 +15,19 @@ import {
   Users,
   Database,
   Bone,
-  FileText,
-  Activity,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useSessionTimer } from '../hooks/useSessionTimer';
+
+interface NavItem {
+  name: string;
+  path: string;
+  icon?: React.ReactElement;
+  children?: Array<{
+    name: string;
+    path: string;
+  }>;
+}
 
 function DashboardLayout() {
   const { logout, user } = useAuth();
@@ -35,7 +43,7 @@ function DashboardLayout() {
   useSessionTimer();
 
   // Navigation items definition with children for nested navigation
-  const navItems = [
+  const navItems: NavItem[] = [
     { name: 'Dashboard', path: '/', icon: <Home size={20} /> },
     {
       name: 'Exercises',
@@ -73,42 +81,33 @@ function DashboardLayout() {
         { name: 'Add New', path: '/joints/new' },
       ],
     },
-    {
-      name: 'Movement Patterns',
-      path: '/movement-patterns',
-      icon: <Activity size={20} />,
-      children: [
-        { name: 'All Patterns', path: '/movement-patterns' },
-        { name: 'Add New', path: '/movement-patterns/new' },
-      ],
-    },
     { name: 'Admin Users', path: '/users', icon: <Users size={20} /> },
     { name: 'API Clients', path: '/clients', icon: <Database size={20} /> },
   ];
 
   // Auto-expand items based on the current path
   useEffect(() => {
-    navItems.forEach((item) => {
+    for (const item of navItems) {
       if (item.children && location.pathname.startsWith(item.path)) {
         setExpandedItems((prev) => ({ ...prev, [item.path]: true }));
       }
-    });
-  }, []);
+    }
+  }, [location.pathname]);
 
   // Close sidebar when route changes on mobile
   useEffect(() => {
-    setSidebarOpen(false);
-  }, [location.pathname]);
+    const handleRouteChange = () => setSidebarOpen(false);
+    handleRouteChange();
+  }, []);
 
   // Item is active if current path starts with item path
-  // Exception for root path which should be exact match
-  const isActive = (path) => {
+  const isActive = (path: string): boolean => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
 
   // Toggle expansion of navigation items with children
-  const toggleExpand = (path) => {
+  const toggleExpand = (path: string): void => {
     setExpandedItems((prev) => ({
       ...prev,
       [path]: !prev[path],
@@ -129,34 +128,32 @@ function DashboardLayout() {
     const breadcrumbs = [{ name: 'Dashboard', path: '/' }];
     let currentPath = '';
 
-    paths.forEach((path) => {
+    for (const path of paths) {
       currentPath += `/${path}`;
 
       // Find matching nav item to get proper name
       const foundItem = navItems.find(
         (item) =>
           item.path === currentPath ||
-          (item.children &&
-            item.children.some((child) => child.path === currentPath))
+          item.children?.some((child) => child.path === currentPath)
       );
 
       if (foundItem) {
-        const childItem =
-          foundItem.children &&
-          foundItem.children.find((child) => child.path === currentPath);
+        const childItem = foundItem.children?.find(
+          (child) => child.path === currentPath
+        );
 
         breadcrumbs.push({
           name: childItem ? childItem.name : foundItem.name,
           path: currentPath,
         });
       } else {
-        // Use capitalized path part if no match
         breadcrumbs.push({
           name: path.charAt(0).toUpperCase() + path.slice(1),
           path: currentPath,
         });
       }
-    });
+    }
 
     return breadcrumbs;
   };
@@ -170,7 +167,12 @@ function DashboardLayout() {
         <div
           className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 md:hidden"
           onClick={() => setSidebarOpen(false)}
-        ></div>
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setSidebarOpen(false);
+          }}
+          role="button"
+          aria-label="Close sidebar"
+        />
       )}
 
       {/* Mobile sidebar */}
@@ -182,6 +184,7 @@ function DashboardLayout() {
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
           <h1 className="text-xl font-semibold text-black">Fitness Admin</h1>
           <button
+            type="button"
             onClick={() => setSidebarOpen(false)}
             className="text-gray-500 hover:text-gray-700"
           >
@@ -196,6 +199,7 @@ function DashboardLayout() {
                 {item.children ? (
                   <>
                     <button
+                      type="button"
                       onClick={() => toggleExpand(item.path)}
                       className={cn(
                         'w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md',
@@ -284,6 +288,7 @@ function DashboardLayout() {
                   {item.children ? (
                     <>
                       <button
+                        type="button"
                         onClick={() => toggleExpand(item.path)}
                         className={cn(
                           'w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md',
@@ -367,6 +372,7 @@ function DashboardLayout() {
           <div className="px-4 sm:px-6 h-16 flex items-center justify-between">
             {/* Mobile menu button */}
             <button
+              type="button"
               className="md:hidden text-gray-500 hover:text-gray-700"
               onClick={() => setSidebarOpen(true)}
             >
@@ -406,6 +412,7 @@ function DashboardLayout() {
             {/* User dropdown */}
             <div className="relative ml-auto">
               <button
+                type="button"
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 className="flex items-center text-gray-700 hover:text-gray-900"
               >
@@ -426,6 +433,7 @@ function DashboardLayout() {
                     Your Profile
                   </Link>
                   <button
+                    type="button"
                     onClick={() => {
                       handleLogout();
                       setProfileDropdownOpen(false);

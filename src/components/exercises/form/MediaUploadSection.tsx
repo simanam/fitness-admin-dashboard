@@ -1,13 +1,6 @@
 // src/components/exercises/form/MediaUploadSection.tsx
 import React, { useState } from 'react';
-import {
-  Upload,
-  X,
-  Check,
-  FileVideo,
-  Image as ImageIcon,
-  Info,
-} from 'lucide-react';
+import { Upload, X, FileVideo, Image as ImageIcon, Info } from 'lucide-react';
 import { FileUpload } from '../../ui/file-upload';
 import { Select } from '../../ui/select';
 import { Input } from '../../ui/input';

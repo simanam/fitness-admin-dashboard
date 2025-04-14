@@ -1,11 +1,14 @@
 // src/hooks/useMediaManagement.ts
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from './useToast';
-import exerciseMediaService, {
-  ExerciseMedia,
-} from '../api/exerciseMediaService';
-import { MediaFile } from '../components/media/MediaUploader';
+import exerciseMediaService from '../api/exerciseMediaService';
+import type { ExerciseMedia } from '../api/exerciseMediaService';
+import type { MediaFile } from '../components/media/MediaUploader';
 import { debounce } from 'lodash';
+
+// Define view angle type to avoid any
+type ViewAngle = 'front' | 'side' | 'back' | 'diagonal' | '45-degree';
+type MediaType = 'image' | 'video' | 'svg';
 
 interface UseMediaManagementProps {
   exerciseId: string;
@@ -17,8 +20,6 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [mediaToDelete, setMediaToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,10 +39,10 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
       const files: MediaFile[] = mediaData.map((item) => ({
         id: item.id,
         url: item.urls?.preview || item.url,
-        type: item.mediaType.toLowerCase() as 'image' | 'video' | 'svg',
+        type: item.mediaType.toLowerCase() as MediaType,
         name: item.title || `${item.mediaType} ${item.id.slice(0, 6)}`,
         size: 0, // Size info might not be available from API
-        viewAngle: item.viewAngle,
+        viewAngle: (item.viewAngle || 'front') as ViewAngle,
         isPrimary: item.isPrimary,
       }));
 
@@ -64,7 +65,7 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
 
   // Public fetch media function
   const fetchMedia = useCallback(() => {
-    fetchMediaDebounced();
+    void fetchMediaDebounced();
   }, [fetchMediaDebounced]);
 
   // Cleanup debounce on unmount
@@ -76,17 +77,17 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
 
   // Load media on mount
   useEffect(() => {
-    fetchMedia();
-  }, [exerciseId, fetchMedia]);
+    void fetchMedia();
+  }, [fetchMedia]);
 
   // Handle media upload
-  const uploadMedia = async (file: File, viewAngle?: string) => {
-    // Create FormData for upload
-
+  const uploadMedia = async (file: File, viewAngle?: ViewAngle) => {
     const formData = new FormData();
     formData.append('exerciseId', exerciseId);
     formData.append('file', file);
-    const normalizedViewAngle = (viewAngle || 'FRONT').toLowerCase();
+    const normalizedViewAngle = (
+      viewAngle || 'front'
+    ).toLowerCase() as ViewAngle;
     formData.append('viewangle', normalizedViewAngle);
     formData.append(
       'mediaType',
@@ -99,7 +100,6 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
 
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     formData.append('format', fileExtension || '');
-
     formData.append('title', file.name);
 
     // Create temporary media file for UI
@@ -117,7 +117,7 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
       size: file.size,
       progress: 0,
       status: 'uploading',
-      viewAngle: (viewAngle as any) || 'front',
+      viewAngle: normalizedViewAngle as ViewAngle,
     };
 
     setMediaFiles((prev) => [...prev, newFile]);
@@ -141,14 +141,11 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
             ? {
                 id: uploadedMedia.id,
                 url: uploadedMedia.urls?.preview || uploadedMedia.url,
-                type: uploadedMedia.mediaType.toLowerCase() as
-                  | 'image'
-                  | 'video'
-                  | 'svg',
+                type: uploadedMedia.mediaType.toLowerCase() as MediaType,
                 name: uploadedMedia.title || file.name,
                 size: file.size,
                 status: 'success',
-                viewAngle: uploadedMedia.viewAngle,
+                viewAngle: (uploadedMedia.viewAngle || 'front') as ViewAngle,
                 isPrimary: uploadedMedia.isPrimary,
               }
             : f
@@ -262,20 +259,20 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
   };
 
   // Handle updating view angle
-  const updateViewAngle = async (mediaId: string, viewAngle: string) => {
+  const updateViewAngle = async (mediaId: string, viewAngle: ViewAngle) => {
     try {
       await exerciseMediaService.updateMediaViewAngle(mediaId, viewAngle);
 
       // Update local state
       setMedia((prev) =>
         prev.map((m) =>
-          m.id === mediaId ? { ...m, viewAngle: viewAngle as any } : m
+          m.id === mediaId ? { ...m, viewAngle: viewAngle as ViewAngle } : m
         )
       );
 
       setMediaFiles((prev) =>
         prev.map((f) =>
-          f.id === mediaId ? { ...f, viewAngle: viewAngle as any } : f
+          f.id === mediaId ? { ...f, viewAngle: viewAngle as ViewAngle } : f
         )
       );
 
@@ -305,12 +302,12 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
 
       // Update local state with new order
       const updatedMedia = [...media];
-      orderData.forEach((item) => {
+      for (const item of orderData) {
         const mediaItem = updatedMedia.find((m) => m.id === item.id);
         if (mediaItem) {
           mediaItem.order = item.order;
         }
-      });
+      }
 
       setMedia(updatedMedia);
 
@@ -346,7 +343,6 @@ export const useMediaManagement = ({ exerciseId }: UseMediaManagementProps) => {
     setPrimaryMedia,
     updateViewAngle,
     reorderMedia,
-    fetchMediaDebounced, // Expose this for cancellation in cleanup
   };
 };
 

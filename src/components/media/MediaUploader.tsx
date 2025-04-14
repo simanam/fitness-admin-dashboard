@@ -6,7 +6,6 @@ import {
   Image as ImageIcon,
   FileVideo,
   Plus,
-  Trash2,
   AlertTriangle,
   FileImage,
 } from 'lucide-react';
@@ -43,7 +42,6 @@ export function MediaUploader({
   onMediaAdd,
   onMediaRemove,
   onSetPrimary,
-  onUpdateViewAngle,
   className,
   maxFiles = 10,
   allowedTypes = ['image', 'video', 'svg'],
@@ -91,7 +89,8 @@ export function MediaUploader({
           className="h-full w-full object-cover"
         />
       );
-    } else if (media.type === 'svg') {
+    }
+    if (media.type === 'svg') {
       return (
         <img
           src={media.url}
@@ -99,26 +98,25 @@ export function MediaUploader({
           className="h-full w-full object-contain p-2"
         />
       );
-    } else {
-      return (
-        <div className="relative h-full w-full bg-gray-100 flex items-center justify-center">
-          <FileVideo className="h-10 w-10 text-gray-400" />
-          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs p-1 truncate">
-            {media.name}
-          </div>
-        </div>
-      );
     }
+    return (
+      <div className="relative h-full w-full bg-gray-100 flex items-center justify-center">
+        <FileVideo className="h-10 w-10 text-gray-400" />
+        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs p-1 truncate">
+          {media.name}
+        </div>
+      </div>
+    );
   };
 
   const getMediaTypeIcon = (media: MediaFile) => {
     if (media.type === 'video') {
       return <FileVideo className="h-4 w-4" />;
-    } else if (media.type === 'svg') {
-      return <FileImage className="h-4 w-4" />;
-    } else {
-      return <ImageIcon className="h-4 w-4" />;
     }
+    if (media.type === 'svg') {
+      return <FileImage className="h-4 w-4" />;
+    }
+    return <ImageIcon className="h-4 w-4" />;
   };
 
   return (
@@ -139,7 +137,7 @@ export function MediaUploader({
                 {!media.isPrimary && (
                   <button
                     type="button"
-                    onClick={() => onSetPrimary(media.id!)}
+                    onClick={() => media.id && onSetPrimary(media.id)}
                     className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600"
                   >
                     Set as Primary
@@ -148,7 +146,7 @@ export function MediaUploader({
 
                 <button
                   type="button"
-                  onClick={() => onMediaRemove(media.id!)}
+                  onClick={() => media.id && onMediaRemove(media.id)}
                   className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600"
                 >
                   Remove
@@ -161,7 +159,7 @@ export function MediaUploader({
                 <div
                   className="h-1 bg-blue-500"
                   style={{ width: `${media.progress}%` }}
-                ></div>
+                />
                 <div className="px-2 py-1 text-xs">{media.progress}%</div>
               </div>
             )}
@@ -225,10 +223,14 @@ export function MediaUploader({
 
                   {viewAngleRequired && selectedFile && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label
+                        htmlFor="viewAngleSelect"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
                         View Angle
                       </label>
                       <select
+                        id="viewAngleSelect"
                         value={selectedViewAngle}
                         onChange={(e) => setSelectedViewAngle(e.target.value)}
                         className="w-full rounded-md border border-gray-300 py-2 px-3"

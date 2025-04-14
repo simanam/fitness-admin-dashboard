@@ -1,24 +1,26 @@
 // src/components/exercises/form/MediaSection.tsx
 // This section allows users to upload and manage media for exercises
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, type FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { AlertTriangle, Camera, Upload } from 'lucide-react';
 import { FORM_SECTIONS } from '../../../types/exerciseFormTypes';
 import MediaUploader, {
-  MediaFile,
+  type MediaFile,
 } from '../../../components/media/MediaUploader';
 import { useToast } from '../../../hooks/useToast';
 import exerciseMediaService from '../../../api/exerciseMediaService';
+
+// Define ViewAngle type since it's not exported from MediaUploader
+type ViewAngle = 'front' | 'side' | 'back' | 'diagonal' | '45-degree';
 
 interface MediaSectionProps {
   exerciseId?: string;
 }
 
-const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
-  const { formState } = useFormContext();
+const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
   const { showToast } = useToast();
-  const [isLoading, setIsLoading] = useState(exerciseId ? true : false);
+  const [isLoading, setIsLoading] = useState(Boolean(exerciseId));
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [uploadingMedia, setUploadingMedia] = useState<MediaFile[]>([]);
   const [completenessCheck, setCompletenessCheck] = useState<{
@@ -72,7 +74,7 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
   }, [exerciseId, showToast]);
 
   // Handle media upload
-  const handleMediaAdd = async (file: File, viewAngle?: string) => {
+  const handleMediaAdd = async (file: File, viewAngle?: ViewAngle) => {
     // This is only for preview before the exercise is created
     if (!exerciseId) {
       const newMediaFile: MediaFile = {
@@ -82,8 +84,8 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
         type: getMediaTypeFromFile(file),
         name: file.name,
         size: file.size,
-        viewAngle: viewAngle as any,
-        status: 'pending',
+        viewAngle,
+        status: 'uploading',
       };
 
       setMediaFiles((prev) => [...prev, newMediaFile]);
@@ -100,7 +102,7 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
       size: file.size,
       progress: 0,
       status: 'uploading',
-      viewAngle: viewAngle as any,
+      viewAngle,
     };
 
     setUploadingMedia((prev) => [...prev, newMediaFile]);
@@ -110,7 +112,7 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
       const formData = new FormData();
       formData.append('exerciseId', exerciseId);
       formData.append('file', file);
-      formData.append('viewAngle', viewAngle || 'FRONT');
+      formData.append('viewAngle', viewAngle || 'front');
       formData.append('mediaType', getMediaTypeFromFile(file).toUpperCase());
       formData.append('title', file.name);
 
@@ -118,7 +120,6 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
       const uploadedMedia = await exerciseMediaService.uploadMedia(
         formData,
         (progress) => {
-          // Update progress in the uploading state
           setUploadingMedia((prev) =>
             prev.map((item) =>
               item.id === newMediaFile.id ? { ...item, progress } : item
@@ -139,18 +140,15 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
           uploadedMedia.title ||
           `${uploadedMedia.mediaType} - ${uploadedMedia.viewAngle}`,
         size: 0,
-        viewAngle: uploadedMedia.viewAngle,
+        viewAngle: uploadedMedia.viewAngle as ViewAngle,
         isPrimary: uploadedMedia.isPrimary,
+        status: 'success',
       };
 
       setMediaFiles((prev) => [...prev, newMedia]);
-
-      // Remove from uploading state
       setUploadingMedia((prev) =>
         prev.filter((item) => item.id !== newMediaFile.id)
       );
-
-      // Revoke the object URL to avoid memory leaks
       URL.revokeObjectURL(newMediaFile.url);
 
       showToast({
@@ -159,7 +157,6 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
         message: 'Media uploaded successfully',
       });
 
-      // Refresh completeness check if we have an exercise ID
       if (exerciseId) {
         const completenessData =
           await exerciseMediaService.checkMediaCompleteness(exerciseId);
@@ -167,8 +164,6 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
       }
     } catch (error) {
       console.error('Error uploading media:', error);
-
-      // Update status to error
       setUploadingMedia((prev) =>
         prev.map((item) =>
           item.id === newMediaFile.id ? { ...item, status: 'error' } : item
@@ -257,24 +252,27 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
   };
 
   // Handle updating view angle
-  const handleUpdateViewAngle = async (mediaId: string, viewAngle: string) => {
-    // For temporary files
+  const handleUpdateViewAngle = async (
+    mediaId: string,
+    newViewAngle: ViewAngle
+  ) => {
     if (!exerciseId || mediaId.startsWith('temp-')) {
       setMediaFiles((prev) =>
-        prev.map((m) => (m.id === mediaId ? { ...m, viewAngle } : m))
+        prev.map((m) =>
+          m.id === mediaId ? { ...m, viewAngle: newViewAngle as ViewAngle } : m
+        )
       );
       return;
     }
 
     try {
-      await exerciseMediaService.updateMediaViewAngle(mediaId, viewAngle);
-
-      // Update local state
+      await exerciseMediaService.updateMediaViewAngle(mediaId, newViewAngle);
       setMediaFiles((prev) =>
-        prev.map((m) => (m.id === mediaId ? { ...m, viewAngle } : m))
+        prev.map((m) =>
+          m.id === mediaId ? { ...m, viewAngle: newViewAngle as ViewAngle } : m
+        )
       );
 
-      // Refresh completeness check
       const completenessData =
         await exerciseMediaService.checkMediaCompleteness(exerciseId);
       setCompletenessCheck(completenessData);
@@ -300,21 +298,21 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
 
     if (file.type === 'image/svg+xml' || extension === 'svg') {
       return 'svg';
-    } else if (
+    }
+    if (
       file.type.startsWith('video/') ||
       ['mp4', 'webm', 'mov'].includes(extension || '')
     ) {
       return 'video';
-    } else {
-      return 'image';
     }
+    return 'image';
   };
 
   // Show loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-48">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -366,9 +364,13 @@ const MediaSection: React.FC<MediaSectionProps> = ({ exerciseId }) => {
                     <div className="mt-2">
                       <span className="font-medium">Recommendations:</span>
                       <ul className="list-disc list-inside mt-1">
-                        {completenessCheck.recommendations.map((rec, index) => (
-                          <li key={index}>{rec}</li>
-                        ))}
+                        {completenessCheck.recommendations.map(
+                          (recommendation) => (
+                            <li key={`recommendation-${recommendation}`}>
+                              {recommendation}
+                            </li>
+                          )
+                        )}
                       </ul>
                     </div>
                   )}

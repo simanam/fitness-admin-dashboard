@@ -1,6 +1,6 @@
 // src/components/media/MediaAngleCoverage.tsx
 import React, { useMemo } from 'react';
-import { Camera, Plus } from 'lucide-react';
+
 import { ExerciseMedia } from '../../api/exerciseMediaService';
 
 interface MediaAngleCoverageProps {

@@ -5,8 +5,8 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { ArrowLeft, Save, X, ChevronRight } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';
 import clientService from '../../api/clientService';
+import type { ClientFormData } from '../../types/clientFormTypes';
 import {
-  ClientFormData,
   defaultClientFormData,
   FORM_VALIDATION_RULES,
   CLIENT_TIERS,
@@ -20,7 +20,7 @@ const ClientForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
-  const [isLoading, setIsLoading] = useState(id ? true : false);
+  const [isLoading, setIsLoading] = useState(!!id);
   const [activeSection, setActiveSection] = useState(0);
 
   // Get the section from URL query if present
@@ -101,14 +101,12 @@ const ClientForm = () => {
       } else {
         // Create new client
         const newClient = await clientService.createClient(data);
-
-        console.log(newClient, 'djdjdj');
         showToast({
           type: 'success',
           title: 'Success',
           message: 'Client created successfully',
         });
-        navigate(`/clients/${newClient.client.id}`);
+        navigate(`/clients/${newClient.id}`);
       }
     } catch (error) {
       console.error('Error submitting client:', error);
@@ -176,7 +174,7 @@ const ClientForm = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -240,7 +238,6 @@ const ClientForm = () => {
       </div>
 
       <FormProvider {...methods}>
-        {/* Main form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {/* Form sections */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -254,10 +251,14 @@ const ClientForm = () => {
             {activeSection === 0 && (
               <div className="grid grid-cols-1 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Application Name <span className="text-red-500">*</span>
                   </label>
                   <Input
+                    id="name"
                     {...register('name', FORM_VALIDATION_RULES.name)}
                     placeholder="My API Client"
                     error={errors.name?.message}
@@ -265,10 +266,14 @@ const ClientForm = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="companyName"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Company Name <span className="text-red-500">*</span>
                   </label>
                   <Input
+                    id="companyName"
                     {...register(
                       'companyName',
                       FORM_VALIDATION_RULES.companyName
@@ -279,10 +284,14 @@ const ClientForm = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Primary Email <span className="text-red-500">*</span>
                   </label>
                   <Input
+                    id="email"
                     type="email"
                     {...register('email', FORM_VALIDATION_RULES.email)}
                     placeholder="contact@example.com"
@@ -291,10 +300,14 @@ const ClientForm = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Description
                   </label>
                   <Textarea
+                    id="description"
                     {...register('description')}
                     placeholder="Describe the purpose of this API client..."
                     rows={3}
@@ -306,17 +319,28 @@ const ClientForm = () => {
             {activeSection === 1 && (
               <div className="grid grid-cols-1 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="accountOwner"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Account Owner
                   </label>
-                  <Input {...register('accountOwner')} placeholder="John Doe" />
+                  <Input
+                    id="accountOwner"
+                    {...register('accountOwner')}
+                    placeholder="John Doe"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="contactPhone"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Contact Phone
                   </label>
                   <Input
+                    id="contactPhone"
                     {...register(
                       'contactPhone',
                       FORM_VALIDATION_RULES.contactPhone
@@ -327,10 +351,14 @@ const ClientForm = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="technicalContactEmail"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Technical Contact Email
                   </label>
                   <Input
+                    id="technicalContactEmail"
                     type="email"
                     {...register(
                       'technicalContactEmail',
@@ -346,10 +374,14 @@ const ClientForm = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="billingEmail"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Billing Contact Email
                   </label>
                   <Input
+                    id="billingEmail"
                     type="email"
                     {...register(
                       'billingEmail',
@@ -368,10 +400,14 @@ const ClientForm = () => {
             {activeSection === 2 && (
               <div className="grid grid-cols-1 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="tier"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Account Tier <span className="text-red-500">*</span>
                   </label>
                   <Select
+                    id="tier"
                     {...register('tier', FORM_VALIDATION_RULES.tier)}
                     error={errors.tier?.message}
                   >

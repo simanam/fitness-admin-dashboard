@@ -1,12 +1,14 @@
 // src/hooks/useExerciseEquipment.ts
 import { useState, useEffect } from 'react';
 import { useToast } from './useToast';
-import exerciseEquipmentService, {
+import exerciseEquipmentService from '../api/exerciseEquipmentService';
+import type {
   EquipmentLink,
   CreateEquipmentLinkPayload,
   UpdateEquipmentLinkPayload,
 } from '../api/exerciseEquipmentService';
-import equipmentService, { Equipment } from '../api/equipmentService';
+import equipmentService from '../api/equipmentService';
+import type { Equipment } from '../api/equipmentService';
 
 interface UseExerciseEquipmentProps {
   exerciseId: string;
@@ -30,8 +32,8 @@ export const useExerciseEquipment = ({
 
   // Fetch initial data
   useEffect(() => {
-    fetchData();
-  }, [exerciseId]);
+    void fetchData();
+  }, []);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -61,13 +63,16 @@ export const useExerciseEquipment = ({
       );
 
       setAvailableEquipment(available);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching equipment data:', error);
 
       // More detailed error logging
-      if (error.response) {
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as {
+          response: { data: unknown; status: number };
+        };
+        console.error('Error response data:', axiosError.response.data);
+        console.error('Error response status:', axiosError.response.status);
       }
 
       showToast({
@@ -140,19 +145,17 @@ export const useExerciseEquipment = ({
         );
 
         // Update stats if required status changed
-        if (payload.isRequired !== undefined) {
-          const newLinks = equipmentLinks.map((link) =>
-            link.id === linkId
-              ? { ...link, isRequired: payload.isRequired! }
-              : link
-          );
-          const required = newLinks.filter((link) => link.isRequired).length;
-          setStats({
-            required,
-            optional: newLinks.length - required,
-            total: newLinks.length,
-          });
-        }
+        const newLinks = equipmentLinks.map((link) =>
+          link.id === linkId && payload.isRequired !== undefined
+            ? { ...link, isRequired: payload.isRequired }
+            : link
+        );
+        const required = newLinks.filter((link) => link.isRequired).length;
+        setStats({
+          required,
+          optional: newLinks.length - required,
+          total: newLinks.length,
+        });
       }
 
       return true;
@@ -273,7 +276,7 @@ export const useExerciseEquipment = ({
     e.preventDefault();
 
     const sourceId = e.dataTransfer.getData('linkId');
-    const sourceIndex = parseInt(e.dataTransfer.getData('index'));
+    const sourceIndex = Number.parseInt(e.dataTransfer.getData('index'), 10);
 
     // Don't do anything if dropping on the same item
     if (sourceId === targetId) return;

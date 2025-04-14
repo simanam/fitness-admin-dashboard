@@ -1,15 +1,19 @@
 // src/pages/exercises/EditExercisePage.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, type FC } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import ExerciseForm from '../../components/exercises/form/ExerciseForm';
 import { useExerciseForm } from '../../hooks/useExerciseForm';
 import { useToast } from '../../hooks/useToast';
 import exerciseService from '../../api/exerciseService';
-import { ExerciseFormData } from '../../types/exerciseFormTypes';
+import type {
+  ExerciseFormData,
+  MovementPattern,
+  PlaneOfMotion,
+} from '../../types/exerciseFormTypes';
 import { formatInstructions } from '../../utils/instructionsParser';
 
-const EditExercisePage: React.FC = () => {
+const EditExercisePage: FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -35,12 +39,12 @@ const EditExercisePage: React.FC = () => {
           name: exercise.name,
           description: exercise.description,
           difficulty: exercise.difficulty,
-          movement_pattern: exercise.movement_pattern,
+          movement_pattern: exercise.movement_pattern as MovementPattern,
           mechanics: exercise.mechanics,
           force: exercise.force,
           equipment_required: exercise.equipment_required,
           bilateral: exercise.bilateral,
-          plane_of_motion: exercise.plane_of_motion,
+          plane_of_motion: exercise.plane_of_motion as PlaneOfMotion,
           status: exercise.status,
 
           // Handle form_points
@@ -53,7 +57,7 @@ const EditExercisePage: React.FC = () => {
 
           // Generate instructions from form_points if they don't exist
           instructions:
-            exercise.instructions ||
+            (exercise as any).instructions ||
             formatInstructions({
               setup: exercise.form_points?.setup || [],
               execution: exercise.form_points?.execution || [],
@@ -77,7 +81,8 @@ const EditExercisePage: React.FC = () => {
           // Handle tempo recommendations
           tempo_recommendations: {
             default: exercise.tempo_recommendations?.default || '',
-            tempo_notes: exercise.tempo_recommendations?.tempo_notes || '',
+            tempo_notes:
+              (exercise.tempo_recommendations as any)?.tempo_notes || '',
           },
         };
 
@@ -101,7 +106,7 @@ const EditExercisePage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -115,6 +120,7 @@ const EditExercisePage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center">
         <button
+          type="button"
           onClick={() => navigate(`/exercises/${id}`)}
           className="mr-4 p-1 rounded-full text-gray-500 hover:bg-gray-100"
         >

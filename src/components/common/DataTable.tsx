@@ -1,10 +1,10 @@
 // src/components/common/DataTable.tsx
-import { useState, useEffect, ReactNode } from 'react';
+import { type FC, type ReactNode, useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Filter, Search, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export interface Column<T> {
-  key: string;
+  key: keyof T;
   title: string;
   render?: (item: T) => ReactNode;
   sortable?: boolean;
@@ -12,12 +12,12 @@ export interface Column<T> {
   width?: string;
 }
 
-interface DataTableProps<T> {
+interface DataTableProps<T extends Record<string, unknown>> {
   columns: Column<T>[];
   data: T[];
   keyExtractor: (item: T) => string | number;
   onRowClick?: (item: T) => void;
-  initialSortKey?: string;
+  initialSortKey?: keyof T;
   initialSortDirection?: 'asc' | 'desc';
   isLoading?: boolean;
   emptyState?: ReactNode;
@@ -27,7 +27,7 @@ interface DataTableProps<T> {
   className?: string;
 }
 
-export function DataTable<T>({
+export function DataTable<T extends Record<string, unknown>>({
   columns,
   data,
   keyExtractor,
@@ -41,7 +41,7 @@ export function DataTable<T>({
   onSelectionChange,
   className,
 }: DataTableProps<T>) {
-  const [sortKey, setSortKey] = useState<string | undefined>(initialSortKey);
+  const [sortKey, setSortKey] = useState<keyof T | undefined>(initialSortKey);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
     initialSortDirection
   );
@@ -59,7 +59,7 @@ export function DataTable<T>({
     if (search.trim()) {
       const searchLower = search.toLowerCase();
       result = result.filter((item) => {
-        return Object.values(item as Record<string, any>).some((val) => {
+        return Object.values(item).some((val) => {
           if (val === null || val === undefined) return false;
           return String(val).toLowerCase().includes(searchLower);
         });
@@ -67,22 +67,22 @@ export function DataTable<T>({
     }
 
     // Apply filters if any
-    Object.entries(filters).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(filters)) {
       if (value.trim()) {
         const valueLower = value.toLowerCase();
         result = result.filter((item) => {
-          const itemValue = (item as Record<string, any>)[key];
+          const itemValue = item[key];
           if (itemValue === null || itemValue === undefined) return false;
           return String(itemValue).toLowerCase().includes(valueLower);
         });
       }
-    });
+    }
 
     // Apply sorting if a sort key is specified
     if (sortKey) {
       result.sort((a, b) => {
-        const aValue = (a as Record<string, any>)[sortKey];
-        const bValue = (b as Record<string, any>)[sortKey];
+        const aValue = a[sortKey];
+        const bValue = b[sortKey];
 
         if (aValue === bValue) return 0;
 
@@ -99,7 +99,7 @@ export function DataTable<T>({
     setSelected(selectedIds);
   }, [selectedIds]);
 
-  const handleSort = (key: string) => {
+  const handleSort = (key: keyof T) => {
     if (sortKey === key) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -138,10 +138,10 @@ export function DataTable<T>({
     if (e.target.checked) {
       const allIds = filteredData.map((item) => String(keyExtractor(item)));
       setSelected(allIds);
-      if (onSelectionChange) onSelectionChange(allIds);
+      onSelectionChange?.(allIds);
     } else {
       setSelected([]);
-      if (onSelectionChange) onSelectionChange([]);
+      onSelectionChange?.([]);
     }
   };
 
@@ -151,7 +151,7 @@ export function DataTable<T>({
       : selected.filter((selectedId) => selectedId !== id);
 
     setSelected(newSelected);
-    if (onSelectionChange) onSelectionChange(newSelected);
+    onSelectionChange?.(newSelected);
   };
 
   // Create skeleton loading state
@@ -159,15 +159,15 @@ export function DataTable<T>({
     <tr key={`skeleton-row-${index}`}>
       {isSelectable && (
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded animate-pulse" />
         </td>
       )}
-      {columns.map((column, colIndex) => (
+      {columns.map((column) => (
         <td
-          key={`skeleton-col-${colIndex}`}
+          key={`skeleton-${column.key}-${index}`}
           className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
         >
-          <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded animate-pulse" />
         </td>
       ))}
     </tr>
@@ -176,7 +176,7 @@ export function DataTable<T>({
   return (
     <div className={cn('overflow-x-auto', className)}>
       {/* Search and filter bar */}
-      {(columns.some((col) => col.filterable) || true) && (
+      {columns.some((col) => col.filterable) && (
         <div className="flex items-center justify-between mb-4 gap-2">
           <div className="relative flex-1 max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -191,6 +191,7 @@ export function DataTable<T>({
             />
             {search && (
               <button
+                type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => setSearch('')}
               >
@@ -209,6 +210,7 @@ export function DataTable<T>({
                 </span>
                 <span className="text-xs text-gray-600">{value}</span>
                 <button
+                  type="button"
                   className="text-gray-400 hover:text-gray-600"
                   onClick={() => clearFilter(key)}
                 >
@@ -242,7 +244,7 @@ export function DataTable<T>({
               )}
               {columns.map((column) => (
                 <th
-                  key={column.key}
+                  key={String(column.key)}
                   scope="col"
                   className={cn(
                     'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider',
@@ -253,9 +255,16 @@ export function DataTable<T>({
                   )}
                 >
                   <div className="flex items-center space-x-1">
-                    <div
+                    <button
                       className="flex-1 flex items-center"
                       onClick={() => column.sortable && handleSort(column.key)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && column.sortable) {
+                          handleSort(column.key);
+                        }
+                      }}
+                      type="button"
+                      disabled={!column.sortable}
                     >
                       <span>{column.title}</span>
                       {column.sortable && sortKey === column.key && (
@@ -267,32 +276,36 @@ export function DataTable<T>({
                           )}
                         </span>
                       )}
-                    </div>
+                    </button>
 
                     {column.filterable && (
                       <div className="relative">
                         <button
+                          type="button"
                           className={cn(
                             'p-1 rounded hover:bg-gray-200',
-                            filterOpen[column.key] ? 'bg-gray-200' : ''
+                            filterOpen[String(column.key)] ? 'bg-gray-200' : ''
                           )}
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleFilter(column.key);
+                            toggleFilter(String(column.key));
                           }}
                         >
                           <Filter size={14} className="text-gray-500" />
                         </button>
 
-                        {filterOpen[column.key] && (
+                        {filterOpen[String(column.key)] && (
                           <div className="absolute right-0 mt-2 w-60 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                             <div className="p-2">
                               <input
                                 type="text"
                                 placeholder={`Filter by ${column.title}`}
-                                value={filters[column.key] || ''}
+                                value={filters[String(column.key)] || ''}
                                 onChange={(e) =>
-                                  handleFilterChange(column.key, e.target.value)
+                                  handleFilterChange(
+                                    String(column.key),
+                                    e.target.value
+                                  )
                                 }
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-500"
                                 onClick={(e) => e.stopPropagation()}
@@ -323,12 +336,24 @@ export function DataTable<T>({
                       'hover:bg-gray-50',
                       onRowClick ? 'cursor-pointer' : ''
                     )}
-                    onClick={() => onRowClick && onRowClick(item)}
+                    onClick={() => onRowClick?.(item)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && onRowClick) {
+                        onRowClick(item);
+                      }
+                    }}
+                    role={onRowClick ? 'button' : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
                   >
                     {isSelectable && (
                       <td
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                         onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.stopPropagation();
+                          }
+                        }}
                       >
                         <input
                           type="checkbox"
@@ -342,12 +367,12 @@ export function DataTable<T>({
                     )}
                     {columns.map((column) => (
                       <td
-                        key={column.key}
+                        key={String(column.key)}
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                       >
                         {column.render
                           ? column.render(item)
-                          : (item as Record<string, any>)[column.key]}
+                          : String(item[column.key])}
                       </td>
                     ))}
                   </tr>
@@ -364,6 +389,7 @@ export function DataTable<T>({
                       <p className="mb-2 text-gray-500">No data found</p>
                       {Object.keys(filters).length > 0 && (
                         <button
+                          type="button"
                           className="text-sm text-gray-600 underline hover:text-gray-900"
                           onClick={() => setFilters({})}
                         >

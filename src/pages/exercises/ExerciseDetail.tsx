@@ -10,7 +10,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';
-import exerciseService, { Exercise } from '../../api/exerciseService';
+import exerciseService from '../../api/exerciseService';
+import type { Exercise } from '../../api/exerciseService';
 import ConfirmationDialog from '../../components/ui/confirmation-dialog';
 import ExerciseOverview from './tabs/ExerciseOverview';
 import ExerciseMuscles from './tabs/ExerciseMuscles';
@@ -42,13 +43,12 @@ const ExerciseDetail = () => {
 
   // Fetch exercise data
   useEffect(() => {
-    if (!id) return;
-
     const fetchExercise = async () => {
+      if (!id) return;
+
       setIsLoading(true);
       try {
         const data = await exerciseService.getExercise(id);
-
         setExercise(data);
       } catch (error) {
         console.error('Error fetching exercise:', error);
@@ -63,7 +63,7 @@ const ExerciseDetail = () => {
     };
 
     fetchExercise();
-  }, [id]);
+  }, [id, showToast]);
 
   // Handle exercise deletion
   const handleDelete = async () => {
@@ -99,7 +99,7 @@ const ExerciseDetail = () => {
     try {
       const updatedExercise = await exerciseService.updateExerciseStatus(
         exercise.id,
-        'PUBLISHED'
+        'published'
       );
       setExercise(updatedExercise);
       showToast({
@@ -107,7 +107,7 @@ const ExerciseDetail = () => {
         title: 'Success',
         message: 'Exercise published successfully',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       showToast({
         type: 'error',
         title: 'Error',
@@ -125,11 +125,16 @@ const ExerciseDetail = () => {
 
     try {
       // Create a copy without ID and with "Copy of" prefixed to name
-      const { id, created_at, updated_at, ...exerciseData } = exercise;
+      const {
+        id: _id,
+        created_at: _created,
+        updated_at: _updated,
+        ...exerciseData
+      } = exercise;
       const newExercise = {
         ...exerciseData,
         name: `Copy of ${exercise.name}`,
-        status: 'DRAFT',
+        status: 'draft' as const,
       };
 
       const createdExercise = await exerciseService.createExercise(newExercise);
@@ -157,7 +162,7 @@ const ExerciseDetail = () => {
     { key: 'equipment', label: 'Equipment' },
     { key: 'media', label: 'Media' },
     { key: 'relationships', label: 'Relationships' },
-    { key: 'joints', label: 'Joints' }, // Add this line
+    { key: 'joints', label: 'Joints' },
   ];
 
   // Render appropriate component based on active tab
@@ -190,7 +195,7 @@ const ExerciseDetail = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -207,6 +212,7 @@ const ExerciseDetail = () => {
           The exercise you're looking for doesn't exist or has been removed.
         </p>
         <button
+          type="button"
           onClick={() => navigate('/exercises')}
           className="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
         >
@@ -219,12 +225,12 @@ const ExerciseDetail = () => {
 
   // Determine status color
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PUBLISHED':
+    switch (status.toLowerCase()) {
+      case 'published':
         return 'bg-green-100 text-green-800';
-      case 'DRAFT':
+      case 'draft':
         return 'bg-gray-100 text-gray-800';
-      case 'ARCHIVED':
+      case 'archived':
         return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -233,12 +239,12 @@ const ExerciseDetail = () => {
 
   // Determine difficulty color
   const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'BEGINNER':
+    switch (difficulty.toLowerCase()) {
+      case 'beginner':
         return 'bg-green-100 text-green-800';
-      case 'INTERMEDIATE':
+      case 'intermediate':
         return 'bg-blue-100 text-blue-800';
-      case 'ADVANCED':
+      case 'advanced':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -251,6 +257,7 @@ const ExerciseDetail = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div className="flex items-center">
           <button
+            type="button"
             onClick={() => navigate('/exercises')}
             className="mr-4 p-1 rounded-full text-gray-500 hover:bg-gray-100"
           >
@@ -276,8 +283,9 @@ const ExerciseDetail = () => {
         </div>
 
         <div className="flex space-x-2">
-          {exercise.status === 'DRAFT' && (
+          {exercise.status === 'draft' && (
             <button
+              type="button"
               onClick={() => setShowPublishDialog(true)}
               className="flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
@@ -287,6 +295,7 @@ const ExerciseDetail = () => {
           )}
 
           <button
+            type="button"
             onClick={handleDuplicate}
             className="flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
           >
@@ -295,6 +304,7 @@ const ExerciseDetail = () => {
           </button>
 
           <button
+            type="button"
             onClick={() => navigate(`/exercises/${id}/edit`)}
             className="flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
           >
@@ -303,6 +313,7 @@ const ExerciseDetail = () => {
           </button>
 
           <button
+            type="button"
             onClick={() => setShowDeleteDialog(true)}
             className="flex items-center px-3 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50"
           >
@@ -317,6 +328,7 @@ const ExerciseDetail = () => {
         <div className="flex overflow-x-auto">
           {tabs.map((tab) => (
             <button
+              type="button"
               key={tab.key}
               onClick={() => setActiveTab(tab.key as TabKey)}
               className={`py-4 px-6 text-sm font-medium border-b-2 whitespace-nowrap ${

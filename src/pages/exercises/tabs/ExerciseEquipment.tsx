@@ -1,5 +1,5 @@
 // src/pages/exercises/tabs/ExerciseEquipment.tsx
-import { Box, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { useExerciseEquipment } from '../../../hooks/useExerciseEquipment';
 import ExerciseEquipmentManager from '../../../components/exercises/equipment/ExerciseEquipmentManager';
 

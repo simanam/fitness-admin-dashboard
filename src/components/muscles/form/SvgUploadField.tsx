@@ -1,5 +1,6 @@
 // src/components/muscles/form/SvgUploadField.tsx
-import React, { useState, useEffect } from 'react';
+import type { FC } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Layers, Eye, EyeOff } from 'lucide-react';
 import { FileUpload } from '../../ui/file-upload';
@@ -10,7 +11,7 @@ interface SvgUploadFieldProps {
   muscleId?: string;
 }
 
-const SvgUploadField: React.FC<SvgUploadFieldProps> = ({ muscleId }) => {
+const SvgUploadField: FC<SvgUploadFieldProps> = ({ muscleId }) => {
   const { register, setValue, trigger, watch } = useFormContext();
   const keepExistingSvg = watch('keepExistingSvg');
 
@@ -119,6 +120,22 @@ const SvgUploadField: React.FC<SvgUploadFieldProps> = ({ muscleId }) => {
     }
   };
 
+  const renderSvgContent = (content: string) => {
+    const processedSvg = processSvg(content);
+    // Create a blob URL for the SVG content
+    const blob = new Blob([processedSvg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+
+    return (
+      <img
+        src={url}
+        alt="Muscle visualization"
+        className="w-full h-full object-contain"
+        onLoad={() => URL.revokeObjectURL(url)}
+      />
+    );
+  };
+
   return (
     <div className="space-y-4">
       <FormField
@@ -133,10 +150,10 @@ const SvgUploadField: React.FC<SvgUploadFieldProps> = ({ muscleId }) => {
               <input
                 type="checkbox"
                 id="keepExistingSvg"
-                checked={keepExistingSvg}
-                onChange={handleToggleKeepExisting}
+                {...register('keepExistingSvg', {
+                  onChange: (e) => handleToggleKeepExisting(e),
+                })}
                 className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
-                {...register('keepExistingSvg')}
               />
               <label
                 htmlFor="keepExistingSvg"
@@ -147,11 +164,11 @@ const SvgUploadField: React.FC<SvgUploadFieldProps> = ({ muscleId }) => {
             </div>
           )}
 
-          {/* File upload component (shown if no existing SVG or if not keeping existing) */}
+          {/* File upload component */}
           {(!muscleId || !svgContent || !keepExistingSvg) && (
             <FileUpload
               accept=".svg,image/svg+xml"
-              maxSize={2} // 2MB max size
+              maxSize={2}
               onFileSelect={handleFileSelect}
               onFileRemove={handleRemoveFile}
               label={muscleId ? 'Upload new SVG' : 'Upload SVG'}
@@ -189,26 +206,16 @@ const SvgUploadField: React.FC<SvgUploadFieldProps> = ({ muscleId }) => {
                   <div className="w-full max-w-md mx-auto aspect-square">
                     {isLoadingSvg ? (
                       <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-2"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-2" />
                         <p>Loading visualization...</p>
                       </div>
                     ) : newSvgPreview ? (
                       <div className="flex items-center justify-center h-full">
-                        <div
-                          className="w-full h-full"
-                          dangerouslySetInnerHTML={{
-                            __html: processSvg(newSvgPreview),
-                          }}
-                        />
+                        {renderSvgContent(newSvgPreview)}
                       </div>
                     ) : svgContent && keepExistingSvg ? (
                       <div className="flex items-center justify-center h-full">
-                        <div
-                          className="w-full h-full"
-                          dangerouslySetInnerHTML={{
-                            __html: processSvg(svgContent),
-                          }}
-                        />
+                        {renderSvgContent(svgContent)}
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full text-gray-500">

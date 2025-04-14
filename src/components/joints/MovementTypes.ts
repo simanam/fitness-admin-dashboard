@@ -27,6 +27,8 @@ export const COMMON_MOVEMENTS = [
   { value: 'abduction', label: 'Abduction' },
   { value: 'adduction', label: 'Adduction' },
   { value: 'rotation', label: 'Rotation' },
+  { value: 'internal_rotation', label: 'Internal Rotation' },
+  { value: 'external_rotation', label: 'External Rotation' },
   { value: 'lateral_flexion', label: 'Lateral Flexion' },
   { value: 'circumduction', label: 'Circumduction' },
   { value: 'protraction', label: 'Protraction' },
@@ -37,6 +39,9 @@ export const COMMON_MOVEMENTS = [
   { value: 'eversion', label: 'Eversion' },
   { value: 'pronation', label: 'Pronation' },
   { value: 'supination', label: 'Supination' },
+  { value: 'dorsiflexion', label: 'Dorsiflexion' },
+  { value: 'plantarflexion', label: 'Plantarflexion' },
+  { value: 'opposition', label: 'Opposition' },
 ];
 
 // Helper function to get color based on the movement plane

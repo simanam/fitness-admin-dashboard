@@ -1,11 +1,6 @@
 // src/hooks/useToast.tsx
-import React, {
-  createContext,
-  useState,
-  useContext,
-  ReactNode,
-  useCallback,
-} from 'react';
+import { createContext, useState, useContext, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { X, Check, AlertTriangle, Info } from 'lucide-react';
 
 interface ToastProps {
@@ -89,6 +84,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
                 </div>
                 <div className="ml-4 flex-shrink-0 flex">
                   <button
+                    type="button"
                     className="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                     onClick={() => hideToast(toast.id)}
                   >

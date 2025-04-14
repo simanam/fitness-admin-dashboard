@@ -6,7 +6,6 @@ import {
   ArrowDown,
   ChevronUp,
   ChevronDown,
-  ArrowRight,
   CornerUpRight,
   CornerDownRight,
 } from 'lucide-react';
@@ -15,7 +14,6 @@ import {
   ProgressionRelationship,
 } from '../../api/relationshipService';
 import { Exercise } from '../../api/exerciseService';
-import DifficultyIndicator from './DifficultyIndicator';
 
 interface ProgressionPathVisualizationProps {
   progressionPath: ProgressionPath;

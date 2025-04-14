@@ -1,10 +1,15 @@
 // src/hooks/useMovementPatterns.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from './useToast';
-import movementPatternService, {
+import movementPatternService from '../api/movementPatternService';
+import type {
   MovementPattern,
   MovementPatternFilterParams,
+  PaginatedResponse as ServicePaginatedResponse,
 } from '../api/movementPatternService';
+
+// Define the paginated response type to match the service type
+type PaginatedResponse<T> = ServicePaginatedResponse<T>;
 
 interface UseMovementPatternsParams {
   initialCategoryFilter?: string;
@@ -21,7 +26,7 @@ export const useMovementPatterns = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [itemsPerPage] = useState(20);
+  const itemsPerPage = 20; // Convert to constant since we don't need the setter
   const [sortKey, setSortKey] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,19 +36,7 @@ export const useMovementPatterns = ({
   const [typeFilter, setTypeFilter] = useState<string>(initialTypeFilter || '');
   const { showToast } = useToast();
 
-  // Fetch patterns when dependencies change
-  useEffect(() => {
-    fetchPatterns();
-  }, [
-    currentPage,
-    sortKey,
-    sortOrder,
-    searchQuery,
-    categoryFilter,
-    typeFilter,
-  ]);
-
-  const fetchPatterns = async () => {
+  const fetchPatterns = useCallback(async () => {
     setIsLoading(true);
     try {
       const params: MovementPatternFilterParams = {
@@ -71,7 +64,21 @@ export const useMovementPatterns = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    currentPage,
+    itemsPerPage,
+    sortKey,
+    sortOrder,
+    searchQuery,
+    categoryFilter,
+    typeFilter,
+    showToast,
+  ]);
+
+  // Fetch patterns when dependencies change
+  useEffect(() => {
+    void fetchPatterns();
+  }, [fetchPatterns]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

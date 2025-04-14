@@ -1,6 +1,8 @@
 // src/components/media/MediaStatistics.tsx
-import React, { useMemo } from 'react';
+import { useMemo, type FC } from 'react';
 import { FileVideo, Image as ImageIcon, FileUp, RefreshCw } from 'lucide-react';
+
+type ViewAngle = 'FRONT' | 'SIDE' | 'BACK' | 'DIAGONAL' | 'FORTYFIVE';
 
 // Original interface expected by the component
 interface MediaStats {
@@ -10,13 +12,7 @@ interface MediaStats {
     IMAGE: number;
     SVG: number;
   };
-  byViewAngle: {
-    FRONT: number;
-    SIDE: number;
-    BACK: number; // Changed from REAR to BACK
-    DIAGONAL: number; // Changed from ANGLE to DIAGONAL
-    FORTYFIVE: number; // Added this for 45-degree
-  };
+  byViewAngle: Record<ViewAngle, number>;
   totalDuration: number;
   totalSize: number;
 }
@@ -27,31 +23,25 @@ interface NewMediaStatsFormat {
     count: number;
     totalDuration: number;
     totalSize: number;
-    countByAngle: {
-      [key: string]: number;
-    };
+    countByAngle: Record<string, number>;
     hasPrimary: boolean;
   };
   image: {
     count: number;
     totalSize: number;
-    countByAngle: {
-      [key: string]: number;
-    };
+    countByAngle: Record<string, number>;
     hasPrimary: boolean;
   };
   svg?: {
     count: number;
     totalSize: number;
-    countByAngle: {
-      [key: string]: number;
-    };
+    countByAngle: Record<string, number>;
     hasPrimary: boolean;
   };
 }
 
 interface MediaStatisticsProps {
-  exerciseId: string;
+  exerciseId: string; // Kept for future use
   statsData: NewMediaStatsFormat | null;
   isLoading: boolean;
   error: string | null;
@@ -68,15 +58,15 @@ const defaultStats: MediaStats = {
   byViewAngle: {
     FRONT: 0,
     SIDE: 0,
-    REAR: 0,
-    ANGLE: 0,
+    BACK: 0,
+    DIAGONAL: 0,
+    FORTYFIVE: 0,
   },
   totalDuration: 0,
   totalSize: 0,
 };
 
-const MediaStatistics: React.FC<MediaStatisticsProps> = ({
-  exerciseId,
+const MediaStatistics: FC<MediaStatisticsProps> = ({
   statsData,
   isLoading,
   error,
@@ -97,8 +87,9 @@ const MediaStatistics: React.FC<MediaStatisticsProps> = ({
       byViewAngle: {
         FRONT: 0,
         SIDE: 0,
-        REAR: 0,
-        ANGLE: 0,
+        BACK: 0,
+        DIAGONAL: 0,
+        FORTYFIVE: 0,
       },
       totalDuration: statsData.video?.totalDuration || 0,
       totalSize:
@@ -113,35 +104,25 @@ const MediaStatistics: React.FC<MediaStatisticsProps> = ({
       transformedStats.byType.IMAGE +
       transformedStats.byType.SVG;
 
-    // Process angles for videos
+    // Helper function to safely update view angle counts
+    const updateViewAngleCounts = (countByAngle: Record<string, number>) => {
+      Object.entries(countByAngle).forEach(([angle, count]) => {
+        const upperAngle = angle.toUpperCase() as ViewAngle;
+        if (upperAngle in transformedStats.byViewAngle) {
+          transformedStats.byViewAngle[upperAngle] += count;
+        }
+      });
+    };
+
+    // Process angles for all media types
     if (statsData.video?.countByAngle) {
-      for (const [angle, count] of Object.entries(
-        statsData.video.countByAngle
-      )) {
-        const upperAngle = angle.toUpperCase();
-        transformedStats.byViewAngle[upperAngle] =
-          (transformedStats.byViewAngle[upperAngle] || 0) + count;
-      }
+      updateViewAngleCounts(statsData.video.countByAngle);
     }
-
-    // Process angles for images
     if (statsData.image?.countByAngle) {
-      for (const [angle, count] of Object.entries(
-        statsData.image.countByAngle
-      )) {
-        const upperAngle = angle.toUpperCase();
-        transformedStats.byViewAngle[upperAngle] =
-          (transformedStats.byViewAngle[upperAngle] || 0) + count;
-      }
+      updateViewAngleCounts(statsData.image.countByAngle);
     }
-
-    // Process angles for SVGs if they exist
     if (statsData.svg?.countByAngle) {
-      for (const [angle, count] of Object.entries(statsData.svg.countByAngle)) {
-        const upperAngle = angle.toUpperCase();
-        transformedStats.byViewAngle[upperAngle] =
-          (transformedStats.byViewAngle[upperAngle] || 0) + count;
-      }
+      updateViewAngleCounts(statsData.svg.countByAngle);
     }
 
     return transformedStats;
@@ -173,6 +154,7 @@ const MediaStatistics: React.FC<MediaStatisticsProps> = ({
         <h3 className="text-lg font-medium text-gray-900">Media Statistics</h3>
         {!isLoading && (
           <button
+            type="button"
             onClick={onRefresh}
             className="text-gray-500 hover:text-gray-700 p-1 rounded-full"
             title="Refresh statistics"
@@ -190,7 +172,7 @@ const MediaStatistics: React.FC<MediaStatisticsProps> = ({
 
       {isLoading ? (
         <div className="flex justify-center py-6">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900" />
         </div>
       ) : (
         <>
@@ -225,36 +207,19 @@ const MediaStatistics: React.FC<MediaStatisticsProps> = ({
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium text-gray-800 mb-3">View Angles</h4>
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Front View</span>
-                  <span className="text-sm font-medium">
-                    {stats?.byViewAngle?.FRONT ?? 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Side View</span>
-                  <span className="text-sm font-medium">
-                    {stats?.byViewAngle?.SIDE ?? 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Back View</span>
-                  <span className="text-sm font-medium">
-                    {stats?.byViewAngle?.BACK ?? 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Diagonal View</span>
-                  <span className="text-sm font-medium">
-                    {stats?.byViewAngle?.DIAGONAL ?? 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">45° Angle View</span>
-                  <span className="text-sm font-medium">
-                    {stats?.byViewAngle?.FORTYFIVE ?? 0}
-                  </span>
-                </div>
+                {Object.entries(stats.byViewAngle).map(([angle, count]) => (
+                  <div
+                    key={angle}
+                    className="flex justify-between items-center"
+                  >
+                    <span className="text-sm">
+                      {angle.charAt(0) +
+                        angle.slice(1).toLowerCase().replace('_', ' ')}{' '}
+                      View
+                    </span>
+                    <span className="text-sm font-medium">{count}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

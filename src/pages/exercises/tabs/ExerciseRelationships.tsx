@@ -5,7 +5,6 @@ import {
   Trash2,
   ChevronUp,
   ChevronDown,
-  ArrowRight,
   Link as LinkIcon,
   Edit,
 } from 'lucide-react';
@@ -16,8 +15,10 @@ import { Select } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
 import { Checkbox } from '../../../components/ui/checkbox';
 import EmptyState from '../../../components/ui/empty-state';
-import exerciseService, { Exercise } from '../../../api/exerciseService';
-import relationshipService, {
+import exerciseService from '../../../api/exerciseService';
+import type { Exercise } from '../../../api/exerciseService';
+import relationshipService from '../../../api/relationshipService';
+import type {
   ExerciseRelationship,
   ProgressionPath,
   ProgressionRelationship,
@@ -273,28 +274,22 @@ const ExerciseRelationships = ({
   const getRelatedExercise = (relationship: ExerciseRelationship) => {
     if (relationship.baseExerciseId === exerciseId) {
       return relationship.relatedExercise;
-    } else {
-      return relationship.baseExercise;
     }
+    return relationship.baseExercise;
   };
 
   // Get relationship direction indicator
   const getDirectionIndicator = (relationship: ExerciseRelationship) => {
-    // If bidirectional or it's a variation (which are typically bidirectional)
     if (
       relationship.bidirectional ||
       relationship.relationshipType === 'variation'
     ) {
       return '↔️';
     }
-    // If current exercise is the base, show outgoing direction
-    else if (relationship.baseExerciseId === exerciseId) {
+    if (relationship.baseExerciseId === exerciseId) {
       return '→';
     }
-    // Otherwise show incoming direction
-    else {
-      return '←';
-    }
+    return '←';
   };
 
   // Handler for deleting a progression relationship from the visualization
@@ -320,7 +315,7 @@ const ExerciseRelationships = ({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-48">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -331,11 +326,11 @@ const ExerciseRelationships = ({
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium text-gray-900">Relationships</h3>
         <div className="flex space-x-2">
-          {/* Toggle visualization/list view button - only show if there's progression data */}
           {progressionPath &&
             (progressionPath.easier.length > 0 ||
               progressionPath.harder.length > 0) && (
               <button
+                type="button"
                 onClick={toggleView}
                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
               >
@@ -344,6 +339,7 @@ const ExerciseRelationships = ({
             )}
 
           <button
+            type="button"
             onClick={() => setShowAddModal(true)}
             disabled={exercises.length === 0}
             className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md ${
@@ -653,6 +649,7 @@ const ExerciseRelationships = ({
         footer={
           <div className="flex justify-end space-x-3">
             <button
+              type="button"
               onClick={() => {
                 resetForm();
                 setShowAddModal(false);
@@ -663,6 +660,7 @@ const ExerciseRelationships = ({
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleAddRelationship}
               className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
               disabled={isSubmitting || !relatedExerciseId}
@@ -675,10 +673,14 @@ const ExerciseRelationships = ({
         <div className="space-y-4">
           {/* Exercise selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="related-exercise"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Related Exercise
             </label>
             <Select
+              id="related-exercise"
               value={relatedExerciseId}
               onChange={(e) => setRelatedExerciseId(e.target.value)}
               disabled={isSubmitting}
@@ -699,10 +701,14 @@ const ExerciseRelationships = ({
 
           {/* Relationship type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="relationship-type"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Relationship Type
             </label>
             <Select
+              id="relationship-type"
               value={relationshipType}
               onChange={(e) =>
                 setRelationshipType(
@@ -788,10 +794,14 @@ const ExerciseRelationships = ({
               </h5>
 
               <div>
-                <label className="block text-xs text-gray-500 mb-1">
+                <label
+                  htmlFor="setup-changes"
+                  className="block text-xs text-gray-500 mb-1"
+                >
                   Setup Changes
                 </label>
                 <Textarea
+                  id="setup-changes"
                   value={modificationDetails.setupChanges}
                   onChange={(e) =>
                     setModificationDetails({
@@ -806,10 +816,14 @@ const ExerciseRelationships = ({
               </div>
 
               <div>
-                <label className="block text-xs text-gray-500 mb-1">
+                <label
+                  htmlFor="technique-changes"
+                  className="block text-xs text-gray-500 mb-1"
+                >
                   Technique Changes
                 </label>
                 <Textarea
+                  id="technique-changes"
                   value={modificationDetails.techniqueChanges}
                   onChange={(e) =>
                     setModificationDetails({
@@ -824,10 +838,14 @@ const ExerciseRelationships = ({
               </div>
 
               <div>
-                <label className="block text-xs text-gray-500 mb-1">
+                <label
+                  htmlFor="muscle-impact"
+                  className="block text-xs text-gray-500 mb-1"
+                >
                   Target Muscle Impact
                 </label>
                 <Textarea
+                  id="muscle-impact"
                   value={modificationDetails.targetMuscleImpact}
                   onChange={(e) =>
                     setModificationDetails({

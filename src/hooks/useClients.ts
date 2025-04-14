@@ -1,10 +1,8 @@
 // src/hooks/useClients.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from './useToast';
-import clientService, {
-  Client,
-  ClientFilterParams,
-} from '../api/clientService';
+import clientService from '../api/clientService';
+import type { Client, ClientFilterParams } from '../api/clientService';
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -13,7 +11,7 @@ export const useClients = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [itemsPerPage] = useState(20);
   const [sortKey, setSortKey] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,20 +23,8 @@ export const useClients = () => {
   }>({});
   const { showToast } = useToast();
 
-  // Fetch clients when dependencies change
-  useEffect(() => {
-    fetchClients();
-  }, [
-    currentPage,
-    sortKey,
-    sortOrder,
-    searchQuery,
-    statusFilter,
-    tierFilter,
-    dateRangeFilter,
-  ]);
-
-  const fetchClients = async () => {
+  // Memoize fetchClients to prevent unnecessary recreations
+  const fetchClients = useCallback(async () => {
     setIsLoading(true);
     try {
       const params: ClientFilterParams = {
@@ -67,7 +53,22 @@ export const useClients = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    currentPage,
+    itemsPerPage,
+    sortKey,
+    sortOrder,
+    searchQuery,
+    statusFilter,
+    tierFilter,
+    dateRangeFilter,
+    showToast,
+  ]);
+
+  // Fetch clients when dependencies change
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -228,6 +229,7 @@ export const useClients = () => {
     currentPage,
     totalPages,
     totalItems,
+    itemsPerPage,
     sortKey,
     sortOrder,
     searchQuery,

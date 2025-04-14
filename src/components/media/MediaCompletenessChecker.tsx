@@ -3,12 +3,12 @@ import React, { useMemo } from 'react';
 import { CheckCircle, AlertTriangle, RefreshCw, Info } from 'lucide-react';
 
 // Existing interface
-interface MediaCompletenessCheck {
-  isComplete: boolean;
-  missingAngles: string[];
-  missingTypes: string[];
-  recommendations: string[];
-}
+// interface MediaCompletenessCheck {
+//   isComplete: boolean;
+//   missingAngles: string[];
+//   missingTypes: string[];
+//   recommendations: string[];
+// }
 
 // New interface to match your API response
 interface NewCompletenessFormat {
@@ -29,7 +29,6 @@ interface MediaCompletenessCheckerProps {
 }
 
 const MediaCompletenessChecker: React.FC<MediaCompletenessCheckerProps> = ({
-  exerciseId,
   completenessData,
   isLoading,
   error,

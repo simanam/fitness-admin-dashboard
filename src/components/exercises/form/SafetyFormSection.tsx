@@ -1,29 +1,36 @@
 // src/components/exercises/form/SafetyFormSection.tsx
-import React from 'react';
+
+import type { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Plus, X, AlertTriangle, Check } from 'lucide-react';
 import { Textarea } from '../../ui/textarea';
 import { Select } from '../../ui/select';
 
-const SafetyFormSection: React.FC = () => {
-  const {
-    register,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useFormContext();
+interface Mistake {
+  description: string;
+  correction: string;
+  risk_level: 'low' | 'medium' | 'high';
+  id?: string;
+}
+
+interface Contraindication {
+  condition: string;
+  severity: 'absolute' | 'relative';
+  recommendation: string;
+  id?: string;
+}
+
+const SafetyFormSection: FC = () => {
+  const { register, watch, setValue } = useFormContext();
 
   // Watch safety info fields
   const commonMistakes = watch('common_mistakes.mistakes') || [];
-  const safetyInfo = watch('safety_info') || {
-    risk_level: 'low',
-    contraindications: [],
-    precautions: [],
-    warning_signs: [],
-  };
   const precautions = watch('safety_info.precautions') || [];
   const warningsSigns = watch('safety_info.warning_signs') || [];
   const contraindications = watch('safety_info.contraindications') || [];
+
+  // Generate unique ID
+  const generateId = () => `_${Math.random().toString(36).substr(2, 9)}`;
 
   // Add new item to an array
   const addItem = (field: string) => {
@@ -31,8 +38,13 @@ const SafetyFormSection: React.FC = () => {
     setValue(field, [
       ...current,
       field.includes('contraindications')
-        ? { condition: '', severity: 'relative', recommendation: '' }
-        : '',
+        ? {
+            condition: '',
+            severity: 'relative',
+            recommendation: '',
+            id: generateId(),
+          }
+        : { text: '', id: generateId() },
     ]);
   };
 
@@ -41,25 +53,25 @@ const SafetyFormSection: React.FC = () => {
     const current = watch(field) || [];
     setValue(
       field,
-      current.filter((_, i) => i !== index)
+      current.filter((_: unknown, i: number) => i !== index)
     );
   };
 
   // Add new mistake
   const addMistake = () => {
-    const current = watch('common_mistakes.mistakes') || [];
+    const current = (watch('common_mistakes.mistakes') || []) as Mistake[];
     setValue('common_mistakes.mistakes', [
       ...current,
-      { description: '', correction: '', risk_level: 'low' },
+      { description: '', correction: '', risk_level: 'low', id: generateId() },
     ]);
   };
 
   // Remove mistake
   const removeMistake = (index: number) => {
-    const current = watch('common_mistakes.mistakes') || [];
+    const current = (watch('common_mistakes.mistakes') || []) as Mistake[];
     setValue(
       'common_mistakes.mistakes',
-      current.filter((_, i) => i !== index)
+      current.filter((_: unknown, i: number) => i !== index)
     );
   };
 
@@ -92,23 +104,30 @@ const SafetyFormSection: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {commonMistakes.map((mistake, index) => (
-              <div key={index} className="bg-gray-50 p-4 rounded-lg relative">
+            {commonMistakes.map((mistake: Mistake) => (
+              <div
+                key={mistake.id || generateId()}
+                className="bg-gray-50 p-4 rounded-lg relative"
+              >
                 <button
                   type="button"
-                  onClick={() => removeMistake(index)}
+                  onClick={() => removeMistake(commonMistakes.indexOf(mistake))}
                   className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
                 >
                   <X className="h-5 w-5" />
                 </button>
 
                 <div className="mb-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor={`mistake-desc-${commonMistakes.indexOf(mistake)}`}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Mistake Description
                   </label>
                   <Textarea
+                    id={`mistake-desc-${commonMistakes.indexOf(mistake)}`}
                     {...register(
-                      `common_mistakes.mistakes.${index}.description`
+                      `common_mistakes.mistakes.${commonMistakes.indexOf(mistake)}.description`
                     )}
                     rows={2}
                     placeholder="Describe the common mistake"
@@ -116,12 +135,16 @@ const SafetyFormSection: React.FC = () => {
                 </div>
 
                 <div className="mb-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor={`mistake-correction-${commonMistakes.indexOf(mistake)}`}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Correction
                   </label>
                   <Textarea
+                    id={`mistake-correction-${commonMistakes.indexOf(mistake)}`}
                     {...register(
-                      `common_mistakes.mistakes.${index}.correction`
+                      `common_mistakes.mistakes.${commonMistakes.indexOf(mistake)}.correction`
                     )}
                     rows={2}
                     placeholder="How to correct this mistake"
@@ -129,12 +152,16 @@ const SafetyFormSection: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor={`mistake-risk-${commonMistakes.indexOf(mistake)}`}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Risk Level
                   </label>
                   <Select
+                    id={`mistake-risk-${commonMistakes.indexOf(mistake)}`}
                     {...register(
-                      `common_mistakes.mistakes.${index}.risk_level`
+                      `common_mistakes.mistakes.${commonMistakes.indexOf(mistake)}.risk_level`
                     )}
                   >
                     <option value="low">Low</option>
@@ -155,10 +182,16 @@ const SafetyFormSection: React.FC = () => {
         </h3>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="safety-risk-level"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Risk Level
           </label>
-          <Select {...register('safety_info.risk_level')}>
+          <Select
+            id="safety-risk-level"
+            {...register('safety_info.risk_level')}
+          >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
             <option value="high">High</option>
@@ -190,12 +223,18 @@ const SafetyFormSection: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {contraindications.map((item, index) => (
-                <div key={index} className="bg-gray-50 p-3 rounded-lg relative">
+              {contraindications.map((item: Contraindication) => (
+                <div
+                  key={item.id || generateId()}
+                  className="bg-gray-50 p-3 rounded-lg relative"
+                >
                   <button
                     type="button"
                     onClick={() =>
-                      removeItem('safety_info.contraindications', index)
+                      removeItem(
+                        'safety_info.contraindications',
+                        contraindications.indexOf(item)
+                      )
                     }
                     className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
                   >
@@ -203,12 +242,16 @@ const SafetyFormSection: React.FC = () => {
                   </button>
 
                   <div className="mb-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor={`contraindication-condition-${contraindications.indexOf(item)}`}
+                      className="block text-xs font-medium text-gray-700 mb-1"
+                    >
                       Condition
                     </label>
                     <Textarea
+                      id={`contraindication-condition-${contraindications.indexOf(item)}`}
                       {...register(
-                        `safety_info.contraindications.${index}.condition`
+                        `safety_info.contraindications.${contraindications.indexOf(item)}.condition`
                       )}
                       rows={1}
                       placeholder="Medical condition or situation"
@@ -216,12 +259,16 @@ const SafetyFormSection: React.FC = () => {
                   </div>
 
                   <div className="mb-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor={`contraindication-severity-${contraindications.indexOf(item)}`}
+                      className="block text-xs font-medium text-gray-700 mb-1"
+                    >
                       Severity
                     </label>
                     <Select
+                      id={`contraindication-severity-${contraindications.indexOf(item)}`}
                       {...register(
-                        `safety_info.contraindications.${index}.severity`
+                        `safety_info.contraindications.${contraindications.indexOf(item)}.severity`
                       )}
                     >
                       <option value="absolute">Absolute</option>
@@ -230,12 +277,16 @@ const SafetyFormSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor={`contraindication-recommendation-${contraindications.indexOf(item)}`}
+                      className="block text-xs font-medium text-gray-700 mb-1"
+                    >
                       Recommendation
                     </label>
                     <Textarea
+                      id={`contraindication-recommendation-${contraindications.indexOf(item)}`}
                       {...register(
-                        `safety_info.contraindications.${index}.recommendation`
+                        `safety_info.contraindications.${contraindications.indexOf(item)}.recommendation`
                       )}
                       rows={1}
                       placeholder="What to recommend for this condition"
@@ -270,18 +321,25 @@ const SafetyFormSection: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {precautions.map((item, index) => (
-                <div key={index} className="flex items-start">
+              {precautions.map((precaution: { text: string; id: string }) => (
+                <div key={precaution.id} className="flex items-start">
                   <div className="flex-grow">
                     <Textarea
-                      {...register(`safety_info.precautions.${index}`)}
+                      {...register(
+                        `safety_info.precautions.${precautions.indexOf(precaution)}`
+                      )}
                       rows={1}
                       placeholder="Safety precaution"
                     />
                   </div>
                   <button
                     type="button"
-                    onClick={() => removeItem('safety_info.precautions', index)}
+                    onClick={() =>
+                      removeItem(
+                        'safety_info.precautions',
+                        precautions.indexOf(precaution)
+                      )
+                    }
                     className="ml-2 mt-1 text-gray-400 hover:text-red-500"
                   >
                     <X className="h-5 w-5" />
@@ -315,11 +373,13 @@ const SafetyFormSection: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {warningsSigns.map((item, index) => (
-                <div key={index} className="flex items-start">
+              {warningsSigns.map((warning: { text: string; id: string }) => (
+                <div key={warning.id} className="flex items-start">
                   <div className="flex-grow">
                     <Textarea
-                      {...register(`safety_info.warning_signs.${index}`)}
+                      {...register(
+                        `safety_info.warning_signs.${warningsSigns.indexOf(warning)}`
+                      )}
                       rows={1}
                       placeholder="Warning sign to watch for"
                     />
@@ -327,7 +387,10 @@ const SafetyFormSection: React.FC = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      removeItem('safety_info.warning_signs', index)
+                      removeItem(
+                        'safety_info.warning_signs',
+                        warningsSigns.indexOf(warning)
+                      )
                     }
                     className="ml-2 mt-1 text-gray-400 hover:text-red-500"
                   >

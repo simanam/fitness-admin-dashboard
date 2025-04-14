@@ -1,5 +1,6 @@
 // src/pages/equipment/components/EquipmentExercisesTable.tsx
-import React, { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
+import type { FC, ReactNode } from 'react';
 import {
   ChevronDown,
   ChevronUp,
@@ -11,12 +12,12 @@ import {
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import EmptyState from '../../../components/ui/empty-state';
-import { ExerciseWithEquipmentDetails } from '../../../api/equipmentExerciseService';
+import type { ExerciseWithEquipmentDetails } from '../../../api/equipmentExerciseService';
 
 interface Column {
   key: string;
   title: string;
-  render?: (item: ExerciseWithEquipmentDetails) => React.ReactNode;
+  render?: (item: ExerciseWithEquipmentDetails) => ReactNode;
   sortable?: boolean;
   filterable?: boolean;
   width?: string;
@@ -29,7 +30,7 @@ interface EquipmentExercisesTableProps {
 }
 
 // Create a specialized table component just for equipment exercises
-const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
+const EquipmentExercisesTable: FC<EquipmentExercisesTableProps> = ({
   data,
   isLoading,
   onViewExercise,
@@ -49,8 +50,7 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
       key: 'name',
       title: 'Exercise Name',
       sortable: true,
-      render: (exercise) =>
-        exercise.exercise?.name || exercise.name || 'Unnamed Exercise',
+      render: (exercise) => exercise.name || 'Unnamed Exercise',
     },
     {
       key: 'isRequired',
@@ -82,11 +82,8 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
       title: 'Difficulty',
       sortable: true,
       render: (exercise) => {
-        // Safely access the difficulty property
         const difficultyValue = (
-          exercise.exercise?.difficulty ||
-          exercise.difficulty ||
-          'BEGINNER'
+          exercise.difficulty || 'BEGINNER'
         ).toUpperCase();
 
         const colors = {
@@ -110,6 +107,7 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
       title: 'Actions',
       render: (exercise) => (
         <button
+          type="button"
           onClick={() => onViewExercise(exercise)}
           className="text-gray-600 hover:text-gray-900"
           title="View Exercise"
@@ -128,16 +126,13 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
     if (search.trim()) {
       const searchLower = search.toLowerCase();
       result = result.filter((item) => {
-        // Search in exercise name
-        const exerciseName = item.exercise?.name || item.name || '';
-        if (exerciseName.toLowerCase().includes(searchLower)) return true;
+        const name = item.name || '';
+        if (name.toLowerCase().includes(searchLower)) return true;
 
-        // Search in setup notes
         const setupNotes = item.setupNotes || '';
         if (setupNotes.toLowerCase().includes(searchLower)) return true;
 
-        // Search in difficulty
-        const difficulty = item.exercise?.difficulty || item.difficulty || '';
+        const difficulty = item.difficulty || '';
         if (difficulty.toLowerCase().includes(searchLower)) return true;
 
         return false;
@@ -145,12 +140,12 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
     }
 
     // Apply filters if any
-    Object.entries(filters).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(filters)) {
       if (value.trim()) {
         const valueLower = value.toLowerCase();
         result = result.filter((item) => {
           if (key === 'name') {
-            const name = item.exercise?.name || item.name || '';
+            const name = item.name || '';
             return name.toLowerCase().includes(valueLower);
           }
           if (key === 'isRequired') {
@@ -162,26 +157,23 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
             return notes.toLowerCase().includes(valueLower);
           }
           if (key === 'difficulty') {
-            const difficulty = (
-              item.exercise?.difficulty ||
-              item.difficulty ||
-              ''
-            ).toLowerCase();
+            const difficulty = (item.difficulty || '').toLowerCase();
             return difficulty.includes(valueLower);
           }
           return true;
         });
       }
-    });
+    }
 
     // Apply sorting if a sort key is specified
     if (sortKey) {
       result.sort((a, b) => {
-        let aValue, bValue;
+        let aValue: string | number = '';
+        let bValue: string | number = '';
 
         if (sortKey === 'name') {
-          aValue = a.exercise?.name || a.name || '';
-          bValue = b.exercise?.name || b.name || '';
+          aValue = a.name || '';
+          bValue = b.name || '';
         } else if (sortKey === 'isRequired') {
           aValue = a.isRequired ? 1 : 0;
           bValue = b.isRequired ? 1 : 0;
@@ -193,16 +185,8 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
             ADVANCED: 3,
           };
 
-          const aDiff = (
-            a.exercise?.difficulty ||
-            a.difficulty ||
-            'BEGINNER'
-          ).toUpperCase();
-          const bDiff = (
-            b.exercise?.difficulty ||
-            b.difficulty ||
-            'BEGINNER'
-          ).toUpperCase();
+          const aDiff = (a.difficulty || 'BEGINNER').toUpperCase();
+          const bDiff = (b.difficulty || 'BEGINNER').toUpperCase();
 
           aValue = difficultyRank[aDiff as keyof typeof difficultyRank] || 1;
           bValue = difficultyRank[bDiff as keyof typeof difficultyRank] || 1;
@@ -211,8 +195,8 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
           bValue = b.setupNotes || '';
         } else {
           // Default to comparing by name
-          aValue = a.exercise?.name || a.name || '';
-          bValue = b.exercise?.name || b.name || '';
+          aValue = a.name || '';
+          bValue = b.name || '';
         }
 
         if (aValue === bValue) return 0;
@@ -260,19 +244,42 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
     }));
   };
 
-  // Create skeleton loading state
+  // Render skeleton loading row with unique keys
   const renderSkeletonRow = (index: number) => (
     <tr key={`skeleton-row-${index}`}>
-      {columns.map((column, colIndex) => (
+      {columns.map((column) => (
         <td
-          key={`skeleton-col-${colIndex}`}
+          key={`skeleton-${column.key}-${index}`}
           className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
         >
-          <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded animate-pulse" />
         </td>
       ))}
     </tr>
   );
+
+  // Convert non-ReactNode values to strings
+  const renderCellContent = (
+    item: ExerciseWithEquipmentDetails,
+    column: Column
+  ): ReactNode => {
+    if (column.render) {
+      return column.render(item);
+    }
+
+    const value = item[column.key as keyof ExerciseWithEquipmentDetails];
+    if (typeof value === 'object' && value !== null) {
+      return JSON.stringify(value);
+    }
+    return String(value ?? '');
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent, action: () => void) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      action();
+    }
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -291,6 +298,7 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
           />
           {search && (
             <button
+              type="button"
               className="absolute inset-y-0 right-0 pr-3 flex items-center"
               onClick={() => setSearch('')}
             >
@@ -307,6 +315,7 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
               <span className="text-xs font-medium text-gray-700">{key}:</span>
               <span className="text-xs text-gray-600">{value}</span>
               <button
+                type="button"
                 className="text-gray-400 hover:text-gray-600"
                 onClick={() => clearFilter(key)}
               >
@@ -334,33 +343,39 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
                   )}
                 >
                   <div className="flex items-center space-x-1">
-                    <div
-                      className="flex-1 flex items-center"
-                      onClick={() => column.sortable && handleSort(column.key)}
-                    >
-                      <span>{column.title}</span>
-                      {column.sortable && sortKey === column.key && (
-                        <span className="ml-1">
-                          {sortDirection === 'asc' ? (
-                            <ChevronUp size={16} className="text-gray-500" />
-                          ) : (
-                            <ChevronDown size={16} className="text-gray-500" />
-                          )}
-                        </span>
-                      )}
-                    </div>
+                    {column.sortable ? (
+                      <button
+                        type="button"
+                        className="flex-1 flex items-center"
+                        onClick={() => handleSort(column.key)}
+                      >
+                        <span>{column.title}</span>
+                        {sortKey === column.key && (
+                          <span className="ml-1">
+                            {sortDirection === 'asc' ? (
+                              <ChevronUp size={16} className="text-gray-500" />
+                            ) : (
+                              <ChevronDown
+                                size={16}
+                                className="text-gray-500"
+                              />
+                            )}
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="flex-1">{column.title}</span>
+                    )}
 
                     {column.filterable && (
                       <div className="relative">
                         <button
+                          type="button"
                           className={cn(
                             'p-1 rounded hover:bg-gray-200',
                             filterOpen[column.key] ? 'bg-gray-200' : ''
                           )}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFilter(column.key);
-                          }}
+                          onClick={() => toggleFilter(column.key)}
                         >
                           <Filter size={14} className="text-gray-500" />
                         </button>
@@ -376,7 +391,6 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
                                   handleFilterChange(column.key, e.target.value)
                                 }
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-500"
-                                onClick={(e) => e.stopPropagation()}
                               />
                             </div>
                           </div>
@@ -390,32 +404,42 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {isLoading ? (
-              // Render skeleton loading rows
               Array.from({ length: 5 }).map((_, index) =>
                 renderSkeletonRow(index)
               )
             ) : filteredData.length > 0 ? (
               filteredData.map((item) => {
-                const id = item.id || `${item.exerciseId}-${item.equipmentId}`;
+                const id = item.id || `exercise-${crypto.randomUUID()}`;
                 return (
-                  <tr
-                    key={id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => onViewExercise(item)}
-                  >
+                  <tr key={id} className="hover:bg-gray-50">
                     {columns.map((column) => (
                       <td
                         key={`${id}-${column.key}`}
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                        onClick={
-                          column.key === 'actions'
-                            ? (e) => e.stopPropagation()
-                            : undefined
-                        }
                       >
-                        {column.render
-                          ? column.render(item)
-                          : (item as any)[column.key]}
+                        {column.key === 'actions' ? (
+                          <button
+                            type="button"
+                            onClick={() => onViewExercise(item)}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            {renderCellContent(item, column)}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onViewExercise(item)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                onViewExercise(item);
+                              }
+                            }}
+                            className="w-full text-left cursor-pointer"
+                          >
+                            {renderCellContent(item, column)}
+                          </button>
+                        )}
                       </td>
                     ))}
                   </tr>
@@ -423,10 +447,7 @@ const EquipmentExercisesTable: React.FC<EquipmentExercisesTableProps> = ({
               })
             ) : (
               <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-6 py-8 text-center text-sm text-gray-500"
-                >
+                <td colSpan={columns.length} className="px-6 py-8 text-center">
                   <EmptyState
                     icon={<Dumbbell size={36} className="text-gray-400" />}
                     title="No related exercises"

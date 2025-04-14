@@ -22,7 +22,7 @@ export const logFormData = (data: any, label = 'Form Data') => {
 /**
  * Replacer function for JSON.stringify that handles circular references
  */
-function replacer(key: string, value: any) {
+function replacer(value: any) {
   if (typeof value === 'object' && value !== null) {
     // Check for circular reference
     if (seenObjects.has(value)) {

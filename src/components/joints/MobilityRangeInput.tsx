@@ -30,6 +30,8 @@ const MobilityRangeInput: React.FC<MobilityRangeInputProps> = ({
     'abduction',
     'adduction',
     'rotation',
+    'internal_rotation',
+    'external_rotation',
     'lateral_flexion',
     'circumduction',
     'protraction',
@@ -40,6 +42,9 @@ const MobilityRangeInput: React.FC<MobilityRangeInputProps> = ({
     'eversion',
     'pronation',
     'supination',
+    'dorsiflexion',
+    'plantarflexion',
+    'opposition',
   ].filter((type) => !Object.keys(mobilityRange).includes(type));
 
   // Handle adding a new mobility range

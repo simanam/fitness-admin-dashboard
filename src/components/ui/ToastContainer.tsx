@@ -1,5 +1,5 @@
 // src/components/ui/ToastContainer.tsx
-import { useState, useEffect } from 'react';
+
 import Toast, { ToastProps } from './Toast';
 
 export interface ToastOptions {

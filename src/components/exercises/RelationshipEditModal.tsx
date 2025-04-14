@@ -1,11 +1,12 @@
 // src/components/exercises/RelationshipEditModal.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import type { FC, ChangeEvent } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import Modal from '../ui/modal';
 import { Select } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
-import { ExerciseRelationship } from '../../api/relationshipService';
+import type { ExerciseRelationship } from '../../api/relationshipService';
 
 interface RelationshipEditModalProps {
   isOpen: boolean;
@@ -27,7 +28,7 @@ interface RelationshipEditModalProps {
 /**
  * Modal component for editing existing relationships
  */
-const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
+const RelationshipEditModal: FC<RelationshipEditModalProps> = ({
   isOpen,
   onClose,
   relationship,
@@ -88,6 +89,7 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
       footer={
         <div className="flex justify-end space-x-3">
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
             disabled={isSubmitting}
@@ -95,6 +97,7 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSubmit}
             className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
             disabled={isSubmitting}
@@ -107,38 +110,41 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
       <div className="space-y-4">
         {/* Relationship type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="relationship-type"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Relationship Type
           </label>
           <Select
-            options={[
-              {
-                value: 'progression',
-                label: 'Progression - Part of a difficulty progression',
-              },
-              {
-                value: 'variation',
-                label: 'Variation - Similar movement pattern',
-              },
-              {
-                value: 'alternative',
-                label: 'Alternative - Substitute exercise',
-              },
-            ]}
+            id="relationship-type"
             value={relationshipType}
-            onChange={(e) =>
+            onChange={(e: ChangeEvent<HTMLSelectElement>) =>
               setRelationshipType(
                 e.target.value as 'progression' | 'variation' | 'alternative'
               )
             }
             disabled={isSubmitting}
-          />
+          >
+            <option value="progression">
+              Progression - Part of a difficulty progression
+            </option>
+            <option value="variation">
+              Variation - Similar movement pattern
+            </option>
+            <option value="alternative">
+              Alternative - Substitute exercise
+            </option>
+          </Select>
         </div>
 
         {/* Conditional fields based on relationship type */}
         {relationshipType === 'progression' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="difficulty-change"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Difficulty Change
             </label>
             <div className="flex items-center space-x-2">
@@ -149,10 +155,14 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
                 }
                 className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
                 disabled={isSubmitting}
+                aria-label="Decrease difficulty"
               >
                 -
               </button>
-              <span className="px-4 py-1 border border-gray-300 rounded-md w-12 text-center">
+              <span
+                id="difficulty-change"
+                className="px-4 py-1 border border-gray-300 rounded-md w-12 text-center"
+              >
                 {difficultyChange > 0
                   ? `+${difficultyChange}`
                   : difficultyChange}
@@ -164,6 +174,7 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
                 }
                 className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
                 disabled={isSubmitting}
+                aria-label="Increase difficulty"
               >
                 +
               </button>
@@ -201,17 +212,21 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
         )}
 
         {/* Modification details for non-progression relationships */}
-        {relationshipType !== 'PROGRESSION' && (
+        {relationshipType !== 'progression' && (
           <div className="space-y-3">
             <h5 className="text-sm font-medium text-gray-700">
               Modification Details
             </h5>
 
             <div>
-              <label className="block text-xs text-gray-500 mb-1">
+              <label
+                htmlFor="setup-changes"
+                className="block text-xs text-gray-500 mb-1"
+              >
                 Setup Changes
               </label>
               <Textarea
+                id="setup-changes"
                 value={modificationDetails.setupChanges}
                 onChange={(e) =>
                   setModificationDetails({
@@ -226,10 +241,14 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs text-gray-500 mb-1">
+              <label
+                htmlFor="technique-changes"
+                className="block text-xs text-gray-500 mb-1"
+              >
                 Technique Changes
               </label>
               <Textarea
+                id="technique-changes"
                 value={modificationDetails.techniqueChanges}
                 onChange={(e) =>
                   setModificationDetails({
@@ -244,10 +263,14 @@ const RelationshipEditModal: React.FC<RelationshipEditModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs text-gray-500 mb-1">
+              <label
+                htmlFor="muscle-impact"
+                className="block text-xs text-gray-500 mb-1"
+              >
                 Target Muscle Impact
               </label>
               <Textarea
+                id="muscle-impact"
                 value={modificationDetails.targetMuscleImpact}
                 onChange={(e) =>
                   setModificationDetails({

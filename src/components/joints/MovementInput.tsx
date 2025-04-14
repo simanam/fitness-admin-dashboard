@@ -75,6 +75,8 @@ const MovementInput: React.FC<MovementInputProps> = ({
     'abduction',
     'adduction',
     'rotation',
+    'internal_rotation',
+    'external_rotation',
     'lateral_flexion',
     'circumduction',
     'protraction',
@@ -85,6 +87,9 @@ const MovementInput: React.FC<MovementInputProps> = ({
     'eversion',
     'pronation',
     'supination',
+    'dorsiflexion',
+    'plantarflexion',
+    'opposition',
   ].filter((name) => !movements.primary.some((m) => m.name === name));
 
   // Handle adding a new primary movement

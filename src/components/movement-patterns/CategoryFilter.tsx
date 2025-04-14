@@ -1,18 +1,16 @@
 // src/components/movement-patterns/CategoryFilter.tsx
-import React from 'react';
+import type { FC } from 'react';
 
 interface CategoryFilterProps {
   selectedCategory: string;
   onChange: (category: string) => void;
   categories: { value: string; label: string }[];
-  isLoading?: boolean;
 }
 
-const CategoryFilter: React.FC<CategoryFilterProps> = ({
+const CategoryFilter: FC<CategoryFilterProps> = ({
   selectedCategory,
   onChange,
   categories,
-  isLoading = false,
 }) => {
   return (
     <div className="space-y-2">
@@ -20,6 +18,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
 
       <div className="flex flex-wrap gap-2">
         <button
+          type="button"
           onClick={() => onChange('')}
           className={`px-3 py-1.5 text-sm rounded-md ${
             selectedCategory === ''
@@ -31,6 +30,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
         </button>
         {categories.map((category) => (
           <button
+            type="button"
             key={category.value}
             onClick={() => onChange(category.value)}
             className={`px-3 py-1.5 text-sm rounded-md ${

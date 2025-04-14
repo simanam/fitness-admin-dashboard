@@ -1,6 +1,6 @@
 // src/components/exercises/JointInvolvementForm.tsx
 import { useState, useEffect } from 'react';
-import { Slider } from '../ui/slider';
+
 import { Select } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -79,6 +79,8 @@ const JointInvolvementForm = ({
     'abduction',
     'adduction',
     'rotation',
+    'internal_rotation',
+    'external_rotation',
     'lateral_flexion',
     'circumduction',
     'protraction',
@@ -89,6 +91,9 @@ const JointInvolvementForm = ({
     'eversion',
     'pronation',
     'supination',
+    'dorsiflexion',
+    'plantarflexion',
+    'opposition',
   ];
 
   const validateForm = (): boolean => {

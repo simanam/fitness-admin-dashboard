@@ -1,10 +1,8 @@
 // src/hooks/useEquipment.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from './useToast';
-import equipmentService, {
-  Equipment,
-  EquipmentFilterParams,
-} from '../api/equipmentService';
+import equipmentService from '../api/equipmentService';
+import type { Equipment, EquipmentFilterParams } from '../api/equipmentService';
 
 export const useEquipment = () => {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -13,7 +11,7 @@ export const useEquipment = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [itemsPerPage] = useState(20);
   const [sortKey, setSortKey] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,19 +21,8 @@ export const useEquipment = () => {
   );
   const { showToast } = useToast();
 
-  // Fetch equipment when dependencies change
-  useEffect(() => {
-    fetchEquipment();
-  }, [
-    currentPage,
-    sortKey,
-    sortOrder,
-    searchQuery,
-    categoryFilter,
-    isCommonFilter,
-  ]);
-
-  const fetchEquipment = async () => {
+  // Memoize fetchEquipment to prevent unnecessary recreations
+  const fetchEquipment = useCallback(async () => {
     setIsLoading(true);
     try {
       const params: EquipmentFilterParams = {
@@ -63,7 +50,21 @@ export const useEquipment = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    currentPage,
+    itemsPerPage,
+    sortKey,
+    sortOrder,
+    searchQuery,
+    categoryFilter,
+    isCommonFilter,
+    showToast,
+  ]);
+
+  // Fetch equipment when dependencies change
+  useEffect(() => {
+    fetchEquipment();
+  }, [fetchEquipment]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -136,7 +137,6 @@ export const useEquipment = () => {
       { value: 'bodyweight', label: 'Bodyweight' },
       { value: 'cardio', label: 'Cardio' },
       { value: 'accessories', label: 'Accessories' },
-      // { value: 'other', label: 'Other' },
     ];
 
     return categories;
@@ -150,6 +150,7 @@ export const useEquipment = () => {
     currentPage,
     totalPages,
     totalItems,
+    itemsPerPage,
     sortKey,
     sortOrder,
     searchQuery,

@@ -1,11 +1,9 @@
 // src/components/muscles/form/MuscleForm.tsx
-import React from 'react';
+import type { FC } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Save, X } from 'lucide-react';
-import {
-  MuscleFormData,
-  FORM_VALIDATION_RULES,
-} from '../../../types/muscleFormTypes';
+import type { MuscleFormData } from '../../../types/muscleFormTypes';
+import { FORM_VALIDATION_RULES } from '../../../types/muscleFormTypes';
 import BasicInfoSection from './BasicInfoSection';
 
 interface MuscleFormProps {
@@ -16,7 +14,18 @@ interface MuscleFormProps {
   muscleId?: string;
 }
 
-const MuscleForm: React.FC<MuscleFormProps> = ({
+interface ValidationError {
+  type: string;
+  message: string;
+}
+
+type ValidationErrors = {
+  [key in keyof MuscleFormData]?: ValidationError;
+} & {
+  root?: ValidationError;
+};
+
+const MuscleForm: FC<MuscleFormProps> = ({
   initialData,
   onSubmit,
   onCancel,
@@ -26,10 +35,74 @@ const MuscleForm: React.FC<MuscleFormProps> = ({
   const methods = useForm<MuscleFormData>({
     defaultValues: {
       ...initialData,
-      keepExistingSvg: muscleId ? true : false,
+      keepExistingSvg: Boolean(muscleId),
     },
     mode: 'onChange',
-    rules: FORM_VALIDATION_RULES,
+    resolver: (data) => {
+      // Apply validation rules using the imported FORM_VALIDATION_RULES
+      try {
+        const errors: ValidationErrors = {};
+
+        for (const [field, rules] of Object.entries(FORM_VALIDATION_RULES)) {
+          const value = data[field as keyof MuscleFormData];
+          const fieldRules = rules as {
+            required?: string;
+            minLength?: { value: number; message: string };
+            maxLength?: { value: number; message: string };
+          };
+
+          // Check required rule
+          if (fieldRules.required && !value) {
+            errors[field as keyof MuscleFormData] = {
+              type: 'required',
+              message: fieldRules.required || 'This field is required',
+            };
+            continue; // Skip other validations if required fails
+          }
+
+          // Check minLength rule
+          if (
+            fieldRules.minLength &&
+            typeof value === 'string' &&
+            value.length < fieldRules.minLength.value
+          ) {
+            errors[field as keyof MuscleFormData] = {
+              type: 'minLength',
+              message: fieldRules.minLength.message,
+            };
+            continue;
+          }
+
+          // Check maxLength rule
+          if (
+            fieldRules.maxLength &&
+            typeof value === 'string' &&
+            value.length > fieldRules.maxLength.value
+          ) {
+            errors[field as keyof MuscleFormData] = {
+              type: 'maxLength',
+              message: fieldRules.maxLength.message,
+            };
+          }
+        }
+
+        return {
+          values: data,
+          errors: Object.keys(errors).length > 0 ? errors : {},
+        };
+      } catch (validationError) {
+        console.error('Validation error:', validationError);
+        return {
+          values: {},
+          errors: {
+            root: {
+              type: 'validation',
+              message: 'An error occurred during validation',
+            },
+          },
+        };
+      }
+    },
   });
 
   const {

@@ -1,10 +1,8 @@
 // src/hooks/useAdminUsers.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from './useToast';
-import adminUserService, {
-  AdminUser,
-  AdminUserFilterParams,
-} from '../api/adminUserService';
+import adminUserService from '../api/adminUserService';
+import type { AdminUser, AdminUserFilterParams } from '../api/adminUserService';
 
 export const useAdminUsers = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -13,19 +11,15 @@ export const useAdminUsers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [itemsPerPage] = useState(20);
   const [sortKey, setSortKey] = useState<string>('email');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('');
   const { showToast } = useToast();
 
-  // Fetch users when dependencies change
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage, sortKey, sortOrder, searchQuery, roleFilter]);
-
-  const fetchUsers = async () => {
+  // Memoize fetchUsers to prevent unnecessary recreations
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
       const params: AdminUserFilterParams = {
@@ -51,7 +45,20 @@ export const useAdminUsers = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    currentPage,
+    itemsPerPage,
+    sortKey,
+    sortOrder,
+    searchQuery,
+    roleFilter,
+    showToast,
+  ]);
+
+  // Fetch users when dependencies change
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -117,6 +124,7 @@ export const useAdminUsers = () => {
     currentPage,
     totalPages,
     totalItems,
+    itemsPerPage,
     sortKey,
     sortOrder,
     searchQuery,

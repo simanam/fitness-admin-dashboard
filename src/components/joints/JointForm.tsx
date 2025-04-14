@@ -1,9 +1,9 @@
 // src/components/joints/JointForm.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';
-import jointService, { Joint } from '../../api/jointService';
+import jointService, { type Joint } from '../../api/jointService';
 import { Input } from '../ui/input';
 import { Select } from '../ui/select';
 import { Textarea } from '../ui/textarea';
@@ -11,27 +11,38 @@ import ConfirmationDialog from '../ui/confirmation-dialog';
 import MobilityRangeInput from './MobilityRangeInput';
 import MovementInput from './MovementInput';
 
-interface JointFormProps {
-  jointId?: string;
-  initialData?: Partial<Joint>;
-  onSuccess?: (jointId: string) => void;
+type JointType =
+  | 'ball_and_socket'
+  | 'hinge'
+  | 'pivot'
+  | 'ellipsoidal'
+  | 'saddle'
+  | 'gliding'
+  | 'other';
+
+interface MobilityRangeData {
+  min: number;
+  max: number;
+  units: string;
+}
+
+interface Movement {
+  name: string;
+  plane: string;
+  range: {
+    min: number;
+    max: number;
+    units: string;
+  };
 }
 
 interface FormData {
   name: string;
-  type: string;
+  type: JointType;
   description: string;
-  mobilityRange: Record<string, any>;
+  mobilityRange: Record<string, MobilityRangeData>;
   movements: {
-    primary: Array<{
-      name: string;
-      plane: string;
-      range: {
-        min: number;
-        max: number;
-        units: string;
-      };
-    }>;
+    primary: Movement[];
     accessory: string[];
   };
 }
@@ -42,6 +53,12 @@ interface FormErrors {
   movements?: string;
   mobilityRange?: string;
   [key: string]: string | undefined;
+}
+
+interface JointFormProps {
+  jointId?: string;
+  initialData?: Partial<Joint>;
+  onSuccess?: (jointId: string) => void;
 }
 
 const JointForm: React.FC<JointFormProps> = ({
@@ -66,9 +83,18 @@ const JointForm: React.FC<JointFormProps> = ({
   };
 
   // Form state
-  const [formData, setFormData] = useState<FormData>(
-    initialData ? { ...defaultFormData, ...initialData } : defaultFormData
-  );
+  const [formData, setFormData] = useState<FormData>(() => {
+    if (!initialData) return defaultFormData;
+
+    return {
+      ...defaultFormData,
+      name: initialData.name || '',
+      type: (initialData.type as JointType) || 'hinge',
+      description: initialData.description || '',
+      mobilityRange: initialData.mobilityRange || {},
+      movements: initialData.movements || { primary: [], accessory: [] },
+    };
+  });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -106,31 +132,24 @@ const JointForm: React.FC<JointFormProps> = ({
   };
 
   // Update mobility range section of the form
-  const handleMobilityRangeChange = (mobilityRange: Record<string, any>) => {
+  const handleMobilityRangeChange = (
+    mobilityRange: Record<string, MobilityRangeData>
+  ) => {
     setFormData((prev) => ({ ...prev, mobilityRange }));
     setFormTouched(true);
 
     // Clear error if it exists
     if (errors.mobilityRange) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.mobilityRange;
-        return newErrors;
-      });
+      setErrors((prev) => ({
+        ...prev,
+        mobilityRange: undefined,
+      }));
     }
   };
 
   // Update movements section of the form
   const handleMovementsChange = (movements: {
-    primary: Array<{
-      name: string;
-      plane: string;
-      range: {
-        min: number;
-        max: number;
-        units: string;
-      };
-    }>;
+    primary: Movement[];
     accessory: string[];
   }) => {
     setFormData((prev) => ({ ...prev, movements }));
@@ -138,11 +157,10 @@ const JointForm: React.FC<JointFormProps> = ({
 
     // Clear error if it exists
     if (errors.movements) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.movements;
-        return newErrors;
-      });
+      setErrors((prev) => ({
+        ...prev,
+        movements: undefined,
+      }));
     }
   };
 
@@ -196,7 +214,13 @@ const JointForm: React.FC<JointFormProps> = ({
     try {
       if (isEditMode) {
         // Update existing joint
-        await jointService.updateJoint(jointId, formData);
+        await jointService.updateJoint(jointId, {
+          name: formData.name,
+          type: formData.type,
+          description: formData.description,
+          mobilityRange: formData.mobilityRange,
+          movements: formData.movements,
+        });
         showToast({
           type: 'success',
           title: 'Success',
@@ -209,7 +233,13 @@ const JointForm: React.FC<JointFormProps> = ({
         }
       } else {
         // Create new joint
-        const newJoint = await jointService.createJoint(formData);
+        const newJoint = await jointService.createJoint({
+          name: formData.name,
+          type: formData.type,
+          description: formData.description,
+          mobilityRange: formData.mobilityRange,
+          movements: formData.movements,
+        });
         showToast({
           type: 'success',
           title: 'Success',

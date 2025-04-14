@@ -1,6 +1,6 @@
 // src/pages/exercises/tabs/ExerciseOverview.tsx
-import React from 'react';
-import { Exercise } from '../../../api/exerciseService';
+import type { FC } from 'react';
+import type { Exercise } from '../../../api/exerciseService';
 import {
   Clock,
   Calendar,
@@ -14,14 +14,12 @@ import {
 } from 'lucide-react';
 
 interface ExerciseOverviewProps {
-  exercise: Exercise;
-  setExercise: React.Dispatch<React.SetStateAction<Exercise | null>>;
+  exercise: Exercise & {
+    instructions?: string;
+  };
 }
 
-const ExerciseOverview: React.FC<ExerciseOverviewProps> = ({
-  exercise,
-  setExercise,
-}) => {
+const ExerciseOverview: FC<ExerciseOverviewProps> = ({ exercise }) => {
   // Format the date in a readable format
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -66,6 +64,10 @@ const ExerciseOverview: React.FC<ExerciseOverviewProps> = ({
         exercise.form_points.breathing.length > 0) ||
       (exercise.form_points.alignment &&
         exercise.form_points.alignment.length > 0));
+
+  // Generate unique keys for list items
+  const generateKey = (prefix: string, index: number, value: string) =>
+    `${prefix}-${index}-${value.slice(0, 20)}`;
 
   return (
     <div className="space-y-8">
@@ -143,7 +145,7 @@ const ExerciseOverview: React.FC<ExerciseOverviewProps> = ({
         </div>
       </div>
 
-      {/* Instructions from form_points */}
+      {/* Instructions */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
           <Users className="h-5 w-5 mr-2 text-gray-500" />
@@ -162,7 +164,10 @@ const ExerciseOverview: React.FC<ExerciseOverviewProps> = ({
                   </h4>
                   <ol className="list-decimal pl-5 space-y-2 text-blue-900">
                     {exercise.form_points.setup.map((step, index) => (
-                      <li key={index} className="text-blue-800">
+                      <li
+                        key={generateKey('setup', index, step)}
+                        className="text-blue-800"
+                      >
                         {step}
                       </li>
                     ))}
@@ -180,7 +185,9 @@ const ExerciseOverview: React.FC<ExerciseOverviewProps> = ({
                   </h4>
                   <ol className="list-decimal pl-5 space-y-2 text-gray-700">
                     {exercise.form_points.execution.map((step, index) => (
-                      <li key={index}>{step}</li>
+                      <li key={generateKey('execution', index, step)}>
+                        {step}
+                      </li>
                     ))}
                   </ol>
                 </div>
@@ -196,7 +203,9 @@ const ExerciseOverview: React.FC<ExerciseOverviewProps> = ({
                   </h4>
                   <ul className="list-disc pl-5 space-y-2 text-green-800">
                     {exercise.form_points.breathing.map((step, index) => (
-                      <li key={index}>{step}</li>
+                      <li key={generateKey('breathing', index, step)}>
+                        {step}
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -212,7 +221,9 @@ const ExerciseOverview: React.FC<ExerciseOverviewProps> = ({
                   </h4>
                   <ul className="list-disc pl-5 space-y-2 text-yellow-800">
                     {exercise.form_points.alignment.map((step, index) => (
-                      <li key={index}>{step}</li>
+                      <li key={generateKey('alignment', index, step)}>
+                        {step}
+                      </li>
                     ))}
                   </ul>
                 </div>

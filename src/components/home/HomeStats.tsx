@@ -43,11 +43,11 @@ const HomeStats = () => {
           clientsResponse,
           jointsResponse,
         ] = await Promise.all([
-          exerciseService.getExercises({ limit: 1 }),
+          exerciseService.getExercises({ page: 1, limit: 1 }),
           muscleService.getMuscles(),
-          equipmentService.getEquipment({ limit: 1 }),
-          clientService.getClients({ limit: 1 }),
-          jointService.getJoints({ limit: 1 }),
+          equipmentService.getEquipment({ page: 1, limit: 1 }),
+          clientService.getClients({ page: 1, limit: 1 }),
+          jointService.getJoints({ page: 1, limit: 1 }),
         ]);
 
         // Get the first client to fetch its API keys
@@ -65,7 +65,7 @@ const HomeStats = () => {
         const totalMuscles = musclesResponse.length || 0;
         const totalEquipment = equipmentResponse.meta?.total || 0;
         const totalClients = clientsResponse.meta?.total || 0;
-        const totalJoints = jointsResponse.data?.meta?.total || 0;
+        const totalJoints = jointsResponse.meta?.total || 0;
 
         // In a real app, we'd get the change from the API
         // For this demo, we'll generate some fake changes
@@ -160,10 +160,10 @@ const HomeStats = () => {
           >
             <div className="px-4 py-5 sm:p-6">
               <div className="flex items-center">
-                <div className="flex-shrink-0 bg-gray-200 rounded-md p-3 h-12 w-12"></div>
+                <div className="flex-shrink-0 bg-gray-200 rounded-md p-3 h-12 w-12" />
                 <div className="ml-5 w-0 flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="mt-3 h-6 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="mt-3 h-6 bg-gray-200 rounded w-1/2" />
                 </div>
               </div>
             </div>

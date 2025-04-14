@@ -1,14 +1,22 @@
 // src/pages/equipment/tabs/EquipmentOverview.tsx
-import React from 'react';
-import { Info, Calendar, Box, Check, X } from 'lucide-react';
-import { Equipment } from '../../../api/equipmentService';
+import { type FC } from 'react';
+import { Info, Calendar, Box, Check, X, AlertCircle } from 'lucide-react';
+import type { Equipment } from '../../../api/equipmentService';
 
-interface EquipmentOverviewProps {
-  equipment: Equipment;
-  setEquipment: React.Dispatch<React.SetStateAction<Equipment | null>>;
+// Extend the Equipment type to include the missing properties
+interface ExtendedEquipment extends Equipment {
+  usage_tips?: string;
+  safety_considerations?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-const EquipmentOverview: React.FC<EquipmentOverviewProps> = ({ equipment }) => {
+interface EquipmentOverviewProps {
+  equipment: ExtendedEquipment;
+  setEquipment: React.Dispatch<React.SetStateAction<ExtendedEquipment | null>>;
+}
+
+const EquipmentOverview: FC<EquipmentOverviewProps> = ({ equipment }) => {
   // Format the date in a readable format
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';

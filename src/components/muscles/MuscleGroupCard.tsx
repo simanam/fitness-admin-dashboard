@@ -1,6 +1,6 @@
 // src/components/muscles/MuscleGroupCard.tsx
-import React from 'react';
-import { MuscleGroup } from '../../api/muscleService';
+import type { FC } from 'react';
+import type { MuscleGroup } from '../../api/muscleService';
 import { Layers, Edit, Trash2 } from 'lucide-react';
 
 interface MuscleGroupCardProps {
@@ -9,7 +9,7 @@ interface MuscleGroupCardProps {
   onDelete: (group: MuscleGroup) => void;
 }
 
-const MuscleGroupCard: React.FC<MuscleGroupCardProps> = ({
+const MuscleGroupCard: FC<MuscleGroupCardProps> = ({
   group,
   onEdit,
   onDelete,
@@ -33,6 +33,7 @@ const MuscleGroupCard: React.FC<MuscleGroupCardProps> = ({
           </div>
           <div className="flex space-x-2">
             <button
+              type="button"
               onClick={() => onEdit(group)}
               className="p-1 text-gray-500 hover:text-blue-600 rounded-full hover:bg-white"
               title="Edit Group"
@@ -40,6 +41,7 @@ const MuscleGroupCard: React.FC<MuscleGroupCardProps> = ({
               <Edit size={18} />
             </button>
             <button
+              type="button"
               onClick={() => onDelete(group)}
               className="p-1 text-gray-500 hover:text-red-600 rounded-full hover:bg-white"
               title="Delete Group"
@@ -56,7 +58,7 @@ const MuscleGroupCard: React.FC<MuscleGroupCardProps> = ({
 
           {group.parentGroupId && (
             <span className="ml-2 text-sm">
-              Parent: {group.parentGroup?.name || 'Unknown'}
+              Parent ID: {group.parentGroupId}
             </span>
           )}
         </div>

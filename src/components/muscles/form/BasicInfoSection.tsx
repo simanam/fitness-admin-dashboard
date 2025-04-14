@@ -1,5 +1,5 @@
 // src/components/muscles/form/BasicInfoSection.tsx
-import React from 'react';
+import { type FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useMuscleGroups } from '../../../hooks/useMuscleGroups';
 import { Input } from '../../../components/ui/input';
@@ -14,9 +14,36 @@ interface BasicInfoSectionProps {
   muscleId?: string;
 }
 
-const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ muscleId }) => {
-  const { register } = useFormContext();
+interface MuscleFormData {
+  name: string;
+  commonName?: string;
+  description?: string;
+  muscleGroupId: string;
+}
+
+interface MuscleGroup {
+  id: string;
+  name: string;
+  category: string;
+}
+
+const BasicInfoSection: FC<BasicInfoSectionProps> = ({ muscleId }) => {
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<MuscleFormData>();
   const { muscleGroups, isLoading } = useMuscleGroups();
+
+  const groupedMuscleGroups = muscleGroups.reduce<
+    Record<string, MuscleGroup[]>
+  >((acc, group) => {
+    const category = group.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(group);
+    return acc;
+  }, {});
 
   return (
     <div className="space-y-6">
@@ -35,11 +62,20 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ muscleId }) => {
           label="Muscle Name"
           required
           helperText="Enter the anatomical name of the muscle"
+          error={errors.name?.message}
         >
           <Input
-            {...register('name')}
+            {...register('name', {
+              required: 'Muscle name is required',
+              maxLength: {
+                value: 100,
+                message: 'Name must be less than 100 characters',
+              },
+            })}
             placeholder="e.g., Rectus Femoris"
             className="mt-1"
+            aria-describedby="name-description"
+            maxLength={100}
           />
         </FormField>
 
@@ -47,11 +83,19 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ muscleId }) => {
           name="commonName"
           label="Common Name"
           helperText="Enter a commonly used name for this muscle (optional)"
+          error={errors.commonName?.message}
         >
           <Input
-            {...register('commonName')}
+            {...register('commonName', {
+              maxLength: {
+                value: 50,
+                message: 'Common name must be less than 50 characters',
+              },
+            })}
             placeholder="e.g., Quad"
             className="mt-1"
+            aria-describedby="commonName-description"
+            maxLength={50}
           />
         </FormField>
 
@@ -59,12 +103,20 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ muscleId }) => {
           name="description"
           label="Description"
           helperText="Provide a brief description of the muscle"
+          error={errors.description?.message}
         >
           <Textarea
-            {...register('description')}
+            {...register('description', {
+              maxLength: {
+                value: 1000,
+                message: 'Description must be less than 1000 characters',
+              },
+            })}
             placeholder="Describe the muscle's location, function, and other relevant details..."
             rows={4}
             className="mt-1"
+            aria-describedby="description-description"
+            maxLength={1000}
           />
         </FormField>
 
@@ -73,25 +125,18 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ muscleId }) => {
           label="Muscle Group"
           required
           helperText="Select the group this muscle belongs to"
+          error={errors.muscleGroupId?.message}
         >
           <Select
-            {...register('muscleGroupId')}
+            {...register('muscleGroupId', {
+              required: 'Muscle group is required',
+            })}
             className="mt-1"
             disabled={isLoading}
+            aria-describedby="muscleGroupId-description"
           >
             <option value="">Select a muscle group</option>
-            {/* Group options by category */}
-            {Object.entries(
-              muscleGroups.reduce(
-                (acc, group) => {
-                  const category = group.category;
-                  if (!acc[category]) acc[category] = [];
-                  acc[category].push(group);
-                  return acc;
-                },
-                {} as Record<string, typeof muscleGroups>
-              )
-            ).map(([category, groups]) => (
+            {Object.entries(groupedMuscleGroups).map(([category, groups]) => (
               <optgroup key={category} label={category.replace('_', ' ')}>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
@@ -103,12 +148,18 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ muscleId }) => {
           </Select>
         </FormField>
 
-        {/* New SVG Upload Field */}
+        {/* SVG Upload Field */}
         <SvgUploadField muscleId={muscleId} />
 
-        <div className="bg-yellow-50 border border-yellow-100 rounded-md p-4">
+        <div
+          className="bg-yellow-50 border border-yellow-100 rounded-md p-4"
+          role="alert"
+        >
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0" />
+            <AlertCircle
+              className="h-5 w-5 text-yellow-400 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="ml-3">
               <h3 className="text-sm font-medium text-yellow-800">
                 Important Note

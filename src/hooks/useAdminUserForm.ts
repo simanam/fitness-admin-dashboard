@@ -32,11 +32,12 @@ export const useAdminUserForm = ({
     setIsSubmitting(true);
     try {
       if (userId) {
-        // Update existing user - remove password if empty
-        const updateData = { ...data };
-        if (!updateData.password) {
-          delete updateData.password;
-        }
+        // Update existing user - create new object without password if empty
+        const updateData = {
+          email: data.email,
+          role: data.role as 'EDITOR' | 'READONLY',
+          ...(data.password ? { password: data.password } : {}),
+        };
 
         await adminUserService.updateAdminUser(userId, updateData);
 
@@ -59,7 +60,14 @@ export const useAdminUserForm = ({
           return;
         }
 
-        const newUser = await adminUserService.createAdminUser(data);
+        // Ensure password is defined for new user creation
+        const createData = {
+          email: data.email,
+          password: data.password,
+          role: data.role as string,
+        };
+
+        const newUser = await adminUserService.createAdminUser(createData);
 
         showToast({
           type: 'success',

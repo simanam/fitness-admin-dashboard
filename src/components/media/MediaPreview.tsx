@@ -48,9 +48,9 @@ const MediaPreview = ({
   const getVideoUrl = () => {
     // First try to use the high quality version if available
 
-    // if (media.url) {
-    //   return media.url;
-    // }
+    if (media.url) {
+      return media.url;
+    }
 
     if (media.urls?.qualities?.high) {
       return media.urls.qualities.high;
@@ -73,8 +73,8 @@ const MediaPreview = ({
   // Get the best poster image to use
   const getPosterUrl = () => {
     // First try to use the poster
-    if (media.urls?.poster) {
-      return media.urls.poster;
+    if (media.urls?.preview) {
+      return media.urls.preview;
     }
 
     // // Then try the thumbnail
@@ -83,9 +83,6 @@ const MediaPreview = ({
     }
 
     // // Then try the preview
-    if (media.urls?.preview) {
-      return media.urls.preview;
-    }
 
     // No poster available
     return '';

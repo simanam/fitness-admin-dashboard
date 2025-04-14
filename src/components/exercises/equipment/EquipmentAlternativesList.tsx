@@ -1,7 +1,7 @@
 // src/components/exercises/equipment/EquipmentAlternativesList.tsx
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
-import { Equipment, EquipmentAlternative } from '../../../api/equipmentService';
+import { Equipment } from '../../../api/equipmentService';
 
 interface EquipmentAlternativesListProps {
   equipment: Equipment;

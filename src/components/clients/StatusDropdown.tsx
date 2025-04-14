@@ -1,6 +1,6 @@
 // src/components/clients/StatusDropdown.tsx
-import React, { useState } from 'react';
-import { Check, ChevronDown, AlertCircle } from 'lucide-react';
+import { type FC, useState } from 'react';
+import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import ConfirmationDialog from '../ui/confirmation-dialog';
 import { Textarea } from '../ui/textarea';
@@ -12,8 +12,7 @@ interface StatusDropdownProps {
   disabled?: boolean;
 }
 
-const StatusDropdown: React.FC<StatusDropdownProps> = ({
-  clientId,
+const StatusDropdown: FC<StatusDropdownProps> = ({
   currentStatus,
   onStatusChange,
   disabled = false,
@@ -40,10 +39,7 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
 
   const currentStatusObj = statuses.find((s) => s.value === currentStatus);
 
-  const handleStatusClick = async (
-    status: string,
-    needsReason: boolean = false
-  ) => {
+  const handleStatusClick = async (status: string, needsReason = false) => {
     if (status === currentStatus) {
       setIsOpen(false);
       return;
@@ -81,6 +77,8 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
     }
   };
 
+  const suspendReasonId = 'suspend-reason-textarea';
+
   return (
     <>
       <div className="relative inline-block text-left">
@@ -93,6 +91,8 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
           )}
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
+          aria-expanded={isOpen}
+          aria-haspopup="true"
         >
           {currentStatusObj?.label}
           <ChevronDown
@@ -105,10 +105,11 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
 
         {isOpen && (
           <div className="absolute right-0 z-10 mt-1 w-40 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-            <div className="py-1" role="menu">
+            <div className="py-1" role="menu" aria-orientation="vertical">
               {statuses.map((status) => (
                 <button
                   key={status.value}
+                  type="button"
                   onClick={() =>
                     handleStatusClick(status.value, status.needsReason)
                   }
@@ -126,7 +127,7 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
                       <Check className="mr-2 h-4 w-4 text-green-500" />
                     )}
                     <span
-                      className={!status.value === currentStatus ? 'ml-6' : ''}
+                      className={status.value !== currentStatus ? 'ml-6' : ''}
                     >
                       {status.label}
                     </span>
@@ -153,10 +154,14 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
               immediately revoke their API access.
             </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor={suspendReasonId}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Reason for suspension <span className="text-red-500">*</span>
               </label>
               <Textarea
+                id={suspendReasonId}
                 value={suspendReason}
                 onChange={(e) => setSuspendReason(e.target.value)}
                 placeholder="Please provide a reason for suspension..."

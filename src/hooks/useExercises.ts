@@ -1,10 +1,11 @@
 // src/hooks/useExercises.ts
 import { useState, useEffect } from 'react';
 import { useToast } from './useToast';
-import exerciseService, {
-  Exercise,
-  ExerciseFilterParams,
-} from '../api/exerciseService';
+import exerciseService from '../api/exerciseService';
+import type { Exercise, ExerciseFilterParams } from '../api/exerciseService';
+
+// Define valid filter value types
+type FilterValue = string | number | boolean | string[] | null;
 
 export const useExercises = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -13,7 +14,7 @@ export const useExercises = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const itemsPerPage = 20; // Convert to constant since setter is unused
   const [sortKey, setSortKey] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,11 +26,7 @@ export const useExercises = () => {
   >({});
   const { showToast } = useToast();
 
-  // Fetch exercises when dependencies change
-  useEffect(() => {
-    fetchExercises();
-  }, [currentPage, sortKey, sortOrder, searchQuery, filters]);
-
+  // Memoize fetchExercises dependencies
   const fetchExercises = async () => {
     setIsLoading(true);
     try {
@@ -58,6 +55,11 @@ export const useExercises = () => {
     }
   };
 
+  // Fetch exercises when dependencies change
+  useEffect(() => {
+    void fetchExercises();
+  }, [currentPage, sortKey, sortOrder, searchQuery, JSON.stringify(filters)]);
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -76,7 +78,7 @@ export const useExercises = () => {
     setCurrentPage(1); // Reset to first page on new search
   };
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: FilterValue) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
@@ -119,7 +121,7 @@ export const useExercises = () => {
 
   const bulkArchiveExercises = async (ids: string[]) => {
     try {
-      await exerciseService.bulkUpdateStatus(ids, 'ARCHIVED');
+      await exerciseService.bulkUpdateStatus(ids, 'archived');
       showToast({
         type: 'success',
         title: 'Success',
@@ -142,7 +144,7 @@ export const useExercises = () => {
 
   const publishExercise = async (id: string) => {
     try {
-      await exerciseService.updateExerciseStatus(id, 'PUBLISHED');
+      await exerciseService.updateExerciseStatus(id, 'published');
       showToast({
         type: 'success',
         title: 'Success',
@@ -150,8 +152,10 @@ export const useExercises = () => {
       });
 
       // Update in state
-      setExercises(
-        exercises.map((e) => (e.id === id ? { ...e, status: 'PUBLISHED' } : e))
+      setExercises((currentExercises) =>
+        currentExercises.map((e) =>
+          e.id === id ? { ...e, status: 'published' as const } : e
+        )
       );
       return true;
     } catch (error) {

@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Camera, AlertTriangle } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import MediaUploader from '../../../components/media/MediaUploader';
-
 import MediaGallery from '../../../components/media/MediaGallery';
 import MediaReorder from '../../../components/media/MediaReorder';
 import ConfirmationDialog from '../../../components/ui/confirmation-dialog';
@@ -13,6 +12,11 @@ import MediaCompletenessChecker from '../../../components/media/MediaCompletenes
 import MediaStatistics from '../../../components/media/MediaStatistics';
 import MediaAngleCoverage from '../../../components/media/MediaAngleCoverage';
 import exerciseMediaService from '../../../api/exerciseMediaService';
+import type { ViewAngle } from '../../../types/media';
+import type {
+  MediaStats,
+  MediaCompletenessCheck,
+} from '../../../api/exerciseMediaService';
 
 interface ExerciseMediaProps {
   exerciseId: string;
@@ -39,186 +43,121 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
   );
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [mediaToDelete, setMediaToDelete] = useState<string | null>(null);
-  const [mediaStats, setMediaStats] = useState(null);
-  const [mediaCompleteness, setMediaCompleteness] = useState(null);
+  const [mediaStats, setMediaStats] = useState<MediaStats | null>(null);
+  const [mediaCompleteness, setMediaCompleteness] =
+    useState<MediaCompletenessCheck | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
   const [loadingCompleteness, setLoadingCompleteness] = useState(false);
-  const [statsError, setStatsError] = useState(null);
-  const [completenessError, setCompletenessError] = useState(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [completenessError, setCompletenessError] = useState<string | null>(
+    null
+  );
 
-  // Only fetch media data on mount and when exerciseId changes
+  // Fetch media data
   useEffect(() => {
     fetchMedia();
-    // No need to cleanup since we don't want to cancel this request
-  }, [exerciseId]);
+  }, [fetchMedia]);
 
+  // Clear cache on unmount
   useEffect(() => {
-    // When exerciseId changes, clear the previous cache to avoid mixing data
     return () => {
-      // This cleanup function runs when the component unmounts or exerciseId changes
-      if (exerciseMediaService && exerciseMediaService.clearCache) {
-        exerciseMediaService.clearCache(exerciseId);
-      }
+      exerciseMediaService?.clearCache?.(exerciseId);
     };
   }, [exerciseId]);
 
-  // Delay loading stats and completeness info to avoid rate limiting
+  // Fetch stats and completeness
   useEffect(() => {
-    // Only fetch secondary data after media has loaded
     if (!isLoading && media.length > 0) {
-      // Fetch stats first with a delay
-      setLoadingStats(true);
-      const statsTimer = setTimeout(() => {
-        fetchMediaStats();
-      }, 1000);
+      const fetchSecondaryData = async () => {
+        setLoadingStats(true);
+        setLoadingCompleteness(true);
 
-      // Then fetch completeness data with a longer delay
-      setLoadingCompleteness(true);
-      const completenessTimer = setTimeout(() => {
-        fetchMediaCompleteness();
-      }, 2000);
+        try {
+          const stats = await exerciseMediaService.getMediaStats(exerciseId);
+          setMediaStats(stats);
+          setStatsError(null);
+        } catch (err) {
+          console.error('Error fetching media stats:', err);
+          setStatsError('Failed to load statistics');
+        } finally {
+          setLoadingStats(false);
+        }
 
-      return () => {
-        clearTimeout(statsTimer);
-        clearTimeout(completenessTimer);
+        try {
+          const completeness =
+            await exerciseMediaService.checkMediaCompleteness(exerciseId);
+          setMediaCompleteness(completeness);
+          setCompletenessError(null);
+        } catch (err) {
+          console.error('Error checking media completeness:', err);
+          setCompletenessError('Failed to check media completeness');
+        } finally {
+          setLoadingCompleteness(false);
+        }
       };
+
+      fetchSecondaryData();
     }
   }, [isLoading, media.length, exerciseId]);
 
-  // Fetch media stats with proper error handling
-  const fetchMediaStats = useCallback(async () => {
-    try {
-      if (!exerciseId) {
-        console.error('Cannot fetch stats: exerciseId is undefined');
-        setStatsError('Missing exercise ID');
-        setLoadingStats(false);
-        return;
-      }
-
-      const stats = await exerciseMediaService.getMediaStats(exerciseId);
-
-      // Safety check - make sure the stats belong to the current exercise
-      // If your API doesn't return this info, you might need to modify it
-      if (stats.exerciseId && stats.exerciseId !== exerciseId) {
-        console.warn(
-          'Stats data mismatch - received stats for a different exercise'
-        );
-        setMediaStats(null); // Avoid displaying wrong data
-      } else {
-        setMediaStats(stats);
-      }
-
-      setStatsError(null);
-    } catch (err) {
-      console.error('Error fetching media stats:', err);
-      setStatsError('Failed to load statistics');
-    } finally {
-      setLoadingStats(false);
-    }
-  }, [exerciseId]);
-
-  // Fetch media completeness with proper error handling
-  const fetchMediaCompleteness = useCallback(async () => {
-    try {
-      const completeness =
-        await exerciseMediaService.checkMediaCompleteness(exerciseId);
-
-      setMediaCompleteness(completeness);
-      setCompletenessError(null);
-    } catch (err) {
-      console.error('Error checking media completeness:', err);
-      setCompletenessError('Failed to check media completeness');
-    } finally {
-      setLoadingCompleteness(false);
-    }
-  }, [exerciseId]);
-
-  // Fetch all data - to be used for refresh buttons
-  const refreshAllData = useCallback(() => {
-    fetchMedia();
-    // Add delays to avoid rate limiting
+  const handleRequestUploadForAngle = useCallback((angle: ViewAngle) => {
+    setActiveTab('upload');
+    // Add a slight delay to ensure the tab has changed before focusing
     setTimeout(() => {
-      setLoadingStats(true);
-      fetchMediaStats();
-    }, 1000);
+      const uploadTabElement = document.getElementById('upload-tab-content');
+      uploadTabElement?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }, []);
 
-    setTimeout(() => {
-      setLoadingCompleteness(true);
-      fetchMediaCompleteness();
-    }, 2000);
-  }, [fetchMedia, fetchMediaStats, fetchMediaCompleteness]);
+  const handleMediaUpload = async (file: File, viewAngle?: ViewAngle) => {
+    const success = await uploadMedia(file, viewAngle);
+    if (success) {
+      await Promise.all([
+        new Promise((resolve) =>
+          setTimeout(() => {
+            setLoadingStats(true);
+            fetchMediaStats();
+            resolve(null);
+          }, 1000)
+        ),
+        new Promise((resolve) =>
+          setTimeout(() => {
+            setLoadingCompleteness(true);
+            fetchMediaCompleteness();
+            resolve(null);
+          }, 2000)
+        ),
+      ]);
+    }
+    return success;
+  };
 
-  // Handle media removal with confirmation
-  const handleRemoveMedia = (mediaId: string) => {
-    // For temporary files being uploaded, just remove directly
+  const handleRemoveMedia = async (mediaId: string): Promise<void> => {
     if (mediaId.startsWith('temp-')) {
-      removeMedia(mediaId);
+      await removeMedia(mediaId);
       return;
     }
-
-    // For actual media files, confirm deletion
     setMediaToDelete(mediaId);
     setShowDeleteDialog(true);
   };
 
-  // Confirm media deletion
-  const confirmDeleteMedia = async () => {
-    if (!mediaToDelete) return;
-    const success = await removeMedia(mediaToDelete);
-
-    if (success) {
-      // Refresh stats and completeness data after a short delay
-      setTimeout(() => {
-        setLoadingStats(true);
-        fetchMediaStats();
-      }, 1000);
-
-      setTimeout(() => {
-        setLoadingCompleteness(true);
-        fetchMediaCompleteness();
-      }, 2000);
-    }
-
-    setShowDeleteDialog(false);
-    setMediaToDelete(null);
+  const handleSetPrimary = async (mediaId: string): Promise<void> => {
+    await setPrimaryMedia(mediaId);
   };
 
-  // Request to upload media for a specific angle
-  const handleRequestUploadForAngle = (viewAngle: string) => {
-    setActiveTab('upload');
-
-    // Add a slight delay to ensure the tab has changed before focusing on adding media
-    setTimeout(() => {
-      // Scroll to upload section
-      const uploadTabElement = document.getElementById('upload-tab-content');
-      if (uploadTabElement) {
-        uploadTabElement.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
+  const handleUpdateViewAngle = async (
+    mediaId: string,
+    angle: ViewAngle
+  ): Promise<void> => {
+    await updateViewAngle(mediaId, angle);
   };
 
-  // Handle successful media upload
-  const handleMediaUpload = async (file: File, viewAngle?: string) => {
-    console.log(file, viewAngle, 'sjsjsj');
-    const success = await uploadMedia(file, viewAngle);
-
-    if (success) {
-      // Refresh stats and completeness after upload with delays to avoid rate limiting
-      setTimeout(() => {
-        setLoadingStats(true);
-        fetchMediaStats();
-      }, 1000);
-
-      setTimeout(() => {
-        setLoadingCompleteness(true);
-        fetchMediaCompleteness();
-      }, 2000);
-    }
-
-    return success;
+  const handleReorderMedia = async (
+    orderData: { id: string; order: number }[]
+  ): Promise<void> => {
+    await reorderMedia(orderData);
   };
 
-  // Display error state if the hook encountered any errors
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
@@ -228,7 +167,8 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
         </h3>
         <p className="text-red-700 mb-4">{error}</p>
         <button
-          onClick={() => refreshAllData()}
+          type="button"
+          onClick={refreshAllData}
           className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
         >
           Try Again
@@ -237,50 +177,20 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
     );
   }
 
-  // Display loading state
   if (isLoading && media.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Media Statistics & Completeness Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pass down loaded data instead of letting component fetch */}
-        {typeof MediaCompletenessChecker !== 'undefined' && (
-          <MediaCompletenessChecker
-            exerciseId={exerciseId}
-            completenessData={mediaCompleteness}
-            isLoading={loadingCompleteness}
-            error={completenessError}
-            onCheck={() => {
-              setLoadingCompleteness(true);
-              fetchMediaCompleteness();
-            }}
-          />
-        )}
-
-        {typeof MediaStatistics !== 'undefined' && (
-          <MediaStatistics
-            exerciseId={exerciseId}
-            statsData={mediaStats}
-            isLoading={loadingStats}
-            error={statsError}
-            onRefresh={() => {
-              setLoadingStats(true);
-              fetchMediaStats();
-            }}
-          />
-        )}
-      </div>
-
       {/* Tab navigation */}
       <div className="flex border-b border-gray-200 overflow-x-auto">
         <button
+          type="button"
           onClick={() => setActiveTab('gallery')}
           className={`py-3 px-4 font-medium text-sm whitespace-nowrap ${
             activeTab === 'gallery'
@@ -291,6 +201,7 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
           Media Gallery
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('upload')}
           className={`py-3 px-4 font-medium text-sm whitespace-nowrap ${
             activeTab === 'upload'
@@ -301,6 +212,7 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
           Upload Media
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('reorder')}
           className={`py-3 px-4 font-medium text-sm whitespace-nowrap ${
             activeTab === 'reorder'
@@ -312,102 +224,61 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
         </button>
       </div>
 
-      {/* Active tab content */}
-      <div>
-        {activeTab === 'gallery' && (
-          <div className="space-y-6">
-            {/* Angle Coverage Overview - if component exists */}
-            {typeof MediaAngleCoverage !== 'undefined' && (
-              <MediaAngleCoverage
-                media={media}
-                onRequestUpload={handleRequestUploadForAngle}
-              />
-            )}
+      {/* Gallery content */}
+      {activeTab === 'gallery' && (
+        <div className="space-y-6">
+          {typeof MediaAngleCoverage !== 'undefined' && (
+            <MediaAngleCoverage
+              media={media}
+              onRequestUpload={handleRequestUploadForAngle}
+            />
+          )}
 
-            {/* Gallery Component */}
-            {media.length > 0 ? (
-              <MediaGallery
-                media={media}
-                onSetPrimary={setPrimaryMedia}
-                onDelete={handleRemoveMedia}
-                isLoading={isLoading}
-              />
-            ) : (
-              <EmptyState
-                icon={<Camera size={36} className="text-gray-400" />}
-                title="No media available"
-                description="Upload images, videos, or SVGs to showcase this exercise."
-                action={
-                  <button
-                    onClick={() => setActiveTab('upload')}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-black hover:bg-gray-800"
-                  >
-                    Upload Media
-                  </button>
-                }
-              />
-            )}
-          </div>
-        )}
-
-        {activeTab === 'upload' && (
-          <div id="upload-tab-content" className="space-y-6">
-            {/* Upload Form */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
+          {media.length > 0 ? (
+            <MediaGallery
+              media={media}
+              onSetPrimary={handleSetPrimary}
+              onDelete={handleRemoveMedia}
+              isLoading={isLoading}
+            />
+          ) : (
+            <EmptyState
+              icon={<Camera size={36} className="text-gray-400" />}
+              title="No media available"
+              description="Upload images, videos, or SVGs to showcase this exercise."
+              action={
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('upload')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-black hover:bg-gray-800"
+                >
                   Upload Media
-                </h3>
-                <div className="bg-blue-50 text-blue-800 px-3 py-1 text-xs rounded-full">
-                  {media.length} / 20 media files
-                </div>
-              </div>
+                </button>
+              }
+            />
+          )}
+        </div>
+      )}
 
-              <MediaUploader
-                mediaFiles={mediaFiles}
-                onMediaAdd={handleMediaUpload}
-                onMediaRemove={handleRemoveMedia}
-                onSetPrimary={setPrimaryMedia}
-                onUpdateViewAngle={updateViewAngle}
-                allowedTypes={['image', 'video', 'svg']}
-                viewAngleRequired={true}
-              />
-            </div>
+      {/* Upload content */}
+      {activeTab === 'upload' && (
+        <div id="upload-tab-content">
+          <MediaUploader
+            mediaFiles={mediaFiles}
+            onMediaAdd={handleMediaUpload}
+            onMediaRemove={handleRemoveMedia}
+            onSetPrimary={handleSetPrimary}
+            onUpdateViewAngle={handleUpdateViewAngle}
+            allowedTypes={['image', 'video', 'svg']}
+            viewAngleRequired={true}
+          />
+        </div>
+      )}
 
-            {/* Upload Tips */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                <Camera className="h-4 w-4 mr-2 text-gray-600" />
-                Media Upload Tips
-              </h4>
-              <ul className="text-sm text-gray-600 space-y-2 ml-6 list-disc">
-                <li>
-                  Include media from all four view angles for complete coverage
-                </li>
-                <li>Videos should be 10-30 seconds long showing proper form</li>
-                <li>
-                  Images should clearly show the position at key points in the
-                  exercise
-                </li>
-                <li>
-                  High-contrast backgrounds help users focus on the movement
-                </li>
-                <li>
-                  Ensure lighting is good and the subject is clearly visible
-                </li>
-                <li>
-                  For exercises using equipment, make sure the equipment is
-                  clearly visible
-                </li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'reorder' && media.length > 0 && (
-          <MediaReorder media={media} onReorder={reorderMedia} />
-        )}
-      </div>
+      {/* Reorder content */}
+      {activeTab === 'reorder' && media.length > 0 && (
+        <MediaReorder media={media} onReorder={handleReorderMedia} />
+      )}
 
       {/* Delete confirmation dialog */}
       <ConfirmationDialog

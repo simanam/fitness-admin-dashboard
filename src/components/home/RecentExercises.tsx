@@ -21,15 +21,19 @@ const RecentExercises = () => {
       try {
         setIsLoading(true);
         const response = await exerciseService.getExercises({
-          limit: 5,
-          sort: 'created_at',
-          order: 'desc',
+          page: 1,
+          pageSize: 5,
+          sortBy: 'created_at',
+          sortOrder: 'desc',
         });
 
-        setExercises(response.data);
+        // Handle response
+        const exerciseList = response?.data || [];
+        setExercises(exerciseList);
       } catch (err) {
         console.error('Error fetching recent exercises:', err);
         setError('Failed to load recent exercises');
+        setExercises([]);
       } finally {
         setIsLoading(false);
       }
@@ -57,8 +61,8 @@ const RecentExercises = () => {
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="animate-pulse flex justify-between">
-                <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/3" />
+                <div className="h-4 bg-gray-200 rounded w-1/4" />
               </div>
             ))}
           </div>
@@ -98,7 +102,7 @@ const RecentExercises = () => {
         </div>
 
         <div className="divide-y divide-gray-200">
-          {exercises.length > 0 ? (
+          {exercises && exercises.length > 0 ? (
             exercises.map((exercise) => (
               <div
                 key={exercise.id}

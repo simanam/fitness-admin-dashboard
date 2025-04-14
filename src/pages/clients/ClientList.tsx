@@ -9,16 +9,16 @@ import {
   X,
   Filter,
   Database,
-  Calendar,
   MoreHorizontal,
 } from 'lucide-react';
-import DataTable, { Column } from '../../components/common/DataTable';
+import DataTable from '../../components/common/DataTable';
+import type { Column } from '../../components/common/DataTable';
 import Pagination from '../../components/ui/pagination';
 import EmptyState from '../../components/ui/empty-state';
 import StatusBadge from '../../components/clients/StatusBadge';
 import TierBadge from '../../components/clients/TierBadge';
 import useClients from '../../hooks/useClients';
-import { Client } from '../../api/clientService';
+import type { Client } from '../../api/clientService';
 import { formatDistanceToNow } from 'date-fns';
 
 const ClientList = () => {
@@ -128,6 +128,7 @@ const ClientList = () => {
       render: (client) => (
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               handleViewClient(client);
@@ -138,6 +139,7 @@ const ClientList = () => {
             <Eye size={18} />
           </button>
           <button
+            type="button"
             onClick={(e) => handleEditClient(client, e)}
             className="text-blue-600 hover:text-blue-900"
             title="Edit Client"
@@ -146,6 +148,7 @@ const ClientList = () => {
           </button>
           <div className="relative">
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 // Add dropdown menu logic here
@@ -168,6 +171,7 @@ const ClientList = () => {
         <h1 className="text-2xl font-bold">API Clients</h1>
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={() => navigate('/clients/new')}
             className="flex items-center px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800"
           >
@@ -194,6 +198,7 @@ const ClientList = () => {
             />
             {searchQuery && (
               <button
+                type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => handleSearchChange('')}
               >
@@ -204,6 +209,7 @@ const ClientList = () => {
 
           <div className="flex space-x-2 mt-4 sm:mt-0">
             <button
+              type="button"
               onClick={() => setShowFilters(!showFilters)}
               className={`inline-flex items-center px-3 py-2 border rounded-md text-sm ${
                 showFilters ||
@@ -229,6 +235,7 @@ const ClientList = () => {
 
             {(statusFilter || tierFilter || dateRangeFilter.startDate) && (
               <button
+                type="button"
                 onClick={clearFilters}
                 className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50"
               >
@@ -244,10 +251,14 @@ const ClientList = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200">
             {/* Status filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Status
               </label>
               <select
+                id="status"
                 value={statusFilter}
                 onChange={(e) => handleStatusFilterChange(e.target.value)}
                 className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-gray-500"
@@ -263,10 +274,14 @@ const ClientList = () => {
 
             {/* Tier filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="tier"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Tier
               </label>
               <select
+                id="tier"
                 value={tierFilter}
                 onChange={(e) => handleTierFilterChange(e.target.value)}
                 className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-gray-500"
@@ -282,11 +297,15 @@ const ClientList = () => {
 
             {/* Date range filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="dateRange"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Created Date
               </label>
               <div className="flex space-x-2">
                 <input
+                  id="startDate"
                   type="date"
                   value={dateRangeFilter.startDate || ''}
                   onChange={(e) =>
@@ -299,6 +318,7 @@ const ClientList = () => {
                   placeholder="Start date"
                 />
                 <input
+                  id="endDate"
                   type="date"
                   value={dateRangeFilter.endDate || ''}
                   onChange={(e) =>
@@ -333,6 +353,7 @@ const ClientList = () => {
             description="Try adjusting your search or filters, or create a new API client."
             action={
               <button
+                type="button"
                 onClick={() => navigate('/clients/new')}
                 className="flex items-center px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800"
               >

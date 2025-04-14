@@ -1,6 +1,13 @@
 // src/components/exercises/MuscleTargetList.tsx
 import { Edit, Trash2, Layers } from 'lucide-react';
-import { MuscleTarget } from '../../api/muscleService';
+import type { Muscle } from '../../api/muscleService';
+
+interface MuscleTarget {
+  id: string;
+  muscle?: Muscle;
+  role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
+  activationPercentage: number;
+}
 
 interface MuscleTargetListProps {
   title: string;
@@ -8,7 +15,7 @@ interface MuscleTargetListProps {
   targets: MuscleTarget[];
   onEdit: (target: MuscleTarget) => void;
   onDelete: (target: MuscleTarget) => void;
-  role: 'primary' | 'secondary' | 'synergist' | 'stabilizer'; // Updated case and enum values
+  role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
 }
 
 const MuscleTargetList = ({
@@ -66,6 +73,22 @@ const MuscleTargetList = ({
     return null;
   }
 
+  // Get progress bar color based on role
+  const getProgressBarColor = () => {
+    switch (role) {
+      case 'primary':
+        return 'bg-red-500';
+      case 'secondary':
+        return 'bg-blue-500';
+      case 'synergist':
+        return 'bg-green-500';
+      case 'stabilizer':
+        return 'bg-purple-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
       <div className={`px-4 py-3 ${headerBg} border-b ${headerBorder}`}>
@@ -98,17 +121,9 @@ const MuscleTargetList = ({
                 <div className="mt-2 flex items-center">
                   <div className="w-full max-w-xs bg-gray-200 rounded-full h-2">
                     <div
-                      className={`h-2 rounded-full ${
-                        role === 'primary'
-                          ? 'bg-red-500'
-                          : role === 'secondary'
-                            ? 'bg-blue-500'
-                            : role === 'synergist'
-                              ? 'bg-green-500'
-                              : 'bg-purple-500'
-                      }`}
+                      className={`h-2 rounded-full ${getProgressBarColor()}`}
                       style={{ width: `${target.activationPercentage}%` }}
-                    ></div>
+                    />
                   </div>
                   <span className="ml-2 text-sm font-medium text-gray-700">
                     {target.activationPercentage}%
@@ -124,6 +139,7 @@ const MuscleTargetList = ({
 
               <div className="flex space-x-2">
                 <button
+                  type="button"
                   onClick={() => onEdit(target)}
                   className="p-1 text-gray-400 hover:text-gray-700 rounded"
                   title="Edit target"
@@ -131,6 +147,7 @@ const MuscleTargetList = ({
                   <Edit size={16} />
                 </button>
                 <button
+                  type="button"
                   onClick={() => onDelete(target)}
                   className="p-1 text-gray-400 hover:text-red-600 rounded"
                   title="Remove target"

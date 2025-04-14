@@ -1,12 +1,14 @@
 // src/pages/exercises/tabs/ExerciseJoints.tsx
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, AlertTriangle, Link } from 'lucide-react';
+import { Plus, Trash2, Edit, Link } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
-import exerciseJointService, {
+import exerciseJointService from '../../../api/exerciseJointService';
+import type {
   JointInvolvement,
   CreateJointInvolvementPayload,
 } from '../../../api/exerciseJointService';
-import jointService, { Joint } from '../../../api/jointService';
+import jointService from '../../../api/jointService';
+import type { Joint } from '../../../api/jointService';
 import ConfirmationDialog from '../../../components/ui/confirmation-dialog';
 import EmptyState from '../../../components/ui/empty-state';
 import Modal from '../../../components/ui/modal';
@@ -16,14 +18,24 @@ interface ExerciseJointsProps {
   exerciseId: string;
 }
 
+type InvolvementType = 'primary' | 'secondary';
+
+interface TransformedInvolvement
+  extends Omit<JointInvolvement, 'involvementType'> {
+  involvementType: InvolvementType;
+  rangeOfMotion: {
+    min: number;
+    max: number;
+  };
+}
+
 const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
   const { showToast } = useToast();
-  // Initialize state based on the API response structure
   const [primaryInvolvements, setPrimaryInvolvements] = useState<
-    JointInvolvement[]
+    TransformedInvolvement[]
   >([]);
   const [secondaryInvolvements, setSecondaryInvolvements] = useState<
-    JointInvolvement[]
+    TransformedInvolvement[]
   >([]);
   const [allJoints, setAllJoints] = useState<Joint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,13 +43,8 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedInvolvement, setSelectedInvolvement] =
-    useState<JointInvolvement | null>(null);
+    useState<TransformedInvolvement | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Fetch data
-  useEffect(() => {
-    fetchData();
-  }, [exerciseId]);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -48,7 +55,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
       ]);
 
       // Transform the API data to match component format
-      const transformInvolvement = (item) => ({
+      const transformInvolvement = (item: any): TransformedInvolvement => ({
         id: item.id,
         exerciseId: item.exerciseId,
         jointId: item.jointId,
@@ -56,13 +63,12 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
         involvementType: item.isPrimary ? 'primary' : 'secondary',
         movementPattern: item.movementType,
         rangeOfMotion: {
-          min: 0, // Assuming minimum is 0 if not provided
-          max: item.romRequired,
+          min: 0,
+          max: item.romRequired || 0,
         },
         notes: item.movementNotes,
       });
 
-      // Handle the response based on its structure
       if (Array.isArray(involvementsResponse)) {
         const transformedInvolvements =
           involvementsResponse.map(transformInvolvement);
@@ -77,21 +83,23 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
           )
         );
       } else {
-        // Handle the object structure with primary and all properties
-        const allInvolvements = Array.isArray(involvementsResponse.all)
-          ? involvementsResponse.all.map(transformInvolvement)
+        const allInvolvements = Array.isArray(involvementsResponse?.data)
+          ? involvementsResponse.data.map(transformInvolvement)
           : [];
 
         setPrimaryInvolvements(
-          allInvolvements.filter((item) => item.involvementType === 'primary')
+          allInvolvements.filter(
+            (item: TransformedInvolvement) => item.involvementType === 'primary'
+          )
         );
-
         setSecondaryInvolvements(
-          allInvolvements.filter((item) => item.involvementType === 'secondary')
+          allInvolvements.filter(
+            (item: TransformedInvolvement) =>
+              item.involvementType === 'secondary'
+          )
         );
       }
 
-      // Handle joints data
       const jointsData =
         jointsResponse.data?.items || jointsResponse.data || [];
       setAllJoints(Array.isArray(jointsData) ? jointsData : []);
@@ -107,22 +115,24 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
     }
   };
 
-  // Add new joint involvement
+  useEffect(() => {
+    fetchData();
+  }, [exerciseId]);
+
   const handleAddInvolvement = async (
     data: Omit<CreateJointInvolvementPayload, 'exerciseId'>
   ) => {
     setIsSubmitting(true);
     try {
-      const formattedPayload = {
-        exerciseId: exerciseId,
+      const payload: CreateJointInvolvementPayload = {
+        exerciseId,
         jointId: data.jointId,
-        movementType: data.movementPattern,
-        romRequired: data.rangeOfMotion.max,
-        isPrimary: data.involvementType === 'primary',
-        movementNotes: data.notes || null,
+        involvementType: data.involvementType,
+        movementPattern: data.movementPattern,
+        rangeOfMotion: data.rangeOfMotion,
       };
 
-      await exerciseJointService.createJointInvolvement(formattedPayload);
+      await exerciseJointService.createJointInvolvement(payload);
 
       showToast({
         type: 'success',
@@ -144,7 +154,6 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
     }
   };
 
-  // Update existing joint involvement
   const handleUpdateInvolvement = async (
     data: Omit<CreateJointInvolvementPayload, 'exerciseId' | 'jointId'>
   ) => {
@@ -152,22 +161,15 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
 
     setIsSubmitting(true);
     try {
-      const formattedPayload: Record<string, any> = {};
-
-      if (data.movementPattern)
-        formattedPayload.movementType = data.movementPattern;
-
-      if (data.rangeOfMotion && typeof data.rangeOfMotion.max === 'number')
-        formattedPayload.romRequired = data.rangeOfMotion.max;
-
-      if (data.involvementType)
-        formattedPayload.isPrimary = data.involvementType === 'primary';
-
-      if (data.notes !== undefined) formattedPayload.movementNotes = data.notes;
+      const payload: Partial<CreateJointInvolvementPayload> = {
+        involvementType: data.involvementType,
+        movementPattern: data.movementPattern,
+        rangeOfMotion: data.rangeOfMotion,
+      };
 
       await exerciseJointService.updateJointInvolvement(
         selectedInvolvement.id,
-        formattedPayload
+        payload
       );
 
       showToast({
@@ -222,13 +224,13 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
   };
 
   // Open edit modal
-  const handleEditInvolvement = (involvement: JointInvolvement) => {
+  const handleEditInvolvement = (involvement: TransformedInvolvement) => {
     setSelectedInvolvement(involvement);
     setShowEditModal(true);
   };
 
   // Open delete confirmation
-  const handleDeleteConfirm = (involvement: JointInvolvement) => {
+  const handleDeleteConfirm = (involvement: TransformedInvolvement) => {
     setSelectedInvolvement(involvement);
     setShowDeleteDialog(true);
   };

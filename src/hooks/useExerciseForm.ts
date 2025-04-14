@@ -2,12 +2,19 @@
 import { useState } from 'react';
 import { useToast } from './useToast';
 import { useNavigate } from 'react-router-dom';
-import {
-  ExerciseFormData,
-  defaultExerciseFormData,
-} from '../types/exerciseFormTypes';
+import type { ExerciseFormData } from '../types/exerciseFormTypes';
+import { defaultExerciseFormData } from '../types/exerciseFormTypes';
 import exerciseService from '../api/exerciseService';
+import type { Exercise } from '../api/exerciseService';
 import { parseInstructions } from '../utils/instructionsParser';
+
+// Define the valid enum types
+type Difficulty = 'beginner' | 'intermediate' | 'advanced';
+type Mechanics = 'compound' | 'isolation';
+type Force = 'push' | 'pull' | 'static';
+type Status = 'draft' | 'published' | 'archived';
+type PlaneOfMotion = 'sagittal' | 'frontal' | 'transverse';
+type MovementPattern = 'squat' | 'hinge' | 'lunge' | 'push' | 'pull' | 'carry';
 
 interface UseExerciseFormProps {
   exerciseId?: string;
@@ -32,35 +39,41 @@ export const useExerciseForm = ({
       // Parse instructions to ensure form_points is properly set
       const parsedFormPoints = parseInstructions(data.instructions || '');
 
+      // Map the status to the correct type if it exists
+      const mappedStatus = data.status?.toLowerCase() as Status | undefined;
+      if (
+        mappedStatus &&
+        !['draft', 'published', 'archived'].includes(mappedStatus)
+      ) {
+        throw new Error('Invalid status value');
+      }
+
       // Prepare form data with form_points properly set
       const processedData = {
         ...data,
-        // Ensure form_points exists with all required arrays
+        difficulty: data.difficulty as Difficulty,
+        mechanics: data.mechanics?.toLowerCase() as Mechanics,
+        force: data.force?.toLowerCase() as Force,
+        status: mappedStatus || 'draft', // Default to 'draft' if no status is provided
+        plane_of_motion: data.plane_of_motion?.toLowerCase() as PlaneOfMotion,
+        movement_pattern:
+          data.movement_pattern?.toLowerCase() as MovementPattern,
         form_points: {
           setup: parsedFormPoints.setup || [],
           execution: parsedFormPoints.execution || [],
           breathing: parsedFormPoints.breathing || [],
           alignment: parsedFormPoints.alignment || [],
         },
-        // Transform any uppercase enum values to lowercase to match backend
-        difficulty: data.difficulty?.toLowerCase(),
-        mechanics: data.mechanics?.toLowerCase(),
-        force: data.force?.toLowerCase(),
-        status: data.status?.toLowerCase(),
-        plane_of_motion: data.plane_of_motion?.toLowerCase(),
-        movement_pattern: data.movement_pattern?.toLowerCase(),
-      };
+      } satisfies Partial<Exercise>;
 
       // If we have media files, use the createExerciseWithMedia endpoint
       if (!exerciseId && mediaFiles && mediaFiles.length > 0) {
         // Create metadata array for each file
         const mediaMetadata = mediaFiles.map((file, index) => ({
-          // Use file properties or defaults
           mediaType: file.type.startsWith('video/') ? 'video' : 'image',
           viewAngle: 'front', // default if not specified
           isPrimary: index === 0, // First file is primary by default
           format: file.name.split('.').pop()?.toLowerCase(),
-          // Add other metadata as needed
         }));
 
         const newExercise = await exerciseService.createExerciseWithMedia(

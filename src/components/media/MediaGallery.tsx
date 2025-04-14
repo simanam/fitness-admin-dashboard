@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import {
   Grid,
-  Image as ImageIcon,
   Video,
   FileImage,
   Filter,
@@ -11,7 +10,7 @@ import {
   Play,
   Maximize2,
 } from 'lucide-react';
-import { ExerciseMedia } from '../../api/exerciseMediaService';
+import type { ExerciseMedia } from '../../api/exerciseMediaService';
 import { cn } from '../../lib/utils';
 import Modal from '../ui/modal';
 import MediaPreview from './MediaPreview';
@@ -33,7 +32,7 @@ const MediaGallery = ({
   media,
   onSetPrimary,
   onDelete,
-  onReorder,
+
   isLoading = false,
   className,
 }: MediaGalleryProps) => {
@@ -88,20 +87,17 @@ const MediaGallery = ({
 
   // Helper to get video preview image
   const getVideoPreviewImage = (item: ExerciseMedia) => {
-    // Try to use poster first, as it's specifically designed for video previews
-    if (item.urls?.poster) {
-      return item.urls.poster;
+    if (item.urls?.preview) {
+      return item.urls.preview;
     }
 
-    // Fall back to thumbnail if poster is not available
     if (item.urls?.thumbnail) {
       return item.urls.thumbnail;
     }
 
+    // Fall back to thumbnail if poster is not available
+
     // Try preview as another fallback
-    if (item.urls?.preview) {
-      return item.urls.preview;
-    }
 
     // If none of the above are available, return null
     return null;
@@ -151,12 +147,13 @@ const MediaGallery = ({
         )}
       >
         {/* Media content */}
-        <div
+        <button
           className={cn(
-            'cursor-pointer overflow-hidden',
+            'w-full text-left cursor-pointer overflow-hidden',
             viewMode === 'grid' ? 'h-full' : 'h-full flex-shrink-0 w-32'
           )}
           onClick={() => handlePreview(item)}
+          type="button"
         >
           {item.mediaType === 'video' && (
             <div className="h-full w-full bg-gray-100 relative flex items-center justify-center">
@@ -221,7 +218,7 @@ const MediaGallery = ({
               />
             </div>
           )}
-        </div>
+        </button>
 
         {/* Media info (list view only) */}
         {viewMode === 'list' && (
@@ -274,30 +271,36 @@ const MediaGallery = ({
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
           <div className="flex space-x-2">
             <button
+              type="button"
               className="bg-white text-gray-800 p-2 rounded-full hover:bg-gray-100"
               onClick={() => handlePreview(item)}
               title="Preview"
             >
               <Maximize2 size={16} />
+              <span className="sr-only">Preview</span>
             </button>
 
             {!isPrimary && onSetPrimary && (
               <button
+                type="button"
                 className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600"
                 onClick={() => handleSetPrimary(item.id)}
                 title="Set as primary"
               >
                 <Star size={16} />
+                <span className="sr-only">Set as primary</span>
               </button>
             )}
 
             {onDelete && (
               <button
+                type="button"
                 className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
                 onClick={() => handleDelete(item.id)}
                 title="Delete"
               >
                 <X size={16} />
+                <span className="sr-only">Delete</span>
               </button>
             )}
           </div>
@@ -310,10 +313,10 @@ const MediaGallery = ({
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-12 bg-gray-200 rounded w-full"></div>
+        <div className="h-12 bg-gray-200 rounded w-full" />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-48 bg-gray-200 rounded"></div>
+            <div key={i} className="h-48 bg-gray-200 rounded" />
           ))}
         </div>
       </div>
@@ -345,6 +348,7 @@ const MediaGallery = ({
             </div>
             <div className="flex space-x-1">
               <button
+                type="button"
                 onClick={() => setMediaTypeFilter('all')}
                 className={cn(
                   'px-3 py-1 text-xs font-medium rounded-full',
@@ -357,6 +361,7 @@ const MediaGallery = ({
               </button>
               {typeCounts.video > 0 && (
                 <button
+                  type="button"
                   onClick={() => setMediaTypeFilter('video')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
@@ -370,6 +375,7 @@ const MediaGallery = ({
               )}
               {typeCounts.image > 0 && (
                 <button
+                  type="button"
                   onClick={() => setMediaTypeFilter('image')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
@@ -383,6 +389,7 @@ const MediaGallery = ({
               )}
               {typeCounts.svg > 0 && (
                 <button
+                  type="button"
                   onClick={() => setMediaTypeFilter('svg')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
@@ -404,6 +411,7 @@ const MediaGallery = ({
             </div>
             <div className="flex space-x-1">
               <button
+                type="button"
                 onClick={() => setViewAngleFilter('all')}
                 className={cn(
                   'px-3 py-1 text-xs font-medium rounded-full',
@@ -416,6 +424,7 @@ const MediaGallery = ({
               </button>
               {angleCounts.front > 0 && (
                 <button
+                  type="button"
                   onClick={() => setViewAngleFilter('front')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
@@ -429,6 +438,7 @@ const MediaGallery = ({
               )}
               {angleCounts.side > 0 && (
                 <button
+                  type="button"
                   onClick={() => setViewAngleFilter('side')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
@@ -440,30 +450,46 @@ const MediaGallery = ({
                   Side ({angleCounts.side})
                 </button>
               )}
-              {angleCounts.rear > 0 && (
+              {angleCounts.back > 0 && (
                 <button
-                  onClick={() => setViewAngleFilter('rear')}
+                  type="button"
+                  onClick={() => setViewAngleFilter('back')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
-                    viewAngleFilter === 'rear'
+                    viewAngleFilter === 'back'
                       ? 'bg-gray-900 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   )}
                 >
-                  Rear ({angleCounts.rear})
+                  Back ({angleCounts.back})
                 </button>
               )}
-              {angleCounts.angle > 0 && (
+              {angleCounts.diagonal > 0 && (
                 <button
-                  onClick={() => setViewAngleFilter('angle')}
+                  type="button"
+                  onClick={() => setViewAngleFilter('diagonal')}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-full',
-                    viewAngleFilter === 'angle'
+                    viewAngleFilter === 'diagonal'
                       ? 'bg-gray-900 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   )}
                 >
-                  Angle ({angleCounts.angle})
+                  Diagonal ({angleCounts.diagonal})
+                </button>
+              )}
+              {angleCounts['45-degree'] > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setViewAngleFilter('45-degree')}
+                  className={cn(
+                    'px-3 py-1 text-xs font-medium rounded-full',
+                    viewAngleFilter === '45-degree'
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  )}
+                >
+                  45° ({angleCounts['45-degree']})
                 </button>
               )}
             </div>
@@ -473,6 +499,7 @@ const MediaGallery = ({
         {/* View Mode Toggle */}
         <div className="flex space-x-1 items-start">
           <button
+            type="button"
             onClick={() => setViewMode('grid')}
             className={cn(
               'p-2 rounded',
@@ -481,8 +508,10 @@ const MediaGallery = ({
             title="Grid view"
           >
             <Grid size={18} className="text-gray-600" />
+            <span className="sr-only">Grid view</span>
           </button>
           <button
+            type="button"
             onClick={() => setViewMode('list')}
             className={cn(
               'p-2 rounded',
@@ -491,8 +520,21 @@ const MediaGallery = ({
             title="List view"
           >
             <Filter size={18} className="text-gray-600" />
+            <span className="sr-only">List view</span>
           </button>
         </div>
+
+        {/* Clear filters button */}
+        <button
+          type="button"
+          onClick={() => {
+            setMediaTypeFilter('all');
+            setViewAngleFilter('all');
+          }}
+          className="mt-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          Clear filters
+        </button>
       </div>
 
       {/* Media Gallery */}
@@ -545,19 +587,21 @@ const MediaGallery = ({
         </Modal>
       )}
 
-      {/* Add fallback styles */}
-      <style jsx>{`
-        .fallback-video-display {
-          position: relative;
-        }
-        .fallback-video-display::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background-color: #f3f4f6;
-          z-index: 0;
-        }
-      `}</style>
+      {/* Fallback styles */}
+      <style>
+        {`
+          .fallback-video-display {
+            position: relative;
+          }
+          .fallback-video-display::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: #f3f4f6;
+            z-index: 0;
+          }
+        `}
+      </style>
     </div>
   );
 };

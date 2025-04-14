@@ -1,17 +1,30 @@
 // src/components/equipment/form/AlternativesSection.tsx
-import React, { useState } from 'react';
+import { type FC } from 'react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { Input } from '../../../components/ui/input';
 import { Textarea } from '../../../components/ui/textarea';
 import { FORM_SECTIONS } from '../../../types/equipmentFormTypes';
 
-const AlternativesSection: React.FC = () => {
+interface AlternativeOption {
+  name: string;
+  modification_needed: string;
+  difficulty_change: number;
+  limitation_notes: string;
+}
+
+interface AlternativesFormData {
+  alternatives: {
+    equipment_options: AlternativeOption[];
+  };
+}
+
+const AlternativesSection: FC = () => {
   const {
     control,
     register,
     formState: { errors },
-  } = useFormContext();
+  } = useFormContext<AlternativesFormData>();
 
   // Use the useFieldArray hook to handle dynamic alternative inputs
   const { fields, append, remove } = useFieldArray({
@@ -87,10 +100,14 @@ const AlternativesSection: React.FC = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor={`alternative-name-${index}`}
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Alternative Name <span className="text-red-500">*</span>
                   </label>
                   <Input
+                    id={`alternative-name-${index}`}
                     {...register(
                       `alternatives.equipment_options.${index}.name`,
                       {
@@ -103,18 +120,22 @@ const AlternativesSection: React.FC = () => {
                   {errors.alternatives?.equipment_options?.[index]?.name && (
                     <p className="mt-1 text-sm text-red-600">
                       {
-                        errors.alternatives.equipment_options[index].name
-                          .message
+                        errors.alternatives.equipment_options[index]?.name
+                          ?.message
                       }
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor={`alternative-modification-${index}`}
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Modification Needed <span className="text-red-500">*</span>
                   </label>
                   <Textarea
+                    id={`alternative-modification-${index}`}
                     {...register(
                       `alternatives.equipment_options.${index}.modification_needed`,
                       {
@@ -130,14 +151,17 @@ const AlternativesSection: React.FC = () => {
                     <p className="mt-1 text-sm text-red-600">
                       {
                         errors.alternatives.equipment_options[index]
-                          .modification_needed.message
+                          ?.modification_needed?.message
                       }
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor={`difficulty-change-${index}`}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Difficulty Change
                   </label>
                   <div className="flex items-center space-x-2">
@@ -147,7 +171,10 @@ const AlternativesSection: React.FC = () => {
                         const input = document.getElementById(
                           `difficulty-change-${index}`
                         ) as HTMLInputElement;
-                        const currentValue = parseInt(input.value || '0');
+                        const currentValue = Number.parseInt(
+                          input.value || '0',
+                          10
+                        );
                         input.value = Math.max(-3, currentValue - 1).toString();
                         // Manually trigger change event to update the form
                         const event = new Event('input', { bubbles: true });
@@ -176,7 +203,10 @@ const AlternativesSection: React.FC = () => {
                         const input = document.getElementById(
                           `difficulty-change-${index}`
                         ) as HTMLInputElement;
-                        const currentValue = parseInt(input.value || '0');
+                        const currentValue = Number.parseInt(
+                          input.value || '0',
+                          10
+                        );
                         input.value = Math.min(3, currentValue + 1).toString();
                         // Manually trigger change event to update the form
                         const event = new Event('input', { bubbles: true });
@@ -188,15 +218,15 @@ const AlternativesSection: React.FC = () => {
                     </button>
                     <span className="text-sm text-gray-500 ml-2">
                       <span className="flex items-center">
-                        {parseInt(field.difficulty_change as any) > 0 && (
+                        {Number(field.difficulty_change) > 0 && (
                           <ChevronUp size={16} className="text-red-500" />
                         )}
-                        {parseInt(field.difficulty_change as any) < 0 && (
+                        {Number(field.difficulty_change) < 0 && (
                           <ChevronDown size={16} className="text-green-500" />
                         )}
-                        {parseInt(field.difficulty_change as any) > 0
+                        {Number(field.difficulty_change) > 0
                           ? 'Harder'
-                          : parseInt(field.difficulty_change as any) < 0
+                          : Number(field.difficulty_change) < 0
                             ? 'Easier'
                             : 'Same difficulty'}
                       </span>
@@ -209,10 +239,14 @@ const AlternativesSection: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor={`alternative-limitations-${index}`}
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Limitations
                   </label>
                   <Textarea
+                    id={`alternative-limitations-${index}`}
                     {...register(
                       `alternatives.equipment_options.${index}.limitation_notes`
                     )}
