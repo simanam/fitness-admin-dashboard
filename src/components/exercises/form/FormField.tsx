@@ -11,6 +11,7 @@ interface FormFieldProps {
   helperText?: string;
   className?: string;
   children: React.ReactNode;
+  error?: string;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({

@@ -1,10 +1,10 @@
 // src/components/common/DataTable.tsx
-import { type FC, type ReactNode, useState, useEffect } from 'react';
+import { type ReactNode, useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Filter, Search, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export interface Column<T> {
-  key: keyof T;
+  key: string;
   title: string;
   render?: (item: T) => ReactNode;
   sortable?: boolean;
@@ -12,12 +12,12 @@ export interface Column<T> {
   width?: string;
 }
 
-interface DataTableProps<T extends Record<string, unknown>> {
+interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   keyExtractor: (item: T) => string | number;
   onRowClick?: (item: T) => void;
-  initialSortKey?: keyof T;
+  initialSortKey?: string;
   initialSortDirection?: 'asc' | 'desc';
   isLoading?: boolean;
   emptyState?: ReactNode;
@@ -27,7 +27,7 @@ interface DataTableProps<T extends Record<string, unknown>> {
   className?: string;
 }
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T>({
   columns,
   data,
   keyExtractor,
@@ -41,7 +41,7 @@ export function DataTable<T extends Record<string, unknown>>({
   onSelectionChange,
   className,
 }: DataTableProps<T>) {
-  const [sortKey, setSortKey] = useState<keyof T | undefined>(initialSortKey);
+  const [sortKey, setSortKey] = useState<string | undefined>(initialSortKey);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
     initialSortDirection
   );
@@ -59,7 +59,7 @@ export function DataTable<T extends Record<string, unknown>>({
     if (search.trim()) {
       const searchLower = search.toLowerCase();
       result = result.filter((item) => {
-        return Object.values(item).some((val) => {
+        return Object.values(item as Record<string, unknown>).some((val) => {
           if (val === null || val === undefined) return false;
           return String(val).toLowerCase().includes(searchLower);
         });
@@ -71,7 +71,7 @@ export function DataTable<T extends Record<string, unknown>>({
       if (value.trim()) {
         const valueLower = value.toLowerCase();
         result = result.filter((item) => {
-          const itemValue = item[key];
+          const itemValue = (item as Record<string, unknown>)[key];
           if (itemValue === null || itemValue === undefined) return false;
           return String(itemValue).toLowerCase().includes(valueLower);
         });
@@ -81,8 +81,8 @@ export function DataTable<T extends Record<string, unknown>>({
     // Apply sorting if a sort key is specified
     if (sortKey) {
       result.sort((a, b) => {
-        const aValue = a[sortKey];
-        const bValue = b[sortKey];
+        const aValue = (a as Record<string, unknown>)[sortKey];
+        const bValue = (b as Record<string, unknown>)[sortKey];
 
         if (aValue === bValue) return 0;
 
@@ -99,7 +99,7 @@ export function DataTable<T extends Record<string, unknown>>({
     setSelected(selectedIds);
   }, [selectedIds]);
 
-  const handleSort = (key: keyof T) => {
+  const handleSort = (key: string) => {
     if (sortKey === key) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -164,7 +164,7 @@ export function DataTable<T extends Record<string, unknown>>({
       )}
       {columns.map((column) => (
         <td
-          key={`skeleton-${column.key}-${index}`}
+          key={`skeleton-${String(column.key)}-${index}`}
           className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
         >
           <div className="h-4 bg-gray-200 rounded animate-pulse" />
@@ -257,17 +257,19 @@ export function DataTable<T extends Record<string, unknown>>({
                   <div className="flex items-center space-x-1">
                     <button
                       className="flex-1 flex items-center"
-                      onClick={() => column.sortable && handleSort(column.key)}
+                      onClick={() =>
+                        column.sortable && handleSort(String(column.key))
+                      }
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && column.sortable) {
-                          handleSort(column.key);
+                          handleSort(String(column.key));
                         }
                       }}
                       type="button"
                       disabled={!column.sortable}
                     >
                       <span>{column.title}</span>
-                      {column.sortable && sortKey === column.key && (
+                      {column.sortable && sortKey === String(column.key) && (
                         <span className="ml-1">
                           {sortDirection === 'asc' ? (
                             <ChevronUp size={16} className="text-gray-500" />

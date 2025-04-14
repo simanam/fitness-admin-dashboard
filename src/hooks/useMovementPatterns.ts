@@ -5,11 +5,17 @@ import movementPatternService from '../api/movementPatternService';
 import type {
   MovementPattern,
   MovementPatternFilterParams,
-  PaginatedResponse as ServicePaginatedResponse,
 } from '../api/movementPatternService';
 
-// Define the paginated response type to match the service type
-type PaginatedResponse<T> = ServicePaginatedResponse<T>;
+interface MovementPatternResponse {
+  data: MovementPattern[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
 
 interface UseMovementPatternsParams {
   initialCategoryFilter?: string;
@@ -26,7 +32,7 @@ export const useMovementPatterns = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const itemsPerPage = 20; // Convert to constant since we don't need the setter
+  const itemsPerPage = 20;
   const [sortKey, setSortKey] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,7 +55,8 @@ export const useMovementPatterns = ({
         patternType: typeFilter,
       };
 
-      const response = await movementPatternService.getMovementPatterns(params);
+      const response: MovementPatternResponse =
+        await movementPatternService.getMovementPatterns(params);
 
       setPatterns(response.data);
       setTotalPages(response.meta.totalPages);
@@ -66,7 +73,6 @@ export const useMovementPatterns = ({
     }
   }, [
     currentPage,
-    itemsPerPage,
     sortKey,
     sortOrder,
     searchQuery,

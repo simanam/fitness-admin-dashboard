@@ -1,8 +1,43 @@
 // src/components/media/MediaPreview.tsx
 import { useState, useEffect, useRef } from 'react';
 import { Star, Trash2, Play, Pause, Volume2, VolumeX } from 'lucide-react';
-import { ExerciseMedia } from '../../api/exerciseMediaService';
 import { cn } from '../../lib/utils';
+
+interface MediaMetadata {
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  size?: number;
+}
+
+interface MediaUrls {
+  original: string;
+  thumbnail: string;
+  preview: string;
+  fullsize: string;
+  qualities?: {
+    high: string;
+    medium?: string;
+    low?: string;
+  };
+  desktop?: {
+    url: string;
+  };
+}
+
+interface ExerciseMedia {
+  id: string;
+  title?: string;
+  url: string;
+  urls?: MediaUrls;
+  mediaType: 'video' | 'image' | 'svg';
+  viewAngle: string;
+  duration?: number;
+  format?: string;
+  isPrimary?: boolean;
+  metadata?: MediaMetadata;
+}
 
 interface MediaPreviewProps {
   media: ExerciseMedia;
@@ -156,13 +191,16 @@ const MediaPreview = ({
                   'Error loading video. The URL may be invalid or the format unsupported.'
                 );
               }}
-            />
+            >
+              <track kind="captions" src="" label="English captions" />
+            </video>
 
             {/* Video controls */}
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
               <div className="flex items-center justify-between">
                 <div className="flex space-x-3">
                   <button
+                    type="button"
                     onClick={togglePlay}
                     className="text-white hover:text-gray-200 focus:outline-none"
                   >
@@ -170,6 +208,7 @@ const MediaPreview = ({
                   </button>
 
                   <button
+                    type="button"
                     onClick={toggleMute}
                     className="text-white hover:text-gray-200 focus:outline-none"
                   >
@@ -279,6 +318,7 @@ const MediaPreview = ({
           <div className="flex space-x-2 mt-2 sm:mt-0">
             {!media.isPrimary && onSetPrimary && (
               <button
+                type="button"
                 onClick={onSetPrimary}
                 className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100"
               >
@@ -289,6 +329,7 @@ const MediaPreview = ({
 
             {onDelete && (
               <button
+                type="button"
                 onClick={onDelete}
                 className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md bg-red-50 text-red-700 hover:bg-red-100"
               >

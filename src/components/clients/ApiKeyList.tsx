@@ -4,8 +4,6 @@ import {
   Key,
   Copy,
   RefreshCcw,
-  Eye,
-  EyeOff,
   Calendar,
   Clock,
   AlertCircle,
@@ -36,18 +34,9 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
   const [showRotateDialog, setShowRotateDialog] = useState(false);
   const [revokeReason, setRevokeReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [visibleSecrets, setVisibleSecrets] = useState<Record<string, boolean>>(
-    {}
-  );
+  const [setVisibleSecrets] = useState<Record<string, boolean>>({});
   const [copiedKeyIds, setCopiedKeyIds] = useState<Record<string, boolean>>({});
   const [newKey, setNewKey] = useState<ApiKey | null>(null);
-
-  const toggleSecretVisibility = (keyId: string) => {
-    setVisibleSecrets((prev) => ({
-      ...prev,
-      [keyId]: !prev[keyId],
-    }));
-  };
 
   const copyToClipboard = (text: string, keyId: string) => {
     navigator.clipboard.writeText(text);
@@ -108,13 +97,6 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
     return (
       !key.revokedAt && (!key.expiresAt || new Date(key.expiresAt) > new Date())
     );
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never';
-
-    const date = new Date(dateString);
-    return format(date, 'MMM d, yyyy h:mm a');
   };
 
   const formatExpiry = (expiresAt: string | null) => {

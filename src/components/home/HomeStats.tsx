@@ -43,11 +43,11 @@ const HomeStats = () => {
           clientsResponse,
           jointsResponse,
         ] = await Promise.all([
-          exerciseService.getExercises({ page: 1, limit: 1 }),
+          exerciseService.getExercises({ page: 1, pageSize: 1 }),
           muscleService.getMuscles(),
-          equipmentService.getEquipment({ page: 1, limit: 1 }),
-          clientService.getClients({ page: 1, limit: 1 }),
-          jointService.getJoints({ page: 1, limit: 1 }),
+          equipmentService.getEquipment({ page: 1, pageSize: 1 }),
+          clientService.getClients({ page: 1, pageSize: 1 }),
+          jointService.getJoints({ page: 1, pageSize: 1 }),
         ]);
 
         // Get the first client to fetch its API keys
@@ -65,7 +65,7 @@ const HomeStats = () => {
         const totalMuscles = musclesResponse.length || 0;
         const totalEquipment = equipmentResponse.meta?.total || 0;
         const totalClients = clientsResponse.meta?.total || 0;
-        const totalJoints = jointsResponse.meta?.total || 0;
+        const totalJoints = jointsResponse.data?.length || 0;
 
         // In a real app, we'd get the change from the API
         // For this demo, we'll generate some fake changes

@@ -100,11 +100,12 @@ const EquipmentList = () => {
       ),
     },
     {
-      key: 'actions',
+      key: '_actions',
       title: 'Actions',
       render: (item) => (
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               handleViewEquipment(item);
@@ -115,6 +116,7 @@ const EquipmentList = () => {
             <Eye size={18} />
           </button>
           <button
+            type="button"
             onClick={(e) => handleEditEquipment(item, e)}
             className="text-blue-600 hover:text-blue-900"
             title="Edit"
@@ -122,10 +124,10 @@ const EquipmentList = () => {
             <Edit size={18} />
           </button>
           <button
+            type="button"
             onClick={(e) => handleDeleteClick(item, e)}
             className="text-red-600 hover:text-red-900"
             title="Delete"
-            disabled={isDeleting}
           >
             <Trash2 size={18} />
           </button>
@@ -141,6 +143,7 @@ const EquipmentList = () => {
         <h1 className="text-2xl font-bold">Equipment</h1>
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={() => navigate('/equipment/new')}
             className="flex items-center px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800"
           >
@@ -167,6 +170,7 @@ const EquipmentList = () => {
             />
             {searchQuery && (
               <button
+                type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => handleSearchChange('')}
               >
@@ -188,6 +192,7 @@ const EquipmentList = () => {
           {/* Clear filters button */}
           {(categoryFilter || searchQuery || isCommonFilter !== undefined) && (
             <button
+              type="button"
               onClick={clearFilters}
               className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -227,6 +232,7 @@ const EquipmentList = () => {
             description="Try adjusting your search or filters, or create new equipment."
             action={
               <button
+                type="button"
                 onClick={() => navigate('/equipment/new')}
                 className="flex items-center px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800"
               >

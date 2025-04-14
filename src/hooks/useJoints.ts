@@ -2,11 +2,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from './useToast';
 import jointService from '../api/jointService';
-import type {
-  Joint,
-  JointFilterParams,
-  PaginatedResponse,
-} from '../api/jointService';
+import type { Joint, JointFilterParams } from '../api/jointService';
+
+interface JointResponse {
+  data: Joint[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
 
 export const useJoints = () => {
   const [joints, setJoints] = useState<Joint[]>([]);
@@ -15,7 +21,7 @@ export const useJoints = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const itemsPerPage = 20; // Convert to constant since we don't need the setter
+  const itemsPerPage = 20;
   const [sortKey, setSortKey] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,7 +40,7 @@ export const useJoints = () => {
         order: sortOrder,
       };
 
-      const response = await jointService.getJoints(params);
+      const response: JointResponse = await jointService.getJoints(params);
       setJoints(response.data);
       setTotalPages(response.meta.totalPages);
       setTotalItems(response.meta.total);
@@ -48,15 +54,7 @@ export const useJoints = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    currentPage,
-    itemsPerPage,
-    searchQuery,
-    typeFilter,
-    sortKey,
-    sortOrder,
-    showToast,
-  ]);
+  }, [currentPage, searchQuery, typeFilter, sortKey, sortOrder, showToast]);
 
   // Fetch joints when dependencies change
   useEffect(() => {

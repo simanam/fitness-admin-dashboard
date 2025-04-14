@@ -153,11 +153,12 @@ const ExerciseList = () => {
       ),
     },
     {
-      key: 'actions',
+      key: '_actions',
       title: 'Actions',
       render: (exercise) => (
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               handleViewExercise(exercise);
@@ -168,6 +169,7 @@ const ExerciseList = () => {
             <Eye size={18} />
           </button>
           <button
+            type="button"
             onClick={(e) => handleEditExercise(exercise, e)}
             className="text-blue-600 hover:text-blue-900"
             title="Edit"
@@ -175,6 +177,7 @@ const ExerciseList = () => {
             <Edit size={18} />
           </button>
           <button
+            type="button"
             onClick={(e) => confirmDelete(exercise, e)}
             className="text-red-600 hover:text-red-900"
             title="Delete"
@@ -204,6 +207,7 @@ const ExerciseList = () => {
             />
           )}
           <button
+            type="button"
             onClick={() => navigate('/exercises/new')}
             className="flex items-center px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800"
           >
@@ -229,6 +233,7 @@ const ExerciseList = () => {
             />
             {searchQuery && (
               <button
+                type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => handleSearchChange('')}
               >
@@ -265,6 +270,7 @@ const ExerciseList = () => {
           {/* Clear filters button */}
           {(Object.keys(filters).length > 0 || searchQuery) && (
             <button
+              type="button"
               onClick={clearFilters}
               className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -292,6 +298,7 @@ const ExerciseList = () => {
             description="Try adjusting your search or filters, or create a new exercise."
             action={
               <button
+                type="button"
                 onClick={() => navigate('/exercises/new')}
                 className="flex items-center px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800"
               >

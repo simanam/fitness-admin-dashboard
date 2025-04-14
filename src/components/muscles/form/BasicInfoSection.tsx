@@ -1,10 +1,11 @@
 // src/components/muscles/form/BasicInfoSection.tsx
-import { type FC } from 'react';
+import type { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useMuscleGroups } from '../../../hooks/useMuscleGroups';
 import { Input } from '../../../components/ui/input';
 import { Textarea } from '../../../components/ui/textarea';
 import { Select } from '../../../components/ui/select';
+import type { FormFieldProps } from '../../exercises/form/FormField';
 import FormField from '../../exercises/form/FormField';
 import { FORM_SECTIONS } from '../../../types/muscleFormTypes';
 import { AlertCircle } from 'lucide-react';

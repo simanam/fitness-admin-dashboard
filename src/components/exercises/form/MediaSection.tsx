@@ -2,7 +2,7 @@
 // This section allows users to upload and manage media for exercises
 
 import { useState, useEffect, type FC } from 'react';
-import { useFormContext } from 'react-hook-form';
+
 import { AlertTriangle, Camera, Upload } from 'lucide-react';
 import { FORM_SECTIONS } from '../../../types/exerciseFormTypes';
 import MediaUploader, {
@@ -11,8 +11,8 @@ import MediaUploader, {
 import { useToast } from '../../../hooks/useToast';
 import exerciseMediaService from '../../../api/exerciseMediaService';
 
-// Define ViewAngle type since it's not exported from MediaUploader
-type ViewAngle = 'front' | 'side' | 'back' | 'diagonal' | '45-degree';
+// Update ViewAngle type to be a string to match MediaUploader's expectations
+type ViewAngle = string;
 
 interface MediaSectionProps {
   exerciseId?: string;
@@ -74,7 +74,7 @@ const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
   }, [exerciseId, showToast]);
 
   // Handle media upload
-  const handleMediaAdd = async (file: File, viewAngle?: ViewAngle) => {
+  const handleMediaAdd = async (file: File, viewAngle?: string) => {
     // This is only for preview before the exercise is created
     if (!exerciseId) {
       const newMediaFile: MediaFile = {
@@ -254,7 +254,7 @@ const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
   // Handle updating view angle
   const handleUpdateViewAngle = async (
     mediaId: string,
-    newViewAngle: ViewAngle
+    newViewAngle: string
   ) => {
     if (!exerciseId || mediaId.startsWith('temp-')) {
       setMediaFiles((prev) =>

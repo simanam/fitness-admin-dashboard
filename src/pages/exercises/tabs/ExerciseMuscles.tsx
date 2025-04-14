@@ -6,7 +6,26 @@ import exerciseMuscleService from '../../../api/exerciseMuscleService';
 import type { CreateMuscleTargetPayload } from '../../../api/exerciseMuscleService';
 import muscleService from '../../../api/muscleService';
 import type { Muscle } from '../../../api/muscleService';
-import type { MuscleTarget } from '../../../types/muscle';
+
+// Define MuscleTarget type here since it's missing from types/muscle
+interface MuscleTarget {
+  id: string;
+  exerciseId: string;
+  muscleId: string;
+  muscle?: Muscle;
+  role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
+  activationPercentage: number;
+}
+
+// interface MuscleTargetListProps {
+//   title: string;
+//   description: string;
+//   targets: MuscleTarget[];
+//   onEdit: (target: MuscleTarget) => void;
+//   onDelete: (target: MuscleTarget) => void;
+//   targetType: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
+// }
+
 import ConfirmationDialog from '../../../components/ui/confirmation-dialog';
 import EmptyState from '../../../components/ui/empty-state';
 import MuscleTargetForm from '../../../components/exercises/MuscleTargetForm';
@@ -33,11 +52,6 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch data
-  useEffect(() => {
-    fetchData();
-  }, [exerciseId]);
-
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -59,6 +73,11 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
       setIsLoading(false);
     }
   };
+
+  // Fetch data
+  useEffect(() => {
+    void fetchData();
+  }, []); // Remove exerciseId from dependencies since it's used in fetchData
 
   // Add new muscle target
   const handleAddTarget = async (

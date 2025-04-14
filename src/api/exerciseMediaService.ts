@@ -74,7 +74,7 @@ const clearExerciseCache = (exerciseId: string) => {
 // Rate limit tracking
 let pendingRequests = 0;
 const maxConcurrentRequests = 2;
-const requestQueue: Array<() => Promise<any>> = [];
+const requestQueue: Array<() => Promise<unknown>> = [];
 
 // Queue mechanism for API requests
 const queueRequest = <T>(fn: () => Promise<T>): Promise<T> => {
@@ -117,22 +117,29 @@ const retryWithBackoff = async <T>(
   const attempt = async (): Promise<T> => {
     try {
       return await fn();
-    } catch (error) {
-      if (error.response && error.response.status === 429) {
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'status' in error.response &&
+        error.response.status === 429
+      ) {
         retries++;
         if (retries >= maxRetries) throw error;
 
         // Exponential backoff with jitter to avoid thundering herd
         const jitter = Math.random() * 500;
-        const delay = initialDelay * Math.pow(2, retries) + jitter;
+        const delay = initialDelay * 2 ** retries + jitter;
         console.log(
           `Rate limited, retrying in ${Math.round(delay)}ms (attempt ${retries})`
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
         return attempt();
-      } else {
-        throw error;
       }
+      throw error;
     }
   };
 
