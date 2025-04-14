@@ -1,6 +1,12 @@
 // src/api/exerciseMuscleService.ts
 import apiClient from './client';
-import { MuscleTarget } from './muscleService';
+
+export interface MuscleTarget {
+  exerciseId: string;
+  muscleId: string;
+  type: 'PRIMARY' | 'SECONDARY' | 'TERTIARY';
+  notes?: string;
+}
 
 export interface CreateMuscleTargetPayload {
   exerciseId: string;

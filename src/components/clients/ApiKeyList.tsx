@@ -34,7 +34,6 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
   const [showRotateDialog, setShowRotateDialog] = useState(false);
   const [revokeReason, setRevokeReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [setVisibleSecrets] = useState<Record<string, boolean>>({});
   const [copiedKeyIds, setCopiedKeyIds] = useState<Record<string, boolean>>({});
   const [newKey, setNewKey] = useState<ApiKey | null>(null);
 

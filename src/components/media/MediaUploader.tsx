@@ -12,6 +12,8 @@ import {
 import { FileUpload } from '../ui/file-upload';
 import { cn } from '../../lib/utils';
 
+export type ViewAngle = 'front' | 'side' | 'back' | 'diagonal' | '45-degree';
+
 export interface MediaFile {
   id?: string;
   file?: File;
@@ -21,27 +23,32 @@ export interface MediaFile {
   size: number;
   progress?: number;
   status?: 'uploading' | 'success' | 'error';
-  viewAngle?: 'front' | 'side' | 'back' | 'diagonal' | '45-degree';
   isPrimary?: boolean;
+  viewAngle?: ViewAngle;
 }
 
 export interface MediaUploaderProps {
   mediaFiles: MediaFile[];
-  onMediaAdd: (file: File, viewAngle?: string) => void;
-  onMediaRemove: (mediaId: string) => void;
-  onSetPrimary: (mediaId: string) => void;
-  onUpdateViewAngle: (mediaId: string, viewAngle: string) => void;
+  onMediaAdd: (file: File, viewAngle?: ViewAngle) => void;
+  onMediaDelete: (mediaId: string) => void;
+  onMediaPrimaryChange: (mediaId: string) => void;
+  onUpdateViewAngle: (mediaId: string, viewAngle: ViewAngle) => void;
   className?: string;
   maxFiles?: number;
   allowedTypes?: ('image' | 'video' | 'svg')[];
   viewAngleRequired?: boolean;
 }
 
+export const isViewAngle = (value: string): value is ViewAngle => {
+  return ['front', 'side', 'back', 'diagonal', '45-degree'].includes(value);
+};
+
 export function MediaUploader({
   mediaFiles,
   onMediaAdd,
-  onMediaRemove,
-  onSetPrimary,
+  onMediaDelete,
+  onMediaPrimaryChange,
+  onUpdateViewAngle,
   className,
   maxFiles = 10,
   allowedTypes = ['image', 'video', 'svg'],
@@ -49,7 +56,8 @@ export function MediaUploader({
 }: MediaUploaderProps) {
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedViewAngle, setSelectedViewAngle] = useState<string>('FRONT');
+  const [selectedViewAngle, setSelectedViewAngle] =
+    useState<ViewAngle>('front');
 
   const viewAngles = [
     { value: 'front', label: 'Front View' },
@@ -137,7 +145,7 @@ export function MediaUploader({
                 {!media.isPrimary && (
                   <button
                     type="button"
-                    onClick={() => media.id && onSetPrimary(media.id)}
+                    onClick={() => media.id && onMediaPrimaryChange(media.id)}
                     className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600"
                   >
                     Set as Primary
@@ -146,7 +154,7 @@ export function MediaUploader({
 
                 <button
                   type="button"
-                  onClick={() => media.id && onMediaRemove(media.id)}
+                  onClick={() => media.id && onMediaDelete(media.id)}
                   className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600"
                 >
                   Remove
@@ -232,7 +240,9 @@ export function MediaUploader({
                       <select
                         id="viewAngleSelect"
                         value={selectedViewAngle}
-                        onChange={(e) => setSelectedViewAngle(e.target.value)}
+                        onChange={(e) =>
+                          setSelectedViewAngle(e.target.value as ViewAngle)
+                        }
                         className="w-full rounded-md border border-gray-300 py-2 px-3"
                       >
                         {viewAngles.map((angle) => (

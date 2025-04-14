@@ -118,7 +118,7 @@ const jointService = {
   // Update mobility range
   updateMobilityRange: async (
     id: string,
-    mobilityRange: any
+    mobilityRange: Joint['mobilityRange']
   ): Promise<Joint> => {
     const response = await apiClient.put(
       `/joints/${id}/mobility-range`,
@@ -128,13 +128,28 @@ const jointService = {
   },
 
   // Update movements
-  updateMovements: async (id: string, movements: any): Promise<Joint> => {
+  updateMovements: async (
+    id: string,
+    movements: Joint['movements']
+  ): Promise<Joint> => {
     const response = await apiClient.put(`/joints/${id}/movements`, movements);
     return response.data.data;
   },
 
   // Get movement capabilities
-  getMovementCapabilities: async (id: string): Promise<any> => {
+  getMovementCapabilities: async (
+    id: string
+  ): Promise<{
+    possibleMovements: string[];
+    rangeOfMotion: Record<
+      string,
+      {
+        min: number;
+        max: number;
+        units: string;
+      }
+    >;
+  }> => {
     const response = await apiClient.get(`/joints/${id}/capabilities`);
     return response.data.data;
   },

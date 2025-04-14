@@ -5,7 +5,7 @@ import jointService from '../api/jointService';
 import type { Joint, JointFilterParams } from '../api/jointService';
 
 interface JointResponse {
-  data: Joint[];
+  items: Joint[];
   meta: {
     total: number;
     page: number;
@@ -40,10 +40,10 @@ export const useJoints = () => {
         order: sortOrder,
       };
 
-      const response: JointResponse = await jointService.getJoints(params);
-      setJoints(response.data);
-      setTotalPages(response.meta.totalPages);
-      setTotalItems(response.meta.total);
+      const response = await jointService.getJoints(params);
+      setJoints(response.items || []);
+      setTotalPages(response.meta?.totalPages || 1);
+      setTotalItems(response.meta?.total || 0);
     } catch (error) {
       console.error('Error fetching joints:', error);
       showToast({

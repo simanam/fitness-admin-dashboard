@@ -27,6 +27,8 @@ interface DataTableProps<T> {
   className?: string;
 }
 
+type SortDirection = 'asc' | 'desc';
+
 export function DataTable<T>({
   columns,
   data,
@@ -80,15 +82,7 @@ export function DataTable<T>({
 
     // Apply sorting if a sort key is specified
     if (sortKey) {
-      result.sort((a, b) => {
-        const aValue = (a as Record<string, unknown>)[sortKey];
-        const bValue = (b as Record<string, unknown>)[sortKey];
-
-        if (aValue === bValue) return 0;
-
-        const comparison = aValue < bValue ? -1 : 1;
-        return sortDirection === 'asc' ? comparison : -comparison;
-      });
+      result = sortData(result, sortKey, sortDirection);
     }
 
     setFilteredData(result);
@@ -172,6 +166,51 @@ export function DataTable<T>({
       ))}
     </tr>
   );
+
+  const sortData = (
+    data: any[],
+    sortColumn: string,
+    sortDirection: SortDirection
+  ) => {
+    return [...data].sort((a, b) => {
+      const aValue = a[sortColumn];
+      const bValue = b[sortColumn];
+
+      if (aValue === bValue) return 0;
+      if (aValue === null || aValue === undefined) return 1;
+      if (bValue === null || bValue === undefined) return -1;
+
+      // Type-safe comparison
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
+      // Default string comparison for other types
+      const aString = String(aValue);
+      const bString = String(bValue);
+      return sortDirection === 'asc'
+        ? aString.localeCompare(bString)
+        : bString.localeCompare(aString);
+    });
+  };
+
+  // Fix Column generic usage
+  const renderCell = <T,>(item: T, column: Column<T>) => {
+    if (!item || typeof item !== 'object') return '';
+
+    const value = (item as any)[column.key];
+    if (column.render) {
+      return column.render(item);
+    }
+
+    return value === null || value === undefined ? '' : String(value);
+  };
 
   return (
     <div className={cn('overflow-x-auto', className)}>
@@ -372,9 +411,7 @@ export function DataTable<T>({
                         key={String(column.key)}
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                       >
-                        {column.render
-                          ? column.render(item)
-                          : String(item[column.key])}
+                        {renderCell(item, column)}
                       </td>
                     ))}
                   </tr>

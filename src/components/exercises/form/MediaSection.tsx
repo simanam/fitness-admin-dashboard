@@ -7,12 +7,11 @@ import { AlertTriangle, Camera, Upload } from 'lucide-react';
 import { FORM_SECTIONS } from '../../../types/exerciseFormTypes';
 import MediaUploader, {
   type MediaFile,
+  type ViewAngle,
+  isViewAngle,
 } from '../../../components/media/MediaUploader';
 import { useToast } from '../../../hooks/useToast';
 import exerciseMediaService from '../../../api/exerciseMediaService';
-
-// Update ViewAngle type to be a string to match MediaUploader's expectations
-type ViewAngle = string;
 
 interface MediaSectionProps {
   exerciseId?: string;
@@ -74,7 +73,7 @@ const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
   }, [exerciseId, showToast]);
 
   // Handle media upload
-  const handleMediaAdd = async (file: File, viewAngle?: string) => {
+  const handleMediaAdd = async (file: File, viewAngle?: ViewAngle) => {
     // This is only for preview before the exercise is created
     if (!exerciseId) {
       const newMediaFile: MediaFile = {
@@ -84,7 +83,7 @@ const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
         type: getMediaTypeFromFile(file),
         name: file.name,
         size: file.size,
-        viewAngle,
+        viewAngle: viewAngle,
         status: 'uploading',
       };
 
@@ -102,7 +101,7 @@ const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
       size: file.size,
       progress: 0,
       status: 'uploading',
-      viewAngle,
+      viewAngle: viewAngle,
     };
 
     setUploadingMedia((prev) => [...prev, newMediaFile]);
@@ -140,7 +139,9 @@ const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
           uploadedMedia.title ||
           `${uploadedMedia.mediaType} - ${uploadedMedia.viewAngle}`,
         size: 0,
-        viewAngle: uploadedMedia.viewAngle as ViewAngle,
+        viewAngle: isViewAngle(uploadedMedia.viewAngle)
+          ? uploadedMedia.viewAngle
+          : 'front',
         isPrimary: uploadedMedia.isPrimary,
         status: 'success',
       };
@@ -179,7 +180,7 @@ const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
   };
 
   // Handle media removal
-  const handleMediaRemove = async (mediaId: string) => {
+  const handleMediaDelete = async (mediaId: string) => {
     // If it's a temporary preview file (no exercise ID yet)
     if (!exerciseId || mediaId.startsWith('temp-')) {
       setMediaFiles((prev) => prev.filter((m) => m.id !== mediaId));
@@ -254,12 +255,12 @@ const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
   // Handle updating view angle
   const handleUpdateViewAngle = async (
     mediaId: string,
-    newViewAngle: string
+    newViewAngle: ViewAngle
   ) => {
     if (!exerciseId || mediaId.startsWith('temp-')) {
       setMediaFiles((prev) =>
         prev.map((m) =>
-          m.id === mediaId ? { ...m, viewAngle: newViewAngle as ViewAngle } : m
+          m.id === mediaId ? { ...m, viewAngle: newViewAngle } : m
         )
       );
       return;
@@ -269,7 +270,7 @@ const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
       await exerciseMediaService.updateMediaViewAngle(mediaId, newViewAngle);
       setMediaFiles((prev) =>
         prev.map((m) =>
-          m.id === mediaId ? { ...m, viewAngle: newViewAngle as ViewAngle } : m
+          m.id === mediaId ? { ...m, viewAngle: newViewAngle } : m
         )
       );
 
@@ -411,8 +412,8 @@ const MediaSection: FC<MediaSectionProps> = ({ exerciseId }) => {
         <MediaUploader
           mediaFiles={[...mediaFiles, ...uploadingMedia]}
           onMediaAdd={handleMediaAdd}
-          onMediaRemove={handleMediaRemove}
-          onSetPrimary={handleSetPrimary}
+          onMediaDelete={handleMediaDelete}
+          onMediaPrimaryChange={handleSetPrimary}
           onUpdateViewAngle={handleUpdateViewAngle}
           allowedTypes={['image', 'video', 'svg']}
           viewAngleRequired={true}

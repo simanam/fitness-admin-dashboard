@@ -36,7 +36,8 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
   isLoading,
   onRowClick,
   emptyState,
-  keyExtractor = (item) => item.id || `${item.exerciseId}-${item.muscleId}`,
+  keyExtractor = (item: ExerciseWithMuscleDetails) =>
+    item.id || item.exerciseId || `${item.exercise?.id}-${item.muscleId}`,
 }) => {
   const [sortKey, setSortKey] = useState<string | undefined>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -48,7 +49,7 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
   const [search, setSearch] = useState('');
 
   // Helper function for role color
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role: string | undefined) => {
     const roleUpperCase = (role || '').toUpperCase();
     switch (roleUpperCase) {
       case 'PRIMARY':
@@ -68,14 +69,15 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
       key: 'name',
       title: 'Exercise Name',
       sortable: true,
-      render: (exercise) => exercise.exercise?.name || 'Unnamed Exercise',
+      render: (exercise: ExerciseWithMuscleDetails) =>
+        exercise.name || exercise.exercise?.name || 'Unnamed Exercise',
     },
     {
       key: 'role',
       title: 'Role',
       sortable: true,
       render: (exercise) => {
-        const role = exercise.role || '';
+        const role = exercise.type || '';
         return (
           <span
             className={`px-2 py-1 text-xs rounded-full ${getRoleColor(role)}`}
@@ -160,11 +162,11 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
       const searchLower = search.toLowerCase();
       result = result.filter((item) => {
         // Search in exercise name
-        const exerciseName = item.exercise?.name || '';
+        const exerciseName = item.name || item.exercise?.name || '';
         if (exerciseName.toLowerCase().includes(searchLower)) return true;
 
         // Search in role
-        if (item.role?.toLowerCase().includes(searchLower)) return true;
+        if (item.type?.toLowerCase().includes(searchLower)) return true;
 
         // Search in activation percentage
         if (String(item.activationPercentage || 0).includes(searchLower))
@@ -184,12 +186,10 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
         const valueLower = value.toLowerCase();
         result = result.filter((item) => {
           if (key === 'name') {
-            return (item.exercise?.name || '')
-              .toLowerCase()
-              .includes(valueLower);
+            return (item.name || '').toLowerCase().includes(valueLower);
           }
           if (key === 'role') {
-            return (item.role || '').toLowerCase().includes(valueLower);
+            return (item.type || '').toLowerCase().includes(valueLower);
           }
           if (key === 'activationPercentage') {
             return String(item.activationPercentage || 0).includes(valueLower);
@@ -210,11 +210,11 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
         let aValue, bValue;
 
         if (sortKey === 'name') {
-          aValue = a.exercise?.name || '';
-          bValue = b.exercise?.name || '';
+          aValue = a.name || '';
+          bValue = b.name || '';
         } else if (sortKey === 'role') {
-          aValue = a.role || '';
-          bValue = b.role || '';
+          aValue = a.type || '';
+          bValue = b.type || '';
         } else if (sortKey === 'activationPercentage') {
           aValue = a.activationPercentage || 0;
           bValue = b.activationPercentage || 0;

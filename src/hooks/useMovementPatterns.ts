@@ -8,7 +8,7 @@ import type {
 } from '../api/movementPatternService';
 
 interface MovementPatternResponse {
-  data: MovementPattern[];
+  items: MovementPattern[];
   meta: {
     total: number;
     page: number;
@@ -55,12 +55,10 @@ export const useMovementPatterns = ({
         patternType: typeFilter,
       };
 
-      const response: MovementPatternResponse =
-        await movementPatternService.getMovementPatterns(params);
-
-      setPatterns(response.data);
-      setTotalPages(response.meta.totalPages);
-      setTotalItems(response.meta.total);
+      const response = await movementPatternService.getMovementPatterns(params);
+      setPatterns(response.items || []);
+      setTotalPages(response.meta?.totalPages || 1);
+      setTotalItems(response.meta?.total || 0);
     } catch (error) {
       console.error('Error fetching movement patterns:', error);
       showToast({

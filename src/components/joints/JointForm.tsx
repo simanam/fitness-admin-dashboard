@@ -21,9 +21,11 @@ type JointType =
   | 'other';
 
 interface MobilityRangeData {
-  min: number;
-  max: number;
-  units: string;
+  normal: {
+    min: number;
+    max: number;
+    units: string;
+  };
 }
 
 interface Movement {

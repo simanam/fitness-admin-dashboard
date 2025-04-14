@@ -15,6 +15,7 @@ type Force = 'push' | 'pull' | 'static';
 type Status = 'draft' | 'published' | 'archived';
 type PlaneOfMotion = 'sagittal' | 'frontal' | 'transverse';
 type MovementPattern = 'squat' | 'hinge' | 'lunge' | 'push' | 'pull' | 'carry';
+type RiskLevel = 'low' | 'medium' | 'high';
 
 interface UseExerciseFormProps {
   exerciseId?: string;
@@ -48,6 +49,14 @@ export const useExerciseForm = ({
         throw new Error('Invalid status value');
       }
 
+      // Process common mistakes to ensure risk_level is properly typed
+      const processedMistakes = data.common_mistakes?.mistakes?.map(
+        (mistake) => ({
+          ...mistake,
+          risk_level: mistake.risk_level.toLowerCase() as RiskLevel,
+        })
+      );
+
       // Prepare form data with form_points properly set
       const processedData = {
         ...data,
@@ -64,7 +73,10 @@ export const useExerciseForm = ({
           breathing: parsedFormPoints.breathing || [],
           alignment: parsedFormPoints.alignment || [],
         },
-      } satisfies Partial<Exercise>;
+        common_mistakes: processedMistakes
+          ? { mistakes: processedMistakes }
+          : undefined,
+      } as Partial<Exercise>;
 
       // If we have media files, use the createExerciseWithMedia endpoint
       if (!exerciseId && mediaFiles && mediaFiles.length > 0) {

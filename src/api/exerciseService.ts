@@ -24,18 +24,22 @@ export interface Exercise {
     mistakes: Array<{
       description: string;
       correction: string;
-      risk_level: string;
+      risk_level: 'low' | 'medium' | 'high';
     }>;
   };
   safety_info?: {
-    risk_level: string;
-    contraindications: any[];
+    risk_level: 'low' | 'medium' | 'high';
+    contraindications: string[];
     precautions: string[];
     warning_signs: string[];
   };
   tempo_recommendations?: {
     default: string;
-    variations?: any[];
+    variations?: Array<{
+      name: string;
+      tempo: string;
+      description?: string;
+    }>;
   };
   created_at: string;
   updated_at: string;
@@ -60,10 +64,19 @@ export interface ExerciseFilterParams {
   equipment_required?: boolean;
   search?: string;
   page?: number;
+  limit?: number;
   per_page?: number;
   sort?: string;
   order?: 'asc' | 'desc';
 }
+
+export interface MediaMetadata {
+  type: 'image' | 'video' | 'svg';
+  viewAngle?: ViewAngle;
+  isPrimary?: boolean;
+}
+
+export type ViewAngle = 'front' | 'side' | 'back' | 'diagonal' | '45-degree';
 
 export const exerciseService = {
   // Get exercises with pagination and filters
@@ -73,11 +86,11 @@ export const exerciseService = {
     const queryParams = new URLSearchParams();
 
     // Add all params to query string
-    Object.entries(params).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(params)) {
       if (value !== undefined && value !== '') {
         queryParams.append(key, String(value));
       }
-    });
+    }
 
     const response = await apiClient.get(
       `/exercises?${queryParams.toString()}`
@@ -113,7 +126,7 @@ export const exerciseService = {
   createExerciseWithMedia: async (
     exerciseData: Partial<Exercise>,
     mediaFiles: File[],
-    mediaMetadata: any[]
+    mediaMetadata: MediaMetadata[]
   ): Promise<Exercise> => {
     const formData = new FormData();
 
@@ -133,11 +146,11 @@ export const exerciseService = {
 
     // Add media files
     mediaFiles.forEach((file, index) => {
-      formData.append(`files[]`, file);
+      formData.append(`files[${index}]`, file);
     });
 
     // Add media metadata
-    formData.append('videoMetadata', JSON.stringify(mediaMetadata));
+    formData.append('mediaMetadata', JSON.stringify(mediaMetadata));
 
     const response = await apiClient.post('/exercises/with-media', formData, {
       headers: {
