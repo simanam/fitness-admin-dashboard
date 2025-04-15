@@ -74,7 +74,7 @@ export const adminUserService = {
   }): Promise<AdminUser> => {
     const response = await apiClient.post('/users', {
       ...user,
-      role: user.role.toUpperCase(),
+      role: user.role.toLowerCase(),
     });
     return {
       ...response.data.data,
@@ -89,7 +89,7 @@ export const adminUserService = {
   ): Promise<AdminUser> => {
     const response = await apiClient.put(`/users/${id}`, {
       ...user,
-      role: user.role?.toUpperCase(),
+      role: user.role?.toLowerCase(),
     });
     return {
       ...response.data.data,
