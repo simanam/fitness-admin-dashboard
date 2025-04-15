@@ -22,9 +22,9 @@ const RecentExercises = () => {
         setIsLoading(true);
         const response = await exerciseService.getExercises({
           page: 1,
-          pageSize: 5,
-          sortBy: 'created_at',
-          sortOrder: 'desc',
+          per_page: 5,
+          sort: 'created_at',
+          order: 'desc',
         });
 
         // Handle response

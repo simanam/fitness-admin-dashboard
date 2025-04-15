@@ -48,17 +48,14 @@ export interface JointFilterParams {
 }
 
 export interface PaginatedResponse<T> {
-  data: {
-    items: T[];
-    meta: {
-      total: number;
-      page: number;
-      limit: number;
-      totalPages: number;
-    };
-  };
   success: boolean;
-  message: string;
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    per_page: number;
+    totalPages: number;
+  };
 }
 
 const jointService = {
@@ -69,11 +66,11 @@ const jointService = {
     const queryParams = new URLSearchParams();
 
     // Add all params to query string
-    Object.entries(params).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(params)) {
       if (value !== undefined && value !== '') {
         queryParams.append(key, String(value));
       }
-    });
+    }
 
     const response = await apiClient.get(`/joints?${queryParams.toString()}`);
 

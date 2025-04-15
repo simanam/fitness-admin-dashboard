@@ -1,11 +1,16 @@
 // src/pages/muscles/tabs/MuscleOverview.tsx
 import { useState, useEffect } from 'react';
 import { Info, Layers, Calendar } from 'lucide-react';
-import { Muscle } from '../../../api/muscleService';
+import type { Muscle } from '../../../api/muscleService';
 import apiClient from '../../../api/client';
 
+interface ExtendedMuscle extends Muscle {
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 interface MuscleOverviewProps {
-  muscle: Muscle;
+  muscle: ExtendedMuscle;
 }
 
 const MuscleOverview: React.FC<MuscleOverviewProps> = ({ muscle }) => {
@@ -156,7 +161,7 @@ const MuscleOverview: React.FC<MuscleOverviewProps> = ({ muscle }) => {
           <div className="aspect-square max-w-md mx-auto">
             {isLoadingSvg ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mb-2"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mb-2" />
                 <p>Loading visualization...</p>
               </div>
             ) : svgContent ? (

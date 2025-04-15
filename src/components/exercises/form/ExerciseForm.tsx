@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { ChevronRight, Save, X } from 'lucide-react';
+import type { ExerciseFormData } from '../../../types/exerciseFormTypes';
 import {
-  ExerciseFormData,
   FORM_SECTIONS,
   defaultExerciseFormData,
 } from '../../../types/exerciseFormTypes';
@@ -22,16 +22,23 @@ interface ExerciseFormProps {
   isSubmitting?: boolean;
 }
 
+interface MediaMetadata {
+  title?: string;
+  description?: string;
+  type: 'image' | 'video';
+  duration?: number;
+  size: number;
+}
+
 const ExerciseForm: React.FC<ExerciseFormProps> = ({
   initialData,
-
   onSubmit,
   onCancel,
   isSubmitting = false,
 }) => {
   const [activeSection, setActiveSection] = useState(0);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [mediaMetadata, setMediaMetadata] = useState<any[]>([]);
+  const [mediaMetadata, setMediaMetadata] = useState<MediaMetadata[]>([]);
 
   // Ensure all nested objects are properly initialized
   const preparedInitialData: ExerciseFormData = initialData
@@ -68,19 +75,14 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
     mode: 'onChange',
   });
 
-  const {
-    handleSubmit,
-    formState: { isDirty, isValid, errors },
-    getValues,
-    reset,
-  } = methods;
+  const { handleSubmit, reset } = methods;
 
   // Update form values when initialData changes
   useEffect(() => {
     if (initialData) {
       reset(preparedInitialData);
     }
-  }, [initialData, reset]);
+  }, [initialData, reset, preparedInitialData]);
 
   const handleFormSubmit = (data: ExerciseFormData) => {
     // Update form_points from instructions if they exist
@@ -123,7 +125,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
     onSubmit(data, mediaFiles.length > 0 ? mediaFiles : undefined);
   };
 
-  const handleAddMedia = (file: File, metadata: any) => {
+  const handleAddMedia = (file: File, metadata: MediaMetadata) => {
     setMediaFiles([...mediaFiles, file]);
     setMediaMetadata([...mediaMetadata, metadata]);
   };

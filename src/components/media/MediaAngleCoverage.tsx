@@ -1,5 +1,6 @@
 // src/components/media/MediaAngleCoverage.tsx
 import React, { useMemo } from 'react';
+import { Plus } from 'lucide-react';
 
 import { ExerciseMedia } from '../../api/exerciseMediaService';
 

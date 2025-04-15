@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import AdminUserForm from '../../components/users/AdminUserForm';
 import useAdminUserForm from '../../hooks/useAdminUserForm';
-import { defaultAdminUserFormData } from '../../types/adminUserFormTypes';
 import { AdminRole } from '../../types/adminUserFormTypes';
 
 const AdminUserCreate = () => {
   const navigate = useNavigate();
   const { isSubmitting, handleSubmit, handleCancel } = useAdminUserForm({
-    initialData: defaultAdminUserFormData,
+    initialData: {
+      email: '',
+      password: '',
+      role: AdminRole.READONLY,
+    },
   });
 
   return (

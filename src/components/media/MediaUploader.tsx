@@ -48,7 +48,7 @@ export function MediaUploader({
   onMediaAdd,
   onMediaDelete,
   onMediaPrimaryChange,
-  onUpdateViewAngle,
+
   className,
   maxFiles = 10,
   allowedTypes = ['image', 'video', 'svg'],

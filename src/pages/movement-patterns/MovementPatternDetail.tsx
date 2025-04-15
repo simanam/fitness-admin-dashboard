@@ -1,14 +1,7 @@
 // src/pages/movement-patterns/MovementPatternDetail.tsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Edit,
-  Trash2,
-  AlertTriangle,
-  Info,
-  FileText,
-} from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, AlertTriangle, Info } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';
 import movementPatternService, {
   MovementPattern,

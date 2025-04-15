@@ -6,9 +6,8 @@ import { useToast } from '../../../hooks/useToast';
 import MuscleExercisesTable from '../components/MuscleExercisesTable';
 import EmptyState from '../../../components/ui/empty-state';
 import Pagination from '../../../components/ui/pagination';
-import muscleExerciseService, {
-  ExerciseWithMuscleDetails,
-} from '../../../api/muscleExerciseService';
+import muscleExerciseService from '../../../api/muscleExerciseService';
+import type { ExerciseWithMuscleDetails } from '../../../api/muscleExerciseService';
 
 interface MuscleExercisesProps {
   muscleId: string;
@@ -112,10 +111,10 @@ const MuscleExercises: React.FC<MuscleExercisesProps> = ({ muscleId }) => {
     fetchData();
   }, [fetchData]); // Only depend on the fetchData function
 
-  // Handler for viewing exercise details - wrapped in useCallback
+  // Handler for viewing exercise details
   const handleViewExercise = useCallback(
     (exercise: ExerciseWithMuscleDetails) => {
-      navigate(`/exercises/${exercise.exercise?.id || exercise.exerciseId}`);
+      navigate(`/exercises/${exercise.id}`);
     },
     [navigate]
   );
@@ -158,9 +157,7 @@ const MuscleExercises: React.FC<MuscleExercisesProps> = ({ muscleId }) => {
             description="This muscle is not targeted by any exercises yet."
           />
         }
-        keyExtractor={(item) =>
-          item.id || `${item.exerciseId}-${item.muscleId}`
-        }
+        keyExtractor={(item) => item.id}
       />
 
       {/* Pagination */}

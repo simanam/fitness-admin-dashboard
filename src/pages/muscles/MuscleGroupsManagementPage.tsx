@@ -12,7 +12,6 @@ import { useMuscleGroupHierarchy } from '../../hooks/useMuscleGroupHierarchy';
 import { useMuscleGroupWithAncestors } from '../../hooks/useMuscleGroupWithAncestors';
 import { MuscleGroup } from '../../api/muscleService';
 import { MuscleGroupHierarchyItem } from '../../api/muscleGroupService';
-import muscleGroupService from '../../api/muscleGroupService';
 
 const MuscleGroupsManagementPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,11 +29,8 @@ const MuscleGroupsManagementPage: React.FC = () => {
     reorderMuscleGroups,
   } = useMuscleGroupHierarchy();
 
-  const {
-    group: selectedGroup,
-    ancestors,
-    isLoading: isGroupLoading,
-  } = useMuscleGroupWithAncestors(selectedGroupId);
+  const { group: selectedGroup, ancestors } =
+    useMuscleGroupWithAncestors(selectedGroupId);
 
   // State for filter options and tabs
   const [flatGroups, setFlatGroups] = useState<MuscleGroup[]>([]);

@@ -107,7 +107,8 @@ const ExerciseDetail = () => {
         title: 'Success',
         message: 'Exercise published successfully',
       });
-    } catch (error: unknown) {
+    } catch (error) {
+      console.error('Error publishing exercise:', error);
       showToast({
         type: 'error',
         title: 'Error',
@@ -124,13 +125,14 @@ const ExerciseDetail = () => {
     if (!exercise) return;
 
     try {
-      // Create a copy without ID and with "Copy of" prefixed to name
+      // Create a copy without metadata fields
       const {
-        id: _id,
-        created_at: _created,
-        updated_at: _updated,
+        id: exerciseId,
+        created_at,
+        updated_at,
         ...exerciseData
       } = exercise;
+
       const newExercise = {
         ...exerciseData,
         name: `Copy of ${exercise.name}`,
@@ -163,7 +165,7 @@ const ExerciseDetail = () => {
     { key: 'media', label: 'Media' },
     { key: 'relationships', label: 'Relationships' },
     { key: 'joints', label: 'Joints' },
-  ];
+  ] as const;
 
   // Render appropriate component based on active tab
   const renderTabContent = () => {
@@ -171,9 +173,7 @@ const ExerciseDetail = () => {
 
     switch (activeTab) {
       case 'overview':
-        return (
-          <ExerciseOverview exercise={exercise} setExercise={setExercise} />
-        );
+        return <ExerciseOverview exercise={exercise} />;
       case 'muscles':
         return <ExerciseMuscles exerciseId={exercise.id} />;
       case 'equipment':

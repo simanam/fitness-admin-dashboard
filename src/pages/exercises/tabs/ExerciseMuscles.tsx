@@ -1,20 +1,45 @@
 // src/pages/exercises/tabs/ExerciseMuscles.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, AlertTriangle } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import exerciseMuscleService from '../../../api/exerciseMuscleService';
 import type { CreateMuscleTargetPayload } from '../../../api/exerciseMuscleService';
 import muscleService from '../../../api/muscleService';
 import type { Muscle } from '../../../api/muscleService';
+import { MuscleTargetList } from '../../../components/exercises/MuscleTargetList';
 
 // Define MuscleTarget type here since it's missing from types/muscle
-interface MuscleTarget {
+type MuscleRole = 'primary' | 'secondary' | 'synergist' | 'stabilizer';
+type MuscleType = 'PRIMARY' | 'SECONDARY' | 'TERTIARY';
+
+// Base interface for component muscle targets
+interface BaseMuscleTarget {
   id: string;
-  exerciseId: string;
-  muscleId: string;
   muscle?: Muscle;
   role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
   activationPercentage: number;
+}
+
+// Base interface for API responses
+interface ApiMuscleTarget {
+  exerciseId: string;
+  muscleId: string;
+  type: MuscleType;
+  notes?: string;
+}
+
+// Combine both interfaces for our component
+interface MuscleTarget {
+  id: string;
+  name: string;
+  progress: number;
+  muscle?: Muscle;
+  role: MuscleRole;
+  activationPercentage: number;
+  exerciseId: string;
+  muscleId: string;
+  type: MuscleType;
+  notes?: string;
 }
 
 // interface MuscleTargetListProps {
@@ -30,13 +55,16 @@ import ConfirmationDialog from '../../../components/ui/confirmation-dialog';
 import EmptyState from '../../../components/ui/empty-state';
 import MuscleTargetForm from '../../../components/exercises/MuscleTargetForm';
 import BulkMuscleTargetForm from '../../../components/exercises/BulkMuscleTargetForm';
-import MuscleTargetList from '../../../components/exercises/MuscleTargetList';
 import MuscleTargetingVisualization from '../../../components/exercises/MuscleTargetingVisualization';
 import Modal from '../../../components/ui/modal';
 
 interface ExerciseMusclesProps {
   exerciseId: string;
 }
+
+// Props for MuscleTargetList component
+
+// Props for MuscleTargetingVisualization component
 
 const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
   const { showToast } = useToast();
@@ -52,7 +80,7 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [targetsData, musclesData] = await Promise.all([
@@ -60,7 +88,23 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
         muscleService.getMuscles(),
       ]);
 
-      setMuscleTargets(targetsData);
+      // Transform the API response to match our MuscleTarget type
+      const transformedTargets: MuscleTarget[] = targetsData.map(
+        (target: ApiMuscleTarget) => ({
+          id: `${target.exerciseId}-${target.muscleId}`,
+          exerciseId: target.exerciseId,
+          muscleId: target.muscleId,
+          type: target.type,
+          muscle: musclesData.find((m) => m.id === target.muscleId),
+          role: target.type.toLowerCase() as MuscleRole,
+          activationPercentage: 50,
+          notes: target.notes,
+          name: musclesData.find((m) => m.id === target.muscleId)?.name || '',
+          progress: 50,
+        })
+      );
+
+      setMuscleTargets(transformedTargets);
       setAllMuscles(musclesData);
     } catch (error) {
       console.error('Error fetching muscle data:', error);
@@ -72,12 +116,12 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [exerciseId, showToast]);
 
   // Fetch data
   useEffect(() => {
     void fetchData();
-  }, []); // Remove exerciseId from dependencies since it's used in fetchData
+  }, [fetchData]);
 
   // Add new muscle target
   const handleAddTarget = async (
@@ -325,8 +369,10 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
       {muscleTargets.length > 0 && visualizationOpen && (
         <div className="mb-6">
           <MuscleTargetingVisualization
-            targets={muscleTargets}
-            onSelectTarget={handleEditTarget}
+            targets={muscleTargets as BaseMuscleTarget[]}
+            onSelectTarget={
+              handleEditTarget as (target: BaseMuscleTarget) => void
+            }
             selectedTargetId={selectedTarget?.id}
           />
         </div>
@@ -338,37 +384,77 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
           <MuscleTargetList
             title="Primary Muscles"
             description="These muscles are the main focus of the exercise"
-            targets={primaryTargets}
-            onEdit={handleEditTarget}
-            onDelete={handleDeleteConfirm}
-            targetType="primary"
+            targets={primaryTargets.map((target) => ({
+              id: target.id,
+              name: target.muscle?.name || '',
+              progress: target.activationPercentage,
+            }))}
+            onEdit={(target) => {
+              const fullTarget = muscleTargets.find((t) => t.id === target.id);
+              if (fullTarget) handleEditTarget(fullTarget);
+            }}
+            onDelete={(target) => {
+              const fullTarget = muscleTargets.find((t) => t.id === target.id);
+              if (fullTarget) handleDeleteConfirm(fullTarget);
+            }}
+            muscleType="primary"
           />
 
           <MuscleTargetList
             title="Secondary Muscles"
             description="These muscles assist in the movement but aren't the main focus"
-            targets={secondaryTargets}
-            onEdit={handleEditTarget}
-            onDelete={handleDeleteConfirm}
-            targetType="secondary"
+            targets={secondaryTargets.map((target) => ({
+              id: target.id,
+              name: target.muscle?.name || '',
+              progress: target.activationPercentage,
+            }))}
+            onEdit={(target) => {
+              const fullTarget = muscleTargets.find((t) => t.id === target.id);
+              if (fullTarget) handleEditTarget(fullTarget);
+            }}
+            onDelete={(target) => {
+              const fullTarget = muscleTargets.find((t) => t.id === target.id);
+              if (fullTarget) handleDeleteConfirm(fullTarget);
+            }}
+            muscleType="secondary"
           />
 
           <MuscleTargetList
             title="Synergist Muscles"
             description="These muscles help coordinate the movement"
-            targets={synergistTargets}
-            onEdit={handleEditTarget}
-            onDelete={handleDeleteConfirm}
-            targetType="synergist"
+            targets={synergistTargets.map((target) => ({
+              id: target.id,
+              name: target.muscle?.name || '',
+              progress: target.activationPercentage,
+            }))}
+            onEdit={(target) => {
+              const fullTarget = muscleTargets.find((t) => t.id === target.id);
+              if (fullTarget) handleEditTarget(fullTarget);
+            }}
+            onDelete={(target) => {
+              const fullTarget = muscleTargets.find((t) => t.id === target.id);
+              if (fullTarget) handleDeleteConfirm(fullTarget);
+            }}
+            muscleType="synergist"
           />
 
           <MuscleTargetList
             title="Stabilizer Muscles"
             description="These muscles help maintain posture and stability during the exercise"
-            targets={stabilizerTargets}
-            onEdit={handleEditTarget}
-            onDelete={handleDeleteConfirm}
-            targetType="stabilizer"
+            targets={stabilizerTargets.map((target) => ({
+              id: target.id,
+              name: target.muscle?.name || '',
+              progress: target.activationPercentage,
+            }))}
+            onEdit={(target) => {
+              const fullTarget = muscleTargets.find((t) => t.id === target.id);
+              if (fullTarget) handleEditTarget(fullTarget);
+            }}
+            onDelete={(target) => {
+              const fullTarget = muscleTargets.find((t) => t.id === target.id);
+              if (fullTarget) handleDeleteConfirm(fullTarget);
+            }}
+            muscleType="stabilizer"
           />
         </div>
       ) : (

@@ -47,12 +47,15 @@ const HomeStats = () => {
           muscleService.getMuscles(),
           equipmentService.getEquipment({ page: 1, per_page: 1 }),
           clientService.getClients({ page: 1, per_page: 1 }),
-          jointService.getJoints({ page: 1, per_page: 1 }),
+          jointService.getJoints({ page: 1, limit: 1 }),
         ]);
 
         // Get the first client to fetch its API keys
         let activeApiKeys = 0;
-        if (clientsResponse.meta.total > 0 && clientsResponse.data.length > 0) {
+        if (
+          clientsResponse.meta?.total > 0 &&
+          clientsResponse.data?.length > 0
+        ) {
           const firstClientId = clientsResponse.data[0].id;
           const apiKeys = await apiKeyService.getApiKeys(firstClientId, {
             active: true,
@@ -61,11 +64,11 @@ const HomeStats = () => {
         }
 
         // Extract counts
-        const totalExercises = exercisesResponse.meta.total || 0;
-        const totalMuscles = musclesResponse.length || 0;
-        const totalEquipment = equipmentResponse.meta.total || 0;
-        const totalClients = clientsResponse.meta.total || 0;
-        const totalJoints = jointsResponse.meta.total || 0;
+        const totalExercises = exercisesResponse.meta?.total || 0;
+        const totalMuscles = musclesResponse?.length || 0;
+        const totalEquipment = equipmentResponse.meta?.total || 0;
+        const totalClients = clientsResponse.meta?.total || 0;
+        const totalJoints = jointsResponse.meta?.total || 0;
 
         // In a real app, we'd get the change from the API
         // For this demo, we'll generate some fake changes

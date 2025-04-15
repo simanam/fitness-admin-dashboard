@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ExerciseFormData } from '../types/exerciseFormTypes';
 import { defaultExerciseFormData } from '../types/exerciseFormTypes';
 import exerciseService from '../api/exerciseService';
-import type { Exercise } from '../api/exerciseService';
+import type { Exercise, MediaMetadata } from '../api/exerciseService';
 import { parseInstructions } from '../utils/instructionsParser';
 
 // Define the valid enum types
@@ -81,12 +81,17 @@ export const useExerciseForm = ({
       // If we have media files, use the createExerciseWithMedia endpoint
       if (!exerciseId && mediaFiles && mediaFiles.length > 0) {
         // Create metadata array for each file
-        const mediaMetadata = mediaFiles.map((file, index) => ({
-          mediaType: file.type.startsWith('video/') ? 'video' : 'image',
-          viewAngle: 'front', // default if not specified
-          isPrimary: index === 0, // First file is primary by default
-          format: file.name.split('.').pop()?.toLowerCase(),
-        }));
+        const mediaMetadata: MediaMetadata[] = mediaFiles.map(
+          (file, index) => ({
+            type: file.type.startsWith('video/') ? 'video' : 'image',
+            viewAngle: 'front', // default if not specified
+            isPrimary: index === 0, // First file is primary by default
+            format: file.name.split('.').pop()?.toLowerCase() || 'jpg',
+            title: file.name,
+            size: file.size,
+            duration: file.type.startsWith('video/') ? 0 : undefined, // You might want to calculate actual video duration
+          })
+        );
 
         const newExercise = await exerciseService.createExerciseWithMedia(
           processedData,

@@ -4,16 +4,6 @@ import { useToast } from './useToast';
 import jointService from '../api/jointService';
 import type { Joint, JointFilterParams } from '../api/jointService';
 
-interface JointResponse {
-  items: Joint[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
-
 export const useJoints = () => {
   const [joints, setJoints] = useState<Joint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,9 +31,9 @@ export const useJoints = () => {
       };
 
       const response = await jointService.getJoints(params);
-      setJoints(response.items || []);
-      setTotalPages(response.meta?.totalPages || 1);
-      setTotalItems(response.meta?.total || 0);
+      setJoints(response.data);
+      setTotalPages(response.meta.totalPages);
+      setTotalItems(response.meta.total);
     } catch (error) {
       console.error('Error fetching joints:', error);
       showToast({

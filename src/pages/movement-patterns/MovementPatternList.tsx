@@ -11,7 +11,8 @@ import {
   X,
   Filter,
 } from 'lucide-react';
-import DataTable, { Column } from '../../components/common/DataTable';
+import type { Column } from '../../components/common/DataTable';
+import DataTable from '../../components/common/DataTable';
 import Pagination from '../../components/ui/pagination';
 import ConfirmationDialog from '../../components/ui/confirmation-dialog';
 import EmptyState from '../../components/ui/empty-state';
@@ -20,7 +21,7 @@ import TypeFilter from '../../components/movement-patterns/TypeFilter';
 import CategoryBadge from '../../components/movement-patterns/CategoryBadge';
 import TypeBadge from '../../components/movement-patterns/TypeBadge';
 import useMovementPatterns from '../../hooks/useMovementPatterns';
-import { MovementPattern } from '../../api/movementPatternService';
+import type { MovementPattern } from '../../api/movementPatternService';
 
 const MovementPatternList = () => {
   const navigate = useNavigate();
@@ -41,7 +42,6 @@ const MovementPatternList = () => {
     handleTypeFilterChange,
     clearFilters,
     deleteMovementPattern,
-    fetchMovementPatterns,
     getAvailableCategories,
     getAvailableTypes,
   } = useMovementPatterns();
@@ -50,12 +50,11 @@ const MovementPatternList = () => {
     { value: string; label: string }[]
   >([]);
   const [types, setTypes] = useState<{ value: string; label: string }[]>([]);
-  const [loadingFilters, setLoadingFilters] = useState(true);
 
+  // Fetch filters
   useEffect(() => {
     const fetchFilters = async () => {
       try {
-        setLoadingFilters(true);
         // Fetch both in parallel
         const [fetchedCategories, fetchedTypes] = await Promise.all([
           getAvailableCategories(),
@@ -80,13 +79,11 @@ const MovementPatternList = () => {
           { value: 'hinge', label: 'Hinge' },
           { value: 'lunge', label: 'Lunge' },
         ]);
-      } finally {
-        setLoadingFilters(false);
       }
     };
 
-    fetchFilters();
-  }, []);
+    void fetchFilters();
+  }, [getAvailableCategories, getAvailableTypes]);
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deletingPattern, setDeletingPattern] =
@@ -152,6 +149,7 @@ const MovementPatternList = () => {
       render: (pattern) => (
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               handleViewPattern(pattern);
@@ -162,6 +160,7 @@ const MovementPatternList = () => {
             <Eye size={18} />
           </button>
           <button
+            type="button"
             onClick={(e) => handleEditPattern(pattern, e)}
             className="text-blue-600 hover:text-blue-900"
             title="Edit"
@@ -169,6 +168,7 @@ const MovementPatternList = () => {
             <Edit size={18} />
           </button>
           <button
+            type="button"
             onClick={(e) => confirmDelete(pattern, e)}
             className="text-red-600 hover:text-red-900"
             title="Delete"
@@ -187,6 +187,7 @@ const MovementPatternList = () => {
         <h1 className="text-2xl font-bold">Movement Patterns</h1>
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={() => navigate('/movement-patterns/new')}
             className="flex items-center px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800"
           >
@@ -213,6 +214,7 @@ const MovementPatternList = () => {
             />
             {searchQuery && (
               <button
+                type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => handleSearchChange('')}
               >
@@ -224,6 +226,7 @@ const MovementPatternList = () => {
           {/* Clear filters button */}
           {(categoryFilter || typeFilter || searchQuery) && (
             <button
+              type="button"
               onClick={clearFilters}
               className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -238,14 +241,12 @@ const MovementPatternList = () => {
           <CategoryFilter
             selectedCategory={categoryFilter}
             onChange={handleCategoryFilterChange}
-            categories={categories} // Pass the state variable instead of the function
-            isLoading={loadingFilters}
+            categories={categories}
           />
           <TypeFilter
             selectedType={typeFilter}
             onChange={handleTypeFilterChange}
-            types={types} // Pass the state variable instead of the function
-            isLoading={loadingFilters}
+            types={types}
           />
         </div>
       </div>
@@ -267,6 +268,7 @@ const MovementPatternList = () => {
             description="Try adjusting your search or filters, or create a new movement pattern."
             action={
               <button
+                type="button"
                 onClick={() => navigate('/movement-patterns/new')}
                 className="flex items-center px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800"
               >

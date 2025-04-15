@@ -1,12 +1,10 @@
 // src/components/exercises/MuscleTargetList.tsx
 import { Edit, Trash2, Layers } from 'lucide-react';
-import type { Muscle } from '../../api/muscleService';
 
-interface MuscleTarget {
+export interface MuscleTarget {
   id: string;
-  muscle?: Muscle;
-  role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
-  activationPercentage: number;
+  name: string;
+  progress: number;
 }
 
 interface MuscleTargetListProps {
@@ -15,20 +13,20 @@ interface MuscleTargetListProps {
   targets: MuscleTarget[];
   onEdit: (target: MuscleTarget) => void;
   onDelete: (target: MuscleTarget) => void;
-  role: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
+  muscleType: 'primary' | 'secondary' | 'synergist' | 'stabilizer';
 }
 
-const MuscleTargetList = ({
+export const MuscleTargetList: React.FC<MuscleTargetListProps> = ({
   title,
   description,
   targets,
   onEdit,
   onDelete,
-  role,
-}: MuscleTargetListProps) => {
+  muscleType,
+}) => {
   // Get styling based on role
   const getRoleStyles = () => {
-    switch (role) {
+    switch (muscleType) {
       case 'primary':
         return {
           headerBg: 'bg-red-50',
@@ -73,19 +71,18 @@ const MuscleTargetList = ({
     return null;
   }
 
-  // Get progress bar color based on role
-  const getProgressBarColor = () => {
+  const getProgressBarColor = (role: string) => {
     switch (role) {
       case 'primary':
-        return 'bg-red-500';
+        return 'bg-primary';
       case 'secondary':
-        return 'bg-blue-500';
+        return 'bg-secondary';
       case 'synergist':
-        return 'bg-green-500';
+        return 'bg-accent';
       case 'stabilizer':
-        return 'bg-purple-500';
+        return 'bg-neutral';
       default:
-        return 'bg-gray-500';
+        return 'bg-primary';
     }
   };
 
@@ -108,33 +105,20 @@ const MuscleTargetList = ({
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center">
-                  <h5 className="font-medium text-gray-900">
-                    {target.muscle?.name}
-                  </h5>
-                  {target.muscle?.commonName && (
-                    <span className="ml-2 text-sm text-gray-500">
-                      ({target.muscle.commonName})
-                    </span>
-                  )}
+                  <h5 className="font-medium text-gray-900">{target.name}</h5>
                 </div>
 
                 <div className="mt-2 flex items-center">
                   <div className="w-full max-w-xs bg-gray-200 rounded-full h-2">
                     <div
-                      className={`h-2 rounded-full ${getProgressBarColor()}`}
-                      style={{ width: `${target.activationPercentage}%` }}
+                      className={`h-2 rounded-full ${getProgressBarColor(muscleType)}`}
+                      style={{ width: `${target.progress}%` }}
                     />
                   </div>
                   <span className="ml-2 text-sm font-medium text-gray-700">
-                    {target.activationPercentage}%
+                    {target.progress}%
                   </span>
                 </div>
-
-                {target.muscle?.muscleGroup && (
-                  <div className="mt-1 text-sm text-gray-500">
-                    Group: {target.muscle.muscleGroup.name}
-                  </div>
-                )}
               </div>
 
               <div className="flex space-x-2">
@@ -162,5 +146,3 @@ const MuscleTargetList = ({
     </div>
   );
 };
-
-export default MuscleTargetList;

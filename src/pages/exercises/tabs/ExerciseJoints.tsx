@@ -1,5 +1,5 @@
 // src/pages/exercises/tabs/ExerciseJoints.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Edit, Link } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import exerciseJointService from '../../../api/exerciseJointService';
@@ -26,6 +26,16 @@ interface TransformedInvolvement
   rangeOfMotion: {
     min: number;
     max: number;
+    units: string;
+  };
+}
+
+interface APIResponse<T> {
+  data: T[];
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
   };
 }
 
@@ -46,7 +56,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
     useState<TransformedInvolvement | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [involvementsResponse, jointsResponse] = await Promise.all([
@@ -55,54 +65,39 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
       ]);
 
       // Transform the API data to match component format
-      const transformInvolvement = (item: any): TransformedInvolvement => ({
+      const transformInvolvement = (
+        item: JointInvolvement
+      ): TransformedInvolvement => ({
         id: item.id,
         exerciseId: item.exerciseId,
         jointId: item.jointId,
         joint: item.joint,
-        involvementType: item.isPrimary ? 'primary' : 'secondary',
-        movementPattern: item.movementType,
+        involvementType:
+          item.involvementType === 'primary' ? 'primary' : 'secondary',
+        movementPattern: item.movementPattern,
         rangeOfMotion: {
           min: 0,
-          max: item.romRequired || 0,
+          max: item.rangeOfMotion?.max || 0,
+          units: 'degrees',
         },
-        notes: item.movementNotes,
+        notes: item.notes,
       });
 
-      if (Array.isArray(involvementsResponse)) {
-        const transformedInvolvements =
-          involvementsResponse.map(transformInvolvement);
-        setPrimaryInvolvements(
-          transformedInvolvements.filter(
-            (item) => item.involvementType === 'primary'
-          )
-        );
-        setSecondaryInvolvements(
-          transformedInvolvements.filter(
-            (item) => item.involvementType === 'secondary'
-          )
-        );
-      } else {
-        const allInvolvements = Array.isArray(involvementsResponse?.data)
-          ? involvementsResponse.data.map(transformInvolvement)
-          : [];
+      const response =
+        involvementsResponse as unknown as APIResponse<JointInvolvement>;
+      const allInvolvements = Array.isArray(response.data)
+        ? response.data.map(transformInvolvement)
+        : [];
 
-        setPrimaryInvolvements(
-          allInvolvements.filter(
-            (item: TransformedInvolvement) => item.involvementType === 'primary'
-          )
-        );
-        setSecondaryInvolvements(
-          allInvolvements.filter(
-            (item: TransformedInvolvement) =>
-              item.involvementType === 'secondary'
-          )
-        );
-      }
+      setPrimaryInvolvements(
+        allInvolvements.filter((item) => item.involvementType === 'primary')
+      );
+      setSecondaryInvolvements(
+        allInvolvements.filter((item) => item.involvementType === 'secondary')
+      );
 
-      const jointsData =
-        jointsResponse.data?.items || jointsResponse.data || [];
-      setAllJoints(Array.isArray(jointsData) ? jointsData : []);
+      const jointsData = Array.isArray(jointsResponse) ? jointsResponse : [];
+      setAllJoints(jointsData);
     } catch (error) {
       console.error('Error fetching joint data:', error);
       showToast({
@@ -113,11 +108,11 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [exerciseId, showToast]);
 
   useEffect(() => {
-    fetchData();
-  }, [exerciseId]);
+    void fetchData();
+  }, [fetchData]);
 
   const handleAddInvolvement = async (
     data: Omit<CreateJointInvolvementPayload, 'exerciseId'>
@@ -254,7 +249,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-48">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -268,6 +263,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
         <h3 className="text-lg font-medium text-gray-900">Joint Involvement</h3>
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={() => setShowAddModal(true)}
             disabled={availableJoints.length === 0}
             className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md ${
@@ -295,7 +291,10 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
+                      aria-hidden="true"
+                      role="img"
                     >
+                      <title>Primary Joint Icon</title>
                       <path
                         fillRule="evenodd"
                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.25-7.25a.75.75 0 000-1.5H8.66l2.1-1.95a.75.75 0 10-1.02-1.1l-3.5 3.25a.75.75 0 000 1.1l3.5 3.25a.75.75 0 001.02-1.1l-2.1-1.95h4.59z"
@@ -345,6 +344,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
 
                       <div className="flex space-x-2">
                         <button
+                          type="button"
                           onClick={() => handleEditInvolvement(involvement)}
                           className="p-1 text-gray-400 hover:text-gray-700 rounded"
                           title="Edit involvement"
@@ -352,6 +352,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
                           <Edit size={16} />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteConfirm(involvement)}
                           className="p-1 text-gray-400 hover:text-red-600 rounded"
                           title="Remove involvement"
@@ -376,7 +377,10 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
+                      aria-hidden="true"
+                      role="img"
                     >
+                      <title>Secondary Joint Icon</title>
                       <path
                         fillRule="evenodd"
                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.25-7.25a.75.75 0 000-1.5H8.66l2.1-1.95a.75.75 0 10-1.02-1.1l-3.5 3.25a.75.75 0 000 1.1l3.5 3.25a.75.75 0 001.02-1.1l-2.1-1.95h4.59z"
@@ -428,6 +432,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
 
                       <div className="flex space-x-2">
                         <button
+                          type="button"
                           onClick={() => handleEditInvolvement(involvement)}
                           className="p-1 text-gray-400 hover:text-gray-700 rounded"
                           title="Edit involvement"
@@ -435,6 +440,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
                           <Edit size={16} />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteConfirm(involvement)}
                           className="p-1 text-gray-400 hover:text-red-600 rounded"
                           title="Remove involvement"
@@ -456,6 +462,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
           description="Add joint involvements to specify which joints are used in this exercise and how they move."
           action={
             <button
+              type="button"
               onClick={() => setShowAddModal(true)}
               disabled={availableJoints.length === 0}
               className={`inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md ${
@@ -471,7 +478,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
         />
       )}
 
-      {/* Add Joint Involvement Modal */}
+      {/* Add/Edit Modals and Confirmation Dialog */}
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
@@ -486,7 +493,6 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
         />
       </Modal>
 
-      {/* Edit Joint Involvement Modal */}
       <Modal
         isOpen={showEditModal}
         onClose={() => {
@@ -512,7 +518,10 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
               jointId: selectedInvolvement.jointId,
               involvementType: selectedInvolvement.involvementType,
               movementPattern: selectedInvolvement.movementPattern,
-              rangeOfMotion: selectedInvolvement.rangeOfMotion,
+              rangeOfMotion: {
+                ...selectedInvolvement.rangeOfMotion,
+                units: 'degrees',
+              },
               notes: selectedInvolvement.notes,
             }}
             editMode={true}
@@ -520,7 +529,6 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
         )}
       </Modal>
 
-      {/* Delete confirmation dialog */}
       <ConfirmationDialog
         isOpen={showDeleteDialog}
         onClose={() => {

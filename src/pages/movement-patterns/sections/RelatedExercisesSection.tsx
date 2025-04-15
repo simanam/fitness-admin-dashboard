@@ -11,9 +11,6 @@ interface RelatedExercisesSectionProps {
 }
 
 // Mock interface for related exercises - adapt this to your actual API response
-interface RelatedExercisesResponse {
-  exercises: Exercise[];
-}
 
 const RelatedExercisesSection: React.FC<RelatedExercisesSectionProps> = ({
   patternId,

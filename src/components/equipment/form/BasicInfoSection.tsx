@@ -1,5 +1,5 @@
 // src/components/equipment/form/BasicInfoSection.tsx
-import React from 'react';
+import type { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Input } from '../../../components/ui/input';
 import { Textarea } from '../../../components/ui/textarea';
@@ -12,11 +12,8 @@ import {
 } from '../../../types/equipmentFormTypes';
 import { Box } from 'lucide-react';
 
-const BasicInfoSection: React.FC = () => {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext();
+const BasicInfoSection: FC = () => {
+  const { register } = useFormContext();
 
   return (
     <div className="space-y-6">

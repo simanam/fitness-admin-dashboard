@@ -13,6 +13,7 @@ export interface Exercise {
   status: 'draft' | 'published' | 'archived';
   bilateral: boolean;
   plane_of_motion: string;
+  instructions?: string;
   setup_position?: string;
   form_points?: {
     setup: string[];

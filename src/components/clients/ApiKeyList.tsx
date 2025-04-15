@@ -1,5 +1,5 @@
 // src/components/clients/ApiKeyList.tsx
-import React, { useState } from 'react';
+import { type FC, useState } from 'react';
 import {
   Key,
   Copy,
@@ -10,8 +10,8 @@ import {
   Ban,
   X,
 } from 'lucide-react';
-import { ApiKey } from '../../api/apiKeyService';
-import { formatDistanceToNow, format, isPast } from 'date-fns';
+import type { ApiKey } from '../../api/apiKeyService';
+import { formatDistanceToNow, isPast } from 'date-fns';
 import ConfirmationDialog from '../ui/confirmation-dialog';
 import { Textarea } from '../ui/textarea';
 import { cn } from '../../lib/utils';
@@ -23,7 +23,7 @@ interface ApiKeyListProps {
   onRotate: (keyId: string) => Promise<ApiKey | null>;
 }
 
-const ApiKeyList: React.FC<ApiKeyListProps> = ({
+const ApiKeyList: FC<ApiKeyListProps> = ({
   apiKeys,
   isLoading,
   onRevoke,
@@ -114,7 +114,7 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
     return (
       <div className="animate-pulse space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 bg-gray-200 rounded-lg"></div>
+          <div key={i} className="h-24 bg-gray-200 rounded-lg" />
         ))}
       </div>
     );
@@ -136,6 +136,7 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
               </p>
             </div>
             <button
+              type="button"
               onClick={() => setNewKey(null)}
               className="text-green-700 hover:text-green-900"
             >
@@ -150,6 +151,7 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
                   API Key:
                 </span>
                 <button
+                  type="button"
                   onClick={() => copyToClipboard(newKey.apiKey, 'new-key')}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -168,9 +170,12 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
                     API Secret:
                   </span>
                   <button
-                    onClick={() =>
-                      copyToClipboard(newKey.apiSecret!, 'new-secret')
-                    }
+                    type="button"
+                    onClick={() => {
+                      if (newKey.apiSecret) {
+                        copyToClipboard(newKey.apiSecret, 'new-secret');
+                      }
+                    }}
                     className="text-gray-500 hover:text-gray-700"
                   >
                     <Copy className="h-4 w-4" />
@@ -270,6 +275,7 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
                     {isActive(key) && (
                       <>
                         <button
+                          type="button"
                           onClick={() => {
                             setSelectedKeyId(key.id);
                             setShowRotateDialog(true);
@@ -280,6 +286,7 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
                           <RefreshCcw size={16} />
                         </button>
                         <button
+                          type="button"
                           onClick={() => {
                             setSelectedKeyId(key.id);
                             setShowRevokeDialog(true);
@@ -300,6 +307,7 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
                       <div className="truncate">{key.apiKey}</div>
                       <div className="flex items-center space-x-1 ml-2">
                         <button
+                          type="button"
                           onClick={() => copyToClipboard(key.apiKey, key.id)}
                           className="text-gray-500 hover:text-gray-700"
                           title="Copy API Key"
@@ -346,10 +354,14 @@ const ApiKeyList: React.FC<ApiKeyListProps> = ({
               be undone and will immediately prevent the key from being used.
             </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="revoke-reason"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Reason for revocation <span className="text-red-500">*</span>
               </label>
               <Textarea
+                id="revoke-reason"
                 value={revokeReason}
                 onChange={(e) => setRevokeReason(e.target.value)}
                 placeholder="Please provide a reason for revoking this key..."

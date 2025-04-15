@@ -1,5 +1,5 @@
 // src/components/equipment/CategoryFilter.tsx
-import { type FC } from 'react';
+import type { FC } from 'react';
 import { Box } from 'lucide-react';
 
 interface CategoryFilterProps {
@@ -13,20 +13,6 @@ const CategoryFilter: FC<CategoryFilterProps> = ({
   onChange,
   categories,
 }) => {
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      FREE_WEIGHTS: 'bg-blue-100 text-blue-800',
-      MACHINES: 'bg-green-100 text-green-800',
-      CABLES: 'bg-purple-100 text-purple-800',
-      BODYWEIGHT: 'bg-yellow-100 text-yellow-800',
-      CARDIO: 'bg-red-100 text-red-800',
-      ACCESSORIES: 'bg-indigo-100 text-indigo-800',
-      OTHER: 'bg-gray-100 text-gray-800',
-    };
-
-    return colors[category] || 'bg-gray-100 text-gray-800';
-  };
-
   if (!categories || categories.length === 0) {
     return (
       <div className="animate-pulse flex items-center space-x-2">

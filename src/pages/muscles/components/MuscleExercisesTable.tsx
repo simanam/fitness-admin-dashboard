@@ -1,5 +1,6 @@
 // src/pages/muscles/components/MuscleExercisesTable.tsx
-import React, { useState, useEffect, memo, ReactNode } from 'react';
+import { useState, useEffect, memo } from 'react';
+import type { FC, ReactNode } from 'react';
 import {
   ChevronDown,
   ChevronUp,
@@ -10,13 +11,13 @@ import {
   Dumbbell,
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
-import { ExerciseWithMuscleDetails } from '../../../api/muscleExerciseService';
+import type { ExerciseWithMuscleDetails } from '../../../api/muscleExerciseService';
 import EmptyState from '../../../components/ui/empty-state';
 
 interface Column {
   key: string;
   title: string;
-  render?: (item: ExerciseWithMuscleDetails) => React.ReactNode;
+  render?: (item: ExerciseWithMuscleDetails) => ReactNode;
   sortable?: boolean;
   filterable?: boolean;
   width?: string;
@@ -31,13 +32,12 @@ interface MuscleExercisesTableProps {
 }
 
 // Create a specialized table component just for muscle exercises
-const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
+const MuscleExercisesTable: FC<MuscleExercisesTableProps> = ({
   data,
   isLoading,
   onRowClick,
   emptyState,
-  keyExtractor = (item: ExerciseWithMuscleDetails) =>
-    item.id || item.exerciseId || `${item.exercise?.id}-${item.muscleId}`,
+  keyExtractor = (item: ExerciseWithMuscleDetails) => item.id,
 }) => {
   const [sortKey, setSortKey] = useState<string | undefined>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -69,15 +69,14 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
       key: 'name',
       title: 'Exercise Name',
       sortable: true,
-      render: (exercise: ExerciseWithMuscleDetails) =>
-        exercise.name || exercise.exercise?.name || 'Unnamed Exercise',
+      render: (exercise: ExerciseWithMuscleDetails) => exercise.name,
     },
     {
       key: 'role',
       title: 'Role',
       sortable: true,
       render: (exercise) => {
-        const role = exercise.type || '';
+        const role = exercise.role;
         return (
           <span
             className={`px-2 py-1 text-xs rounded-full ${getRoleColor(role)}`}
@@ -113,11 +112,7 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
       title: 'Difficulty',
       sortable: true,
       render: (exercise) => {
-        const difficultyValue = (
-          exercise.exercise?.difficulty ||
-          'beginner' ||
-          ''
-        ).toUpperCase();
+        const difficultyValue = exercise.difficulty.toUpperCase();
 
         const colors = {
           BEGINNER: 'bg-green-100 text-green-800',
@@ -140,9 +135,10 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
       title: 'Actions',
       render: (exercise) => (
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onRowClick && onRowClick(exercise);
+            onRowClick?.(exercise);
           }}
           className="text-gray-600 hover:text-gray-900"
           title="View Exercise"
@@ -162,65 +158,62 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
       const searchLower = search.toLowerCase();
       result = result.filter((item) => {
         // Search in exercise name
-        const exerciseName = item.name || item.exercise?.name || '';
-        if (exerciseName.toLowerCase().includes(searchLower)) return true;
+        if (item.name.toLowerCase().includes(searchLower)) return true;
 
         // Search in role
-        if (item.type?.toLowerCase().includes(searchLower)) return true;
+        if (item.role.toLowerCase().includes(searchLower)) return true;
 
         // Search in activation percentage
         if (String(item.activationPercentage || 0).includes(searchLower))
           return true;
 
         // Search in difficulty
-        const difficulty = item.exercise?.difficulty || '';
-        if (difficulty.toLowerCase().includes(searchLower)) return true;
+        if (item.difficulty.toLowerCase().includes(searchLower)) return true;
 
         return false;
       });
     }
 
     // Apply filters if any
-    Object.entries(filters).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(filters)) {
       if (value.trim()) {
         const valueLower = value.toLowerCase();
         result = result.filter((item) => {
           if (key === 'name') {
-            return (item.name || '').toLowerCase().includes(valueLower);
+            return item.name.toLowerCase().includes(valueLower);
           }
           if (key === 'role') {
-            return (item.type || '').toLowerCase().includes(valueLower);
+            return item.role.toLowerCase().includes(valueLower);
           }
           if (key === 'activationPercentage') {
             return String(item.activationPercentage || 0).includes(valueLower);
           }
           if (key === 'difficulty') {
-            return (item.exercise?.difficulty || '')
-              .toLowerCase()
-              .includes(valueLower);
+            return item.difficulty.toLowerCase().includes(valueLower);
           }
           return true;
         });
       }
-    });
+    }
 
     // Apply sorting if a sort key is specified
     if (sortKey) {
       result.sort((a, b) => {
-        let aValue, bValue;
+        let aValue: string | number;
+        let bValue: string | number;
 
         if (sortKey === 'name') {
-          aValue = a.name || '';
-          bValue = b.name || '';
+          aValue = a.name;
+          bValue = b.name;
         } else if (sortKey === 'role') {
-          aValue = a.type || '';
-          bValue = b.type || '';
+          aValue = a.role;
+          bValue = b.role;
         } else if (sortKey === 'activationPercentage') {
           aValue = a.activationPercentage || 0;
           bValue = b.activationPercentage || 0;
         } else if (sortKey === 'difficulty') {
-          aValue = a.exercise?.difficulty || '';
-          bValue = b.exercise?.difficulty || '';
+          aValue = a.difficulty;
+          bValue = b.difficulty;
         } else {
           // Default values
           aValue = '';
@@ -275,12 +268,12 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
   // Create skeleton loading state
   const renderSkeletonRow = (index: number) => (
     <tr key={`skeleton-row-${index}`}>
-      {columns.map((column, colIndex) => (
+      {columns.map((column) => (
         <td
-          key={`skeleton-col-${colIndex}`}
+          key={`skeleton-col-${column.key}-${index}`}
           className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
         >
-          <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded animate-pulse" />
         </td>
       ))}
     </tr>
@@ -303,6 +296,7 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
           />
           {search && (
             <button
+              type="button"
               className="absolute inset-y-0 right-0 pr-3 flex items-center"
               onClick={() => setSearch('')}
             >
@@ -319,6 +313,7 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
               <span className="text-xs font-medium text-gray-700">{key}:</span>
               <span className="text-xs text-gray-600">{value}</span>
               <button
+                type="button"
                 className="text-gray-400 hover:text-gray-600"
                 onClick={() => clearFilter(key)}
               >
@@ -344,9 +339,19 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
                   )}
                 >
                   <div className="flex items-center space-x-1">
-                    <div
+                    <button
+                      type="button"
                       className="flex-1 flex items-center"
-                      onClick={() => column.sortable && handleSort(column.key)}
+                      onClick={() => {
+                        if (column.sortable) handleSort(column.key);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          if (column.sortable) handleSort(column.key);
+                        }
+                      }}
+                      disabled={!column.sortable}
                     >
                       <span>{column.title}</span>
                       {column.sortable && sortKey === column.key && (
@@ -358,11 +363,12 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
                           )}
                         </span>
                       )}
-                    </div>
+                    </button>
 
                     {column.filterable && (
                       <div className="relative">
                         <button
+                          type="button"
                           className={cn(
                             'p-1 rounded hover:bg-gray-200',
                             filterOpen[column.key] ? 'bg-gray-200' : ''
@@ -414,7 +420,15 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
                       'hover:bg-gray-50',
                       onRowClick ? 'cursor-pointer' : ''
                     )}
-                    onClick={() => onRowClick && onRowClick(item)}
+                    onClick={() => onRowClick?.(item)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onRowClick?.(item);
+                      }
+                    }}
+                    tabIndex={onRowClick ? 0 : -1}
+                    aria-selected={false}
                   >
                     {columns.map((column) => (
                       <td
@@ -425,10 +439,22 @@ const MuscleExercisesTable: React.FC<MuscleExercisesTableProps> = ({
                             ? (e) => e.stopPropagation()
                             : undefined
                         }
+                        onKeyDown={
+                          column.key === 'actions'
+                            ? (e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }
+                              }
+                            : undefined
+                        }
                       >
                         {column.render
                           ? column.render(item)
-                          : (item as any)[column.key]}
+                          : (item[
+                              column.key as keyof ExerciseWithMuscleDetails
+                            ] as string)}
                       </td>
                     ))}
                   </tr>

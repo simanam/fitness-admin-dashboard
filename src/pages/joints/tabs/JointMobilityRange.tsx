@@ -1,6 +1,6 @@
 // src/pages/joints/tabs/JointMobilityRange.tsx
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Save } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import { Joint } from '../../../api/jointService';
 import jointService from '../../../api/jointService';

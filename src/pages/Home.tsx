@@ -1,14 +1,6 @@
 // src/pages/Home.tsx
 import { Link } from 'react-router-dom';
-import {
-  Dumbbell,
-  Layers,
-  Box,
-  Users,
-  Database,
-  Activity,
-  Briefcase,
-} from 'lucide-react';
+import { Dumbbell, Layers, Box, Users, Database, Activity } from 'lucide-react';
 
 import HomeStats from '../components/home/HomeStats';
 import RecentExercises from '../components/home/RecentExercises';

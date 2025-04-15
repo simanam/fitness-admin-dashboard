@@ -1,12 +1,13 @@
 // src/pages/users/AdminUserEdit.tsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';
 import AdminUserForm from '../../components/users/AdminUserForm';
 import useAdminUserForm from '../../hooks/useAdminUserForm';
 import adminUserService from '../../api/adminUserService';
-import { AdminRole, AdminUserFormData } from '../../types/adminUserFormTypes';
+import { AdminRole } from '../../types/adminUserFormTypes';
+import type { AdminUserFormData } from '../../types/adminUserFormTypes';
 
 const AdminUserEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,7 +15,9 @@ const AdminUserEdit = () => {
   const { showToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [initialUserData, setInitialUserData] = useState({
+  const [initialUserData, setInitialUserData] = useState<
+    Partial<AdminUserFormData>
+  >({
     email: '',
     role: AdminRole.READONLY,
   });
@@ -30,7 +33,7 @@ const AdminUserEdit = () => {
 
         setInitialUserData({
           email: user.email,
-          role: user.role as AdminRole,
+          role: user.role,
         });
       } catch (error) {
         console.error('Error fetching admin user:', error);
@@ -56,7 +59,7 @@ const AdminUserEdit = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -66,6 +69,7 @@ const AdminUserEdit = () => {
       {/* Header */}
       <div className="flex items-center">
         <button
+          type="button"
           onClick={() => navigate(`/users/${id}`)}
           className="mr-4 p-1 rounded-full text-gray-500 hover:bg-gray-100"
         >

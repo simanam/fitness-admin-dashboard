@@ -1,16 +1,7 @@
 // src/pages/exercises/ExerciseList.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Eye,
-  Edit,
-  Trash2,
-  Plus,
-  Dumbbell,
-  Search,
-  X,
-  Filter,
-} from 'lucide-react';
+import { Eye, Edit, Trash2, Plus, Dumbbell, Search, X } from 'lucide-react';
 import DataTable, { Column } from '../../components/common/DataTable';
 import Pagination from '../../components/ui/pagination';
 import ConfirmationDialog from '../../components/ui/confirmation-dialog';
@@ -46,7 +37,7 @@ const ExerciseList = () => {
     null
   );
 
-  const { updateStatus, isUpdating: isStatusUpdating } = useExerciseStatus({
+  const { isUpdating: isStatusUpdating } = useExerciseStatus({
     onSuccess: fetchExercises,
   });
 

@@ -1,7 +1,7 @@
 // src/pages/exercises/ExerciseForm.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, ArrowLeft, Trash2, CheckCircle, X } from 'lucide-react';
+import { Save, ArrowLeft, Trash2 } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
@@ -9,11 +9,12 @@ import { Select } from '../../components/ui/select';
 import type { SelectOption } from '../../components/ui/select';
 import { Checkbox } from '../../components/ui/checkbox';
 import ConfirmationDialog from '../../components/ui/confirmation-dialog';
-import exerciseService, { Exercise } from '../../api/exerciseService';
+import exerciseService from '../../api/exerciseService';
+import type { Exercise } from '../../api/exerciseService';
 
-type Difficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
-type Mechanics = 'COMPOUND' | 'ISOLATION';
-type Force = 'PUSH' | 'PULL';
+type Difficulty = 'beginner' | 'intermediate' | 'advanced';
+type Mechanics = 'compound' | 'isolation';
+type Force = 'push' | 'pull' | 'carry' | 'static';
 
 interface FormData {
   name: string;
@@ -43,10 +44,10 @@ const ExerciseForm = () => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
-    difficulty: 'INTERMEDIATE',
+    difficulty: 'intermediate',
     movement_pattern: 'squat',
-    mechanics: 'COMPOUND',
-    force: 'PUSH',
+    mechanics: 'compound',
+    force: 'push',
     equipment_required: false,
     bilateral: true,
     plane_of_motion: 'sagittal',
@@ -61,9 +62,9 @@ const ExerciseForm = () => {
 
   // Define select options
   const difficultyOptions: SelectOption[] = [
-    { value: 'BEGINNER', label: 'Beginner' },
-    { value: 'INTERMEDIATE', label: 'Intermediate' },
-    { value: 'ADVANCED', label: 'Advanced' },
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' },
   ];
 
   const movementPatternOptions: SelectOption[] = [
@@ -78,13 +79,15 @@ const ExerciseForm = () => {
   ];
 
   const mechanicsOptions: SelectOption[] = [
-    { value: 'COMPOUND', label: 'Compound' },
-    { value: 'ISOLATION', label: 'Isolation' },
+    { value: 'compound', label: 'Compound' },
+    { value: 'isolation', label: 'Isolation' },
   ];
 
   const forceOptions: SelectOption[] = [
-    { value: 'PUSH', label: 'Push' },
-    { value: 'PULL', label: 'Pull' },
+    { value: 'push', label: 'Push' },
+    { value: 'pull', label: 'Pull' },
+    { value: 'carry', label: 'Carry' },
+    { value: 'static', label: 'Static' },
   ];
 
   const planeOfMotionOptions: SelectOption[] = [
@@ -105,13 +108,11 @@ const ExerciseForm = () => {
         setFormData({
           name: exercise.name || '',
           description: exercise.description || '',
-          difficulty:
-            (exercise.difficulty?.toUpperCase() as Difficulty) ||
-            'INTERMEDIATE',
+          difficulty: (exercise.difficulty || 'intermediate') as Difficulty,
           movement_pattern: exercise.movement_pattern || 'squat',
-          mechanics:
-            (exercise.mechanics?.toUpperCase() as Mechanics) || 'COMPOUND',
-          force: (exercise.force?.toUpperCase() as Force) || 'PUSH',
+          mechanics: (exercise.mechanics?.toLowerCase() ||
+            'compound') as Mechanics,
+          force: (exercise.force?.toLowerCase() || 'push') as Force,
           equipment_required: exercise.equipment_required || false,
           bilateral: exercise.bilateral || true,
           plane_of_motion: exercise.plane_of_motion || 'sagittal',
@@ -196,9 +197,19 @@ const ExerciseForm = () => {
 
     setIsLoading(true);
     try {
-      if (isEditMode) {
+      const apiData: Partial<Exercise> = {
+        ...formData,
+        mechanics: formData.mechanics.toLowerCase() as 'compound' | 'isolation',
+        force: formData.force.toLowerCase() as
+          | 'push'
+          | 'pull'
+          | 'carry'
+          | 'static',
+      };
+
+      if (isEditMode && id) {
         // Update existing exercise
-        await exerciseService.updateExercise(id, formData);
+        await exerciseService.updateExercise(id, apiData);
         showToast({
           type: 'success',
           title: 'Success',
@@ -207,7 +218,7 @@ const ExerciseForm = () => {
         navigate(`/exercises/${id}`);
       } else {
         // Create new exercise
-        const newExercise = await exerciseService.createExercise(formData);
+        const newExercise = await exerciseService.createExercise(apiData);
         showToast({
           type: 'success',
           title: 'Success',
@@ -274,7 +285,7 @@ const ExerciseForm = () => {
   if (isFetching) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
       </div>
     );
   }

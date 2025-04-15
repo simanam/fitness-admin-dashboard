@@ -38,7 +38,6 @@ const AdminUserList = () => {
     handleRoleFilterChange,
     clearFilters,
     deleteUser,
-    fetchUsers,
   } = useAdminUsers();
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);

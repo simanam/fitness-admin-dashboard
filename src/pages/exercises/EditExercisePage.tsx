@@ -13,6 +13,18 @@ import type {
 } from '../../types/exerciseFormTypes';
 import { formatInstructions } from '../../utils/instructionsParser';
 
+// Define missing interfaces locally since they're not exported
+interface Contraindication {
+  condition: string;
+  severity: 'low' | 'medium' | 'high';
+  recommendation: string;
+}
+
+interface TempoRecommendations {
+  default: string;
+  tempo_notes: string;
+}
+
 const EditExercisePage: FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -57,7 +69,7 @@ const EditExercisePage: FC = () => {
 
           // Generate instructions from form_points if they don't exist
           instructions:
-            (exercise as any).instructions ||
+            exercise.instructions ||
             formatInstructions({
               setup: exercise.form_points?.setup || [],
               execution: exercise.form_points?.execution || [],
@@ -75,14 +87,28 @@ const EditExercisePage: FC = () => {
             risk_level: exercise.safety_info?.risk_level || 'low',
             precautions: exercise.safety_info?.precautions || [],
             warning_signs: exercise.safety_info?.warning_signs || [],
-            contraindications: exercise.safety_info?.contraindications || [],
+            contraindications: (
+              exercise.safety_info?.contraindications || []
+            ).map((item): Contraindication => {
+              if (typeof item === 'string') {
+                return {
+                  condition: item,
+                  severity: 'medium',
+                  recommendation: 'Consult a healthcare professional',
+                };
+              }
+              return item as Contraindication;
+            }),
           },
 
           // Handle tempo recommendations
           tempo_recommendations: {
-            default: exercise.tempo_recommendations?.default || '',
+            default:
+              (exercise.tempo_recommendations as TempoRecommendations)
+                ?.default || '',
             tempo_notes:
-              (exercise.tempo_recommendations as any)?.tempo_notes || '',
+              (exercise.tempo_recommendations as TempoRecommendations)
+                ?.tempo_notes || '',
           },
         };
 

@@ -22,13 +22,13 @@ const MuscleList = () => {
     currentPage,
     totalPages,
     totalItems,
-    searchQuery,
+
     selectedMuscleGroupId,
     handlePageChange,
-    handleSearchChange,
+
     handleMuscleGroupChange,
     deleteMuscle,
-    bulkDeleteMuscles,
+
     fetchMuscles,
   } = useMuscles();
 

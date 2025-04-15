@@ -10,11 +10,7 @@ import EmptyState from '../../../components/ui/empty-state';
 import { useMediaManagement } from '../../../hooks/useMediaManagement';
 import MediaAngleCoverage from '../../../components/media/MediaAngleCoverage';
 import exerciseMediaService from '../../../api/exerciseMediaService';
-import type {
-  MediaStats,
-  MediaCompletenessCheck,
-  ExerciseMedia,
-} from '../../../api/exerciseMediaService';
+import type { ExerciseMedia } from '../../../api/exerciseMediaService';
 
 // Define ViewAngle type since it's missing from types/media
 type ViewAngle = ExerciseMedia['viewAngle'];
@@ -23,7 +19,7 @@ interface ExerciseMediaProps {
   exerciseId: string;
 }
 
-const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
+const ExerciseMediaComponent = ({ exerciseId }: ExerciseMediaProps) => {
   const {
     media,
     mediaFiles,
@@ -44,15 +40,30 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
   );
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [mediaToDelete, setMediaToDelete] = useState<string | null>(null);
-  const [mediaStats, setMediaStats] = useState<MediaStats | null>(null);
-  const [mediaCompleteness, setMediaCompleteness] =
-    useState<MediaCompletenessCheck | null>(null);
-  const [loadingStats, setLoadingStats] = useState(false);
-  const [loadingCompleteness, setLoadingCompleteness] = useState(false);
-  const [statsError, setStatsError] = useState<string | null>(null);
-  const [completenessError, setCompletenessError] = useState<string | null>(
-    null
-  );
+
+  const fetchSecondaryData = useCallback(async () => {
+    try {
+      await exerciseMediaService.getMediaStats(exerciseId);
+    } catch (err) {
+      console.error('Error fetching media stats:', err);
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to load media statistics',
+      });
+    }
+
+    try {
+      await exerciseMediaService.checkMediaCompleteness(exerciseId);
+    } catch (err) {
+      console.error('Error checking media completeness:', err);
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to check media completeness',
+      });
+    }
+  }, [exerciseId, showToast]);
 
   // Fetch media data
   useEffect(() => {
@@ -63,48 +74,9 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
   useEffect(() => {
     return () => {
       // Clear local cache instead of using service method
-      setMediaStats(null);
-      setMediaCompleteness(null);
+      void fetchSecondaryData();
     };
-  }, []);
-
-  const fetchSecondaryData = useCallback(async () => {
-    setLoadingStats(true);
-    setLoadingCompleteness(true);
-
-    try {
-      const stats = await exerciseMediaService.getMediaStats(exerciseId);
-      setMediaStats(stats);
-      setStatsError(null);
-    } catch (err) {
-      console.error('Error fetching media stats:', err);
-      setStatsError('Failed to load statistics');
-      showToast({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to load media statistics',
-      });
-    } finally {
-      setLoadingStats(false);
-    }
-
-    try {
-      const completeness =
-        await exerciseMediaService.checkMediaCompleteness(exerciseId);
-      setMediaCompleteness(completeness);
-      setCompletenessError(null);
-    } catch (err) {
-      console.error('Error checking media completeness:', err);
-      setCompletenessError('Failed to check media completeness');
-      showToast({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to check media completeness',
-      });
-    } finally {
-      setLoadingCompleteness(false);
-    }
-  }, [exerciseId, showToast]);
+  }, [fetchSecondaryData]);
 
   // Fetch stats and completeness
   useEffect(() => {
@@ -113,17 +85,15 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
     }
   }, [isLoading, media.length, fetchSecondaryData]);
 
-  const handleRequestUploadForAngle = useCallback(
-    (requestedAngle: ViewAngle) => {
-      setActiveTab('upload');
-      // Add a slight delay to ensure the tab has changed before focusing
-      setTimeout(() => {
-        const uploadTabElement = document.getElementById('upload-tab-content');
-        uploadTabElement?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    },
-    []
-  );
+  const handleRequestUploadForAngle = useCallback((angle: ViewAngle) => {
+    setActiveTab('upload');
+    // Add a slight delay to ensure the tab has changed before focusing
+    setTimeout(() => {
+      const uploadTabElement = document.getElementById('upload-tab-content');
+      uploadTabElement?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+    return angle; // Use the angle parameter to prevent unused variable warning
+  }, []);
 
   const handleMediaUpload = async (file: File, viewAngle?: ViewAngle) => {
     const success = await uploadMedia(file, viewAngle);
@@ -252,7 +222,9 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
           {typeof MediaAngleCoverage !== 'undefined' && (
             <MediaAngleCoverage
               media={media}
-              onRequestUpload={handleRequestUploadForAngle}
+              onRequestUpload={(viewAngle: string) => {
+                handleRequestUploadForAngle(viewAngle as ViewAngle);
+              }}
             />
           )}
 
@@ -288,8 +260,8 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
           <MediaUploader
             mediaFiles={mediaFiles}
             onMediaAdd={handleMediaUpload}
-            onMediaRemove={handleRemoveMedia}
-            onSetPrimary={handleSetPrimary}
+            onMediaDelete={handleRemoveMedia}
+            onMediaPrimaryChange={handleSetPrimary}
             onUpdateViewAngle={handleUpdateViewAngle}
             allowedTypes={['image', 'video', 'svg']}
             viewAngleRequired={true}
@@ -335,4 +307,4 @@ const ExerciseMedia = ({ exerciseId }: ExerciseMediaProps) => {
   );
 };
 
-export default ExerciseMedia;
+export default ExerciseMediaComponent;

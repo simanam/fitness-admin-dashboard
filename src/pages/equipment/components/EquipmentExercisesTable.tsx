@@ -274,13 +274,6 @@ const EquipmentExercisesTable: FC<EquipmentExercisesTableProps> = ({
     return String(value ?? '');
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent, action: () => void) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      action();
-    }
-  };
-
   return (
     <div className="overflow-x-auto">
       {/* Search and filter bar */}

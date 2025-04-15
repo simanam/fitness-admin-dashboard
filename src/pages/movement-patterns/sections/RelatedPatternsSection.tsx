@@ -1,7 +1,7 @@
 // src/pages/movement-patterns/sections/RelatedPatternsSection.tsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Link as LinkIcon } from 'lucide-react';
+import { Link as LinkIcon } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import movementPatternService, {
   MovementPattern,

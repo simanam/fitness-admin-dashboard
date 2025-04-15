@@ -7,13 +7,15 @@ import type {
   MovementPatternFilterParams,
 } from '../api/movementPatternService';
 
-interface MovementPatternResponse {
-  items: MovementPattern[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
+interface PaginatedResponse<T> {
+  data: {
+    items: T[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
   };
 }
 
@@ -55,10 +57,13 @@ export const useMovementPatterns = ({
         patternType: typeFilter,
       };
 
-      const response = await movementPatternService.getMovementPatterns(params);
-      setPatterns(response.items || []);
-      setTotalPages(response.meta?.totalPages || 1);
-      setTotalItems(response.meta?.total || 0);
+      const response = (await movementPatternService.getMovementPatterns(
+        params
+      )) as PaginatedResponse<MovementPattern>;
+
+      setPatterns(response.data.items);
+      setTotalPages(response.data.meta.totalPages);
+      setTotalItems(response.data.meta.total);
     } catch (error) {
       console.error('Error fetching movement patterns:', error);
       showToast({

@@ -3,13 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from './useToast';
 import adminUserService from '../api/adminUserService';
-import { AdminRole } from '../types/adminUserFormTypes';
-
-export interface AdminUserFormData {
-  email: string;
-  password?: string;
-  role: AdminRole;
-}
+import { AdminRole, AdminUserFormData } from '../types/adminUserFormTypes';
 
 interface UseAdminUserFormProps {
   userId?: string;
@@ -35,7 +29,7 @@ export const useAdminUserForm = ({
         // Update existing user - create new object without password if empty
         const updateData = {
           email: data.email,
-          role: data.role as 'EDITOR' | 'READONLY',
+          role: data.role,
           ...(data.password ? { password: data.password } : {}),
         };
 
@@ -64,7 +58,7 @@ export const useAdminUserForm = ({
         const createData = {
           email: data.email,
           password: data.password,
-          role: data.role as string,
+          role: data.role,
         };
 
         const newUser = await adminUserService.createAdminUser(createData);

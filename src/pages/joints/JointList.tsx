@@ -28,7 +28,6 @@ const JointList = () => {
     handleTypeFilterChange,
     clearFilters,
     deleteJoint,
-    fetchJoints,
     getAvailableTypes,
   } = useJoints();
 
