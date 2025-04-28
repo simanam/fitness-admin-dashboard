@@ -40,49 +40,50 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaMetadata, setMediaMetadata] = useState<MediaMetadata[]>([]);
 
-  // Ensure all nested objects are properly initialized
-  const preparedInitialData: ExerciseFormData = initialData
-    ? {
+  const methods = useForm<ExerciseFormData>({
+    defaultValues: defaultExerciseFormData,
+    mode: 'onChange',
+  });
+
+  const { handleSubmit, reset } = methods;
+
+  // Update the useEffect hook in ExerciseForm.tsx
+  useEffect(() => {
+    if (initialData) {
+      // Create the prepared data inside the useEffect
+      const dataToReset = {
         ...initialData,
-        // Ensure form_points structure is complete
         form_points: {
           setup: initialData.form_points?.setup || [],
           execution: initialData.form_points?.execution || [],
           breathing: initialData.form_points?.breathing || [],
           alignment: initialData.form_points?.alignment || [],
         },
-        // Ensure common_mistakes structure is complete
         common_mistakes: {
           mistakes: initialData.common_mistakes?.mistakes || [],
         },
-        // Ensure safety_info structure is complete
         safety_info: {
           risk_level: initialData.safety_info?.risk_level || 'low',
           precautions: initialData.safety_info?.precautions || [],
           warning_signs: initialData.safety_info?.warning_signs || [],
           contraindications: initialData.safety_info?.contraindications || [],
         },
-        // Ensure tempo_recommendations structure is complete
         tempo_recommendations: {
           default: initialData.tempo_recommendations?.default || '',
           tempo_notes: initialData.tempo_recommendations?.tempo_notes || '',
         },
-      }
-    : defaultExerciseFormData;
+        primary_focus: initialData.primary_focus || undefined,
+        optimal_rest_time: {
+          default: initialData.optimal_rest_time?.default || '',
+          min: initialData.optimal_rest_time?.min || '',
+          max: initialData.optimal_rest_time?.max || '',
+          notes: initialData.optimal_rest_time?.notes || '',
+        },
+      };
 
-  const methods = useForm<ExerciseFormData>({
-    defaultValues: preparedInitialData,
-    mode: 'onChange',
-  });
-
-  const { handleSubmit, reset } = methods;
-
-  // Update form values when initialData changes
-  useEffect(() => {
-    if (initialData) {
-      reset(preparedInitialData);
+      reset(dataToReset);
     }
-  }, [initialData, reset, preparedInitialData]);
+  }, [initialData, reset]);
 
   const handleFormSubmit = (data: ExerciseFormData) => {
     // Update form_points from instructions if they exist

@@ -66,6 +66,13 @@ export interface ExerciseFormData {
     tempo_notes?: string;
     variations?: any[];
   };
+  primary_focus?: 'strength' | 'hypertrophy' | 'endurance' | 'power';
+  optimal_rest_time?: {
+    default: string;
+    min: string;
+    max: string;
+    notes?: string;
+  };
 }
 
 export const defaultExerciseFormData: ExerciseFormData = {
@@ -98,6 +105,13 @@ export const defaultExerciseFormData: ExerciseFormData = {
   tempo_recommendations: {
     default: '',
     tempo_notes: '',
+  },
+  primary_focus: undefined,
+  optimal_rest_time: {
+    default: '',
+    min: '',
+    max: '',
+    notes: '',
   },
 };
 

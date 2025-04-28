@@ -127,6 +127,87 @@ const TechnicalDetailsSection: FC = () => {
         </p>
       </div>
 
+      {/* Primary Focus */}
+      <div>
+        <label
+          htmlFor="primary_focus"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Primary Focus
+        </label>
+        <Select id="primary_focus" {...register('primary_focus')}>
+          <option value="">Not specified</option>
+          <option value="strength">Strength</option>
+          <option value="hypertrophy">Hypertrophy</option>
+          <option value="endurance">Endurance</option>
+          <option value="power">Power</option>
+        </Select>
+        <p className="mt-1 text-xs text-gray-500">
+          The primary training goal this exercise is designed for
+        </p>
+      </div>
+      {/* Optimal Rest Time */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Optimal Rest Time (optional)
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label
+              htmlFor="optimal_rest_time_default"
+              className="block text-xs font-medium text-gray-600 mb-1"
+            >
+              Default Rest
+            </label>
+            <Input
+              id="optimal_rest_time_default"
+              {...register('optimal_rest_time.default')}
+              placeholder="e.g., 60s or 2m"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="optimal_rest_time_min"
+              className="block text-xs font-medium text-gray-600 mb-1"
+            >
+              Minimum Rest
+            </label>
+            <Input
+              id="optimal_rest_time_min"
+              {...register('optimal_rest_time.min')}
+              placeholder="e.g., 30s"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="optimal_rest_time_max"
+              className="block text-xs font-medium text-gray-600 mb-1"
+            >
+              Maximum Rest
+            </label>
+            <Input
+              id="optimal_rest_time_max"
+              {...register('optimal_rest_time.max')}
+              placeholder="e.g., 3m"
+            />
+          </div>
+        </div>
+        <div className="mt-3">
+          <label
+            htmlFor="optimal_rest_time_notes"
+            className="block text-xs font-medium text-gray-600 mb-1"
+          >
+            Rest Time Notes (optional-in seconds)
+          </label>
+          <Textarea
+            id="optimal_rest_time_notes"
+            {...register('optimal_rest_time.notes')}
+            placeholder="Any additional notes about rest periods"
+            rows={2}
+          />
+        </div>
+      </div>
+
       {/* Tempo Recommendations */}
       <div>
         <label

@@ -142,6 +142,58 @@ const ExerciseOverview: FC<ExerciseOverviewProps> = ({ exercise }) => {
               {exercise.plane_of_motion}
             </p>
           </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="text-sm font-medium text-gray-500 mb-1">
+              Primary Focus
+            </h4>
+            <p className="text-gray-900 capitalize">
+              {exercise.primary_focus || 'Not specified'}
+            </p>
+          </div>
+          {exercise.optimal_rest_time && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
+                <Clock className="h-5 w-5 mr-2 text-gray-500" />
+                Optimal Rest Time (in seconds)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
+                    Default
+                  </h4>
+                  <p className="text-gray-900">
+                    {exercise.optimal_rest_time.default}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
+                    Minimum
+                  </h4>
+                  <p className="text-gray-900">
+                    {exercise.optimal_rest_time.min}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
+                    Maximum
+                  </h4>
+                  <p className="text-gray-900">
+                    {exercise.optimal_rest_time.max}
+                  </p>
+                </div>
+                {exercise.optimal_rest_time.notes && (
+                  <div className="bg-gray-50 p-4 rounded-lg sm:col-span-3">
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      Notes
+                    </h4>
+                    <p className="text-gray-900">
+                      {exercise.optimal_rest_time.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

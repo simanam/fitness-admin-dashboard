@@ -13,6 +13,13 @@ export interface Exercise {
   status: 'draft' | 'published' | 'archived';
   bilateral: boolean;
   plane_of_motion: string;
+  primary_focus?: 'strength' | 'hypertrophy' | 'endurance' | 'power';
+  optimal_rest_time?: {
+    default: string;
+    min: string;
+    max: string;
+    notes?: string;
+  };
   instructions?: string;
   setup_position?: string;
   form_points?: {
@@ -64,6 +71,7 @@ export interface ExerciseFilterParams {
   movement_pattern?: string;
   equipment_required?: boolean;
   search?: string;
+  primary_focus?: string;
   page?: number;
   limit?: number;
   per_page?: number;
@@ -103,6 +111,7 @@ export const exerciseService = {
   // Get a single exercise by ID
   getExercise: async (id: string): Promise<Exercise> => {
     const response = await apiClient.get(`/exercises/${id}`);
+    console.log(response.data, 'sss');
     return response.data.data;
   },
 
@@ -117,6 +126,7 @@ export const exerciseService = {
       status: exercise.status?.toLowerCase(),
       plane_of_motion: exercise.plane_of_motion?.toLowerCase(),
       movement_pattern: exercise.movement_pattern?.toLowerCase(),
+      primary_focus: exercise.primary_focus?.toLowerCase(),
     };
 
     const response = await apiClient.post('/exercises', transformedExercise);
@@ -142,6 +152,7 @@ export const exerciseService = {
         status: exerciseData.status?.toLowerCase(),
         plane_of_motion: exerciseData.plane_of_motion?.toLowerCase(),
         movement_pattern: exerciseData.movement_pattern?.toLowerCase(),
+        primary_focus: exerciseData.primary_focus?.toLowerCase(),
       })
     );
 
@@ -176,6 +187,7 @@ export const exerciseService = {
       status: exercise.status?.toLowerCase(),
       plane_of_motion: exercise.plane_of_motion?.toLowerCase(),
       movement_pattern: exercise.movement_pattern?.toLowerCase(),
+      primary_focus: exercise.primary_focus?.toLowerCase(),
     };
 
     const response = await apiClient.put(
