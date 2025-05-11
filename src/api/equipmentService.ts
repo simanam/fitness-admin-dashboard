@@ -11,7 +11,8 @@ export interface Equipment {
     | 'bodyweight'
     | 'cardio'
     | 'accessories'
-    | 'other';
+    | 'benches'
+    | 'racks';
   description: string | null;
   isCommon: boolean;
   alternatives?: {

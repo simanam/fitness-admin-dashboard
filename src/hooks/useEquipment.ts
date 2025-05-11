@@ -137,6 +137,8 @@ export const useEquipment = () => {
       { value: 'bodyweight', label: 'Bodyweight' },
       { value: 'cardio', label: 'Cardio' },
       { value: 'accessories', label: 'Accessories' },
+      { value: 'benches', label: 'Benches' },
+      { value: 'racks', label: 'Racks' },
     ];
 
     return categories;

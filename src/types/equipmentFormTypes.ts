@@ -7,8 +7,8 @@ export type EquipmentCategory =
   | 'bodyweight'
   | 'cardio'
   | 'accessories'
-  | 'other';
-
+  | 'benches'
+  | 'racks';
 export interface EquipmentAlternativeFormData {
   name: string;
   modification_needed: string;
@@ -71,5 +71,6 @@ export const CATEGORY_OPTIONS = [
   { value: 'bodyweight', label: 'Bodyweight' },
   { value: 'cardio', label: 'Cardio Equipment' },
   { value: 'accessories', label: 'Accessories' },
-  { value: 'other', label: 'Other' },
+  { value: 'benches', label: 'Benches' },
+  { value: 'racks', label: 'Racks' },
 ];

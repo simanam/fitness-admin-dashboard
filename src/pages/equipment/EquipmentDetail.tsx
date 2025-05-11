@@ -77,7 +77,8 @@ const EquipmentDetail = () => {
       BODYWEIGHT: 'bg-yellow-100 text-yellow-800',
       CARDIO: 'bg-red-100 text-red-800',
       ACCESSORIES: 'bg-indigo-100 text-indigo-800',
-      OTHER: 'bg-gray-100 text-gray-800',
+      BENCHES: 'bg-gray-100 text-gray-800',
+      RACKS: 'bg-gray-100 text-gray-800',
     };
 
     return (
