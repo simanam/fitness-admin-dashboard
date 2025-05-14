@@ -30,13 +30,9 @@ interface TransformedInvolvement
   };
 }
 
-interface APIResponse<T> {
-  data: T[];
-  meta?: {
-    total: number;
-    page: number;
-    limit: number;
-  };
+interface JointInvolvementResponse {
+  primary: JointInvolvement[];
+  all: JointInvolvement[];
 }
 
 const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
@@ -83,20 +79,27 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
         notes: item.notes,
       });
 
+      // Handle the new response format
       const response =
-        involvementsResponse as unknown as APIResponse<JointInvolvement>;
-      const allInvolvements = Array.isArray(response.data)
-        ? response.data.map(transformInvolvement)
+        involvementsResponse as unknown as JointInvolvementResponse;
+      const allInvolvements = Array.isArray(response.all)
+        ? response.all.map(transformInvolvement)
         : [];
 
       setPrimaryInvolvements(
-        allInvolvements.filter((item) => item.involvementType === 'primary')
+        allInvolvements.filter(
+          (item: TransformedInvolvement) => item.involvementType === 'primary'
+        )
       );
       setSecondaryInvolvements(
-        allInvolvements.filter((item) => item.involvementType === 'secondary')
+        allInvolvements.filter(
+          (item: TransformedInvolvement) => item.involvementType === 'secondary'
+        )
       );
 
-      const jointsData = Array.isArray(jointsResponse) ? jointsResponse : [];
+      const jointsData = Array.isArray(jointsResponse.data)
+        ? jointsResponse.data
+        : [];
       setAllJoints(jointsData);
     } catch (error) {
       console.error('Error fetching joint data:', error);

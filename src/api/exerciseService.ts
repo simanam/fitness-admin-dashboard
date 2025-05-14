@@ -111,7 +111,7 @@ export const exerciseService = {
   // Get a single exercise by ID
   getExercise: async (id: string): Promise<Exercise> => {
     const response = await apiClient.get(`/exercises/${id}`);
-    console.log(response.data, 'sss');
+
     return response.data.data;
   },
 
