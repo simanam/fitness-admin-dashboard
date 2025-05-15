@@ -39,11 +39,6 @@ interface TransformedInvolvement {
   notes?: string;
 }
 
-interface JointInvolvementResponse {
-  primary: JointInvolvement[];
-  all: JointInvolvement[];
-}
-
 const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
   const { showToast } = useToast();
   const [primaryInvolvements, setPrimaryInvolvements] = useState<
