@@ -59,8 +59,9 @@ export const muscleService = {
 
   // Get all muscles (for dropdowns, etc.)
   getMuscles: async (groupId?: string): Promise<Muscle[]> => {
-    const url = groupId ? `/muscles/group/${groupId}` : '/muscles';
+    const url = groupId ? `/muscles/group/${groupId}` : '/muscles/all';
     const response = await apiClient.get(url);
+
     return response.data.data || [];
   },
 
@@ -74,6 +75,7 @@ export const muscleService = {
   getMuscleGroups: async (parentOnly = false): Promise<MuscleGroup[]> => {
     const url = `/muscles/groups${parentOnly ? '?parentOnly=true' : ''}`;
     const response = await apiClient.get(url);
+
     return response.data.data || [];
   },
 
