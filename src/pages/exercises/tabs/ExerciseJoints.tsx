@@ -3,10 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Edit, Link } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import exerciseJointService from '../../../api/exerciseJointService';
-import type {
-  JointInvolvement,
-  CreateJointInvolvementPayload,
-} from '../../../api/exerciseJointService';
+import type { JointInvolvement } from '../../../api/exerciseJointService';
 import jointService from '../../../api/jointService';
 import type { Joint } from '../../../api/jointService';
 import ConfirmationDialog from '../../../components/ui/confirmation-dialog';
@@ -18,16 +15,28 @@ interface ExerciseJointsProps {
   exerciseId: string;
 }
 
-type InvolvementType = 'primary' | 'secondary';
+interface JointInvolvementPayload {
+  exerciseId: string;
+  jointId: string;
+  movementType: string;
+  isPrimary: boolean;
+  romRequired: number;
+  movementNotes?: string;
+}
 
-interface TransformedInvolvement
-  extends Omit<JointInvolvement, 'involvementType'> {
-  involvementType: InvolvementType;
+interface TransformedInvolvement {
+  id: string;
+  exerciseId: string;
+  jointId: string;
+  joint?: Joint;
+  involvementType: 'primary' | 'secondary';
+  movementPattern: string;
   rangeOfMotion: {
     min: number;
     max: number;
     units: string;
   };
+  notes?: string;
 }
 
 interface JointInvolvementResponse {
@@ -68,22 +77,19 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
         exerciseId: item.exerciseId,
         jointId: item.jointId,
         joint: item.joint,
-        involvementType:
-          item.involvementType === 'primary' ? 'primary' : 'secondary',
-        movementPattern: item.movementPattern,
+        involvementType: item.isPrimary ? 'primary' : 'secondary',
+        movementPattern: item.movementType,
         rangeOfMotion: {
           min: 0,
-          max: item.rangeOfMotion?.max || 0,
+          max: item.romRequired || 0,
           units: 'degrees',
         },
-        notes: item.notes,
+        notes: item.movementNotes || undefined,
       });
 
       // Handle the new response format
-      const response =
-        involvementsResponse as unknown as JointInvolvementResponse;
-      const allInvolvements = Array.isArray(response.all)
-        ? response.all.map(transformInvolvement)
+      const allInvolvements = Array.isArray(involvementsResponse.all)
+        ? involvementsResponse.all.map(transformInvolvement)
         : [];
 
       setPrimaryInvolvements(
@@ -117,17 +123,23 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
     void fetchData();
   }, [fetchData]);
 
-  const handleAddInvolvement = async (
-    data: Omit<CreateJointInvolvementPayload, 'exerciseId'>
-  ) => {
+  const handleAddInvolvement = async (data: {
+    exerciseId: string;
+    jointId: string;
+    movementType: string;
+    romRequired?: number;
+    isPrimary?: boolean;
+    movementNotes?: string;
+  }) => {
     setIsSubmitting(true);
     try {
-      const payload: CreateJointInvolvementPayload = {
-        exerciseId,
+      const payload: JointInvolvementPayload = {
+        exerciseId: data.exerciseId,
         jointId: data.jointId,
-        involvementType: data.involvementType,
-        movementPattern: data.movementPattern,
-        rangeOfMotion: data.rangeOfMotion,
+        movementType: data.movementType,
+        isPrimary: data.isPrimary ?? true,
+        romRequired: data.romRequired || 90,
+        movementNotes: data.movementNotes,
       };
 
       await exerciseJointService.createJointInvolvement(payload);
@@ -152,17 +164,25 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
     }
   };
 
-  const handleUpdateInvolvement = async (
-    data: Omit<CreateJointInvolvementPayload, 'exerciseId' | 'jointId'>
-  ) => {
+  const handleUpdateInvolvement = async (data: {
+    exerciseId: string;
+    jointId: string;
+    movementType: string;
+    romRequired?: number;
+    isPrimary?: boolean;
+    movementNotes?: string;
+  }) => {
     if (!selectedInvolvement) return;
 
     setIsSubmitting(true);
     try {
-      const payload: Partial<CreateJointInvolvementPayload> = {
-        involvementType: data.involvementType,
-        movementPattern: data.movementPattern,
-        rangeOfMotion: data.rangeOfMotion,
+      const payload: Partial<
+        Omit<JointInvolvementPayload, 'exerciseId' | 'jointId'>
+      > = {
+        movementType: data.movementType,
+        isPrimary: data.isPrimary ?? true,
+        romRequired: data.romRequired || 90,
+        movementNotes: data.movementNotes,
       };
 
       await exerciseJointService.updateJointInvolvement(
@@ -489,6 +509,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
         size="md"
       >
         <JointInvolvementForm
+          exerciseId={exerciseId}
           joints={availableJoints}
           onSubmit={handleAddInvolvement}
           onCancel={() => setShowAddModal(false)}
@@ -507,6 +528,7 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
       >
         {selectedInvolvement && (
           <JointInvolvementForm
+            exerciseId={exerciseId}
             joints={[
               ...(selectedInvolvement.joint ? [selectedInvolvement.joint] : []),
               ...availableJoints,
@@ -519,13 +541,10 @@ const ExerciseJoints = ({ exerciseId }: ExerciseJointsProps) => {
             isSubmitting={isSubmitting}
             initialData={{
               jointId: selectedInvolvement.jointId,
-              involvementType: selectedInvolvement.involvementType,
-              movementPattern: selectedInvolvement.movementPattern,
-              rangeOfMotion: {
-                ...selectedInvolvement.rangeOfMotion,
-                units: 'degrees',
-              },
-              notes: selectedInvolvement.notes,
+              movementType: selectedInvolvement.movementPattern,
+              romRequired: selectedInvolvement.rangeOfMotion?.max,
+              isPrimary: selectedInvolvement.involvementType === 'primary',
+              movementNotes: selectedInvolvement.notes,
             }}
             editMode={true}
           />

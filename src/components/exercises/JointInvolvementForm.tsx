@@ -9,35 +9,30 @@ import { Joint } from '../../api/jointService';
 
 interface JointInvolvementFormProps {
   joints: Joint[];
+  exerciseId: string;
   onSubmit: (data: {
+    exerciseId: string;
     jointId: string;
-    involvementType: 'primary' | 'secondary';
-    movementPattern: string;
-    rangeOfMotion: {
-      min: number;
-      max: number;
-      units: string;
-    };
-    notes?: string;
+    movementType: string;
+    romRequired?: number;
+    isPrimary?: boolean;
+    movementNotes?: string;
   }) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   initialData?: {
     jointId: string;
-    involvementType: 'primary' | 'secondary';
-    movementPattern: string;
-    rangeOfMotion: {
-      min: number;
-      max: number;
-      units: string;
-    };
-    notes?: string;
+    movementType: string;
+    romRequired?: number;
+    isPrimary?: boolean;
+    movementNotes?: string;
   };
   editMode?: boolean;
 }
 
 const JointInvolvementForm = ({
   joints,
+  exerciseId,
   onSubmit,
   onCancel,
   isSubmitting,
@@ -45,19 +40,18 @@ const JointInvolvementForm = ({
   editMode = false,
 }: JointInvolvementFormProps) => {
   const [jointId, setJointId] = useState<string>(initialData?.jointId || '');
-  const [involvementType, setInvolvementType] = useState<
-    'primary' | 'secondary'
-  >(initialData?.involvementType || 'primary');
-  const [movementPattern, setMovementPattern] = useState<string>(
-    initialData?.movementPattern || ''
+  const [movementType, setMovementType] = useState<string>(
+    initialData?.movementType || ''
   );
-  const [rangeMin, setRangeMin] = useState<number>(
-    initialData?.rangeOfMotion?.min || 0
+  const [romRequired, setRomRequired] = useState<number>(
+    initialData?.romRequired || 90
   );
-  const [rangeMax, setRangeMax] = useState<number>(
-    initialData?.rangeOfMotion?.max || 90
+  const [isPrimary, setIsPrimary] = useState<boolean>(
+    initialData?.isPrimary ?? true
   );
-  const [notes, setNotes] = useState<string>(initialData?.notes || '');
+  const [movementNotes, setMovementNotes] = useState<string>(
+    initialData?.movementNotes || ''
+  );
   const [selectedJoint, setSelectedJoint] = useState<Joint | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [localSubmitting, setLocalSubmitting] = useState<boolean>(false);
@@ -101,8 +95,15 @@ const JointInvolvementForm = ({
       setValidationError('Please select a joint');
       return false;
     }
-    if (!movementPattern) {
-      setValidationError('Please select a movement pattern');
+    if (!movementType || movementType.trim() === '') {
+      setValidationError('Please select a movement type');
+      return false;
+    }
+    if (
+      romRequired !== undefined &&
+      (Number.isNaN(romRequired) || romRequired < 0)
+    ) {
+      setValidationError('ROM Required must be a positive number');
       return false;
     }
     setValidationError(null);
@@ -110,38 +111,35 @@ const JointInvolvementForm = ({
   };
 
   const handleSubmit = async (e: React.MouseEvent) => {
-    // Prevent default button behavior
     e.preventDefault();
     e.stopPropagation();
 
-    // Validate the form
     if (!validateForm()) {
       return;
     }
 
-    // Set local submitting state to show loading indicator
     setLocalSubmitting(true);
 
     try {
-      // Call the onSubmit function passed as prop
-      await onSubmit({
+      const formData = {
+        exerciseId,
         jointId,
-        involvementType,
-        movementPattern,
-        rangeOfMotion: {
-          min: rangeMin,
-          max: rangeMax,
-          units: 'degrees',
-        },
-        notes: notes || undefined,
-      });
+        movementType: movementType,
+        romRequired: romRequired || undefined,
+        isPrimary: isPrimary ?? true,
+        movementNotes: movementNotes || undefined,
+      };
+
+      // Log the data being sent
+      console.log('Submitting form data:', formData);
+
+      await onSubmit(formData);
     } catch (error) {
       console.error('Error submitting form:', error);
       setValidationError(
         'An error occurred while submitting the form. Please try again.'
       );
     } finally {
-      // Reset local submitting state
       setLocalSubmitting(false);
     }
   };
@@ -204,68 +202,26 @@ const JointInvolvementForm = ({
         )}
       </div>
 
-      {/* Involvement type selection */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Involvement Type <span className="text-red-500">*</span>
-        </label>
-        <RadioGroup
-          value={involvementType}
-          onValueChange={(value) =>
-            setInvolvementType(value as 'primary' | 'secondary')
-          }
-          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-        >
-          <div
-            className={`flex items-center space-x-2 border rounded-lg p-3 ${
-              involvementType === 'primary' ? 'ring-2 ring-gray-900' : ''
-            } ${getInvolvementTypeColor('primary')}`}
-          >
-            <RadioGroupItem id="primary" value="primary" />
-            <Label htmlFor="primary" className="font-medium cursor-pointer">
-              Primary
-            </Label>
-          </div>
-
-          <div
-            className={`flex items-center space-x-2 border rounded-lg p-3 ${
-              involvementType === 'secondary' ? 'ring-2 ring-gray-900' : ''
-            } ${getInvolvementTypeColor('secondary')}`}
-          >
-            <RadioGroupItem id="secondary" value="secondary" />
-            <Label htmlFor="secondary" className="font-medium cursor-pointer">
-              Secondary
-            </Label>
-          </div>
-        </RadioGroup>
-
-        <div className="mt-2 text-sm text-gray-500">
-          <p>
-            <span className="font-medium">Primary:</span> Joint is central to
-            the exercise movement
-          </p>
-          <p>
-            <span className="font-medium">Secondary:</span> Joint provides
-            support or stability during the exercise
-          </p>
-        </div>
-      </div>
-
-      {/* Movement pattern selection */}
+      {/* Movement type selection */}
       <div>
         <label
-          htmlFor="movementPattern"
+          htmlFor="movementType"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Movement Pattern <span className="text-red-500">*</span>
+          Movement Type <span className="text-red-500">*</span>
         </label>
         <Select
-          id="movementPattern"
-          value={movementPattern}
-          onChange={(e) => setMovementPattern(e.target.value)}
+          id="movementType"
+          value={movementType}
+          onChange={(e) => {
+            const value = e.target.value;
+            console.log('Selected movement type:', value); // Debug log
+            setMovementType(value);
+          }}
           disabled={isFormSubmitting}
+          required
         >
-          <option value="">Select a movement pattern</option>
+          <option value="">Select a movement type</option>
           {commonMovementPatterns.map((pattern) => (
             <option key={pattern} value={pattern}>
               {pattern
@@ -277,73 +233,82 @@ const JointInvolvementForm = ({
         </Select>
       </div>
 
-      {/* Range of motion input */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Range of Motion (degrees) <span className="text-red-500">*</span>
-        </label>
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-xs text-gray-700 mb-1">Minimum</label>
-            <input
-              type="number"
-              value={rangeMin}
-              onChange={(e) => setRangeMin(parseInt(e.target.value) || 0)}
-              min={-180}
-              max={180}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
-              disabled={isFormSubmitting}
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-700 mb-1">Maximum</label>
-            <input
-              type="number"
-              value={rangeMax}
-              onChange={(e) => setRangeMax(parseInt(e.target.value) || 0)}
-              min={-180}
-              max={180}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
-              disabled={isFormSubmitting}
-            />
-          </div>
-        </div>
-
-        {/* Range visualization */}
-        <div className="mt-2 mb-4">
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>-180°</span>
-            <span>0°</span>
-            <span>+180°</span>
-          </div>
-          <div className="h-2 bg-gray-200 rounded-full relative">
-            <div
-              className="absolute h-full bg-blue-500 rounded-full"
-              style={{
-                left: `${((rangeMin + 180) / 360) * 100}%`,
-                width: `${((rangeMax - rangeMin) / 360) * 100}%`,
-              }}
-            ></div>
-          </div>
-        </div>
-      </div>
-      {/* Notes input */}
+      {/* ROM Required input */}
       <div>
         <label
-          htmlFor="notes"
+          htmlFor="romRequired"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Notes (Optional)
+          ROM Required (degrees)
+        </label>
+        <input
+          id="romRequired"
+          type="number"
+          value={romRequired}
+          onChange={(e) => setRomRequired(Number.parseInt(e.target.value) || 0)}
+          min={0}
+          max={180}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
+          disabled={isFormSubmitting}
+        />
+      </div>
+
+      {/* Primary/Secondary selection */}
+      <div>
+        <label
+          htmlFor="jointRole"
+          className="block text-sm font-medium text-gray-700 mb-3"
+        >
+          Joint Role
+        </label>
+        <RadioGroup
+          id="jointRole"
+          value={isPrimary ? 'primary' : 'secondary'}
+          onValueChange={(value) => setIsPrimary(value === 'primary')}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+        >
+          <div
+            className={`flex items-center space-x-2 border rounded-lg p-3 ${
+              isPrimary ? 'ring-2 ring-gray-900' : ''
+            } ${getInvolvementTypeColor('primary')}`}
+          >
+            <RadioGroupItem id="primary" value="primary" />
+            <Label htmlFor="primary" className="font-medium cursor-pointer">
+              Primary
+            </Label>
+          </div>
+
+          <div
+            className={`flex items-center space-x-2 border rounded-lg p-3 ${
+              !isPrimary ? 'ring-2 ring-gray-900' : ''
+            } ${getInvolvementTypeColor('secondary')}`}
+          >
+            <RadioGroupItem id="secondary" value="secondary" />
+            <Label htmlFor="secondary" className="font-medium cursor-pointer">
+              Secondary
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      {/* Movement Notes input */}
+      <div>
+        <label
+          htmlFor="movementNotes"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Movement Notes (Optional)
         </label>
         <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          id="movementNotes"
+          value={movementNotes}
+          onChange={(e) => setMovementNotes(e.target.value)}
           placeholder="Add notes about the joint's role, positioning, or special considerations"
           rows={3}
           disabled={isFormSubmitting}
         />
       </div>
+
       {/* Form actions */}
       <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
         <button
@@ -358,7 +323,7 @@ const JointInvolvementForm = ({
           type="button"
           onClick={handleSubmit}
           className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
-          // disabled={isFormSubmitting || !jointId || !movementPattern}
+          // disabled={isFormSubmitting || !jointId || !movementType}
         >
           {isFormSubmitting ? 'Saving...' : editMode ? 'Update' : 'Add'}
         </button>

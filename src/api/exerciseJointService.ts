@@ -1,34 +1,33 @@
 // src/api/exerciseJointService.ts
 
 import apiClient from './client';
-import { Joint } from './jointService';
+import type { Joint } from './jointService';
 
 export interface JointInvolvement {
   id: string;
   exerciseId: string;
   jointId: string;
-  involvementType: 'primary' | 'secondary';
-  movementPattern: string; // flexion, extension, rotation, etc.
-  rangeOfMotion: {
-    min: number;
-    max: number;
-    units: string; // typically degrees
-  };
-  notes?: string;
-  joint?: Joint; // Populated when fetching
+  movementType: string;
+  romRequired: number;
+  isPrimary: boolean;
+  movementNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  joint?: Joint;
+}
+
+export interface JointInvolvementResponse {
+  primary: JointInvolvement[];
+  all: JointInvolvement[];
 }
 
 export interface CreateJointInvolvementPayload {
   exerciseId: string;
   jointId: string;
-  involvementType: 'primary' | 'secondary';
-  movementPattern: string;
-  rangeOfMotion: {
-    min: number;
-    max: number;
-    units: string;
-  };
-  notes?: string;
+  movementType: string;
+  isPrimary: boolean;
+  romRequired: number;
+  movementNotes?: string;
 }
 
 export const exerciseJointService = {
@@ -45,9 +44,9 @@ export const exerciseJointService = {
   // Get joint involvements for an exercise
   getJointInvolvements: async (
     exerciseId: string
-  ): Promise<JointInvolvement[]> => {
+  ): Promise<JointInvolvementResponse> => {
     const response = await apiClient.get(`/exercises/${exerciseId}/joints`);
-    return response.data.data || [];
+    return response.data.data || { primary: [], all: [] };
   },
 
   // Create a joint involvement
@@ -104,13 +103,17 @@ export const exerciseJointService = {
   },
 
   // Get ROM analysis for an exercise
-  getRomAnalysis: async (exerciseId: string): Promise<any> => {
+  getRomAnalysis: async (
+    exerciseId: string
+  ): Promise<Record<string, unknown>> => {
     const response = await apiClient.get(`/exercises/${exerciseId}/rom`);
     return response.data.data;
   },
 
   // Get movement profile for an exercise
-  getMovementProfile: async (exerciseId: string): Promise<any> => {
+  getMovementProfile: async (
+    exerciseId: string
+  ): Promise<Record<string, unknown>> => {
     const response = await apiClient.get(
       `/exercises/${exerciseId}/movement-profile`
     );
@@ -118,7 +121,9 @@ export const exerciseJointService = {
   },
 
   // Validate movement requirements
-  validateMovementRequirements: async (data: any): Promise<any> => {
+  validateMovementRequirements: async (
+    data: Record<string, unknown>
+  ): Promise<Record<string, unknown>> => {
     const response = await apiClient.post('/exercises/joints/validate', data);
     return response.data.data;
   },

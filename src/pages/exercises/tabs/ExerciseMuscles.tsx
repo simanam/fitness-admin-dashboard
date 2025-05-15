@@ -22,10 +22,14 @@ interface BaseMuscleTarget {
 
 // Base interface for API responses
 interface ApiMuscleTarget {
+  id: string;
   exerciseId: string;
   muscleId: string;
   type: MuscleType;
+  role: string;
+  activationPercentage: number;
   notes?: string;
+  muscle?: Muscle;
 }
 
 // Combine both interfaces for our component
@@ -89,20 +93,20 @@ const ExerciseMuscles = ({ exerciseId }: ExerciseMusclesProps) => {
       ]);
 
       // Transform the API response to match our MuscleTarget type
-      const transformedTargets: MuscleTarget[] = targetsData.map(
-        (target: ApiMuscleTarget) => ({
-          id: `${target.exerciseId}-${target.muscleId}`,
-          exerciseId: target.exerciseId,
-          muscleId: target.muscleId,
-          type: target.type || 'PRIMARY',
-          muscle: musclesData.find((m) => m.id === target.muscleId),
-          role: (target.type || 'PRIMARY').toLowerCase() as MuscleRole,
-          activationPercentage: 50,
-          notes: target.notes,
-          name: musclesData.find((m) => m.id === target.muscleId)?.name || '',
-          progress: 50,
-        })
-      );
+      const transformedTargets: MuscleTarget[] = (
+        targetsData as unknown as ApiMuscleTarget[]
+      ).map((target: ApiMuscleTarget) => ({
+        id: target.id,
+        exerciseId: target.exerciseId,
+        muscleId: target.muscleId,
+        type: target.type || 'PRIMARY',
+        muscle: musclesData.find((m) => m.id === target.muscleId),
+        role: target.role.toLowerCase() as MuscleRole,
+        activationPercentage: target.activationPercentage || 50,
+        notes: target.notes,
+        name: musclesData.find((m) => m.id === target.muscleId)?.name || '',
+        progress: target.activationPercentage || 50,
+      }));
 
       setMuscleTargets(transformedTargets);
       setAllMuscles(musclesData);
