@@ -75,6 +75,7 @@ export const exerciseMuscleService = {
       `/exercises/muscles/targets/${targetId}`,
       payload
     );
+    console.log('updateMuscleTarget response');
     return response.data.data;
   },
 
